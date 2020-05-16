@@ -1,9 +1,9 @@
 ﻿/*
  *	base64.c - by Joe DF (joedf@ahkscript.org)
  *	Released under the MIT License
- *	
+ *
  *	Revision: 2015-06-12 01:26:51
- *	
+ *
  *	Thank you for inspiration:
  *	http://www.codeproject.com/Tips/813146/Fast-base-functions-for-encode-decode
  *
@@ -12,9 +12,7 @@
 
 #ifndef BASE64_H
 #define BASE64_H
-
-//#include <stdio.h>
-#include <stdint.h>
+#include <cstdint>
 
 //Base64 char table function - used internally for decoding
 //unsigned int b64_int(unsigned int ch);

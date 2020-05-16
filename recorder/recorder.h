@@ -1,29 +1,14 @@
 #ifndef RECORDER_H
 #define RECORDER_H
-
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
-//#include <sstream>
-//#include <math.h>
-#include <string.h>
-#include <vector>
-#include <fstream>
-
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <json-c/json.h>
-#include <json-c/json_util.h>
-#include "base64.h"
-#include <zlib.h>
+#include <cstdint>
+#include <string>
 
 using namespace::std;
 
-/*
- * Short subscriber identity structure
+/**
+ * @brief Short Subscriber Identity structure with last seen time for clean up
  *
  */
-
 
 struct ssi_t {
     time_t last_seen;

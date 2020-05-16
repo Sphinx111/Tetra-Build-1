@@ -49,7 +49,7 @@ void scr_update(const char * info)
         cnt++;
 
         if (cid == NULL) break;
-        
+
         if (cid->m_data_received > 0.)
         {
             mvwprintw(wn_bottom, cnt + 2, 2, "CID [Usage] = %06u [%02u] (%.0f kB) file %s, SSI =",
@@ -70,7 +70,7 @@ void scr_update(const char * info)
             wprintw(wn_bottom, " %08u", cid->m_ssi[idx].ssi);
         }
     }
-    
+
     // for (size_t cnt = 0; cnt < cid_list.size(); cnt++)                    // update caller id list
     // {
     //     if (cid_list[cnt].m_data_received > 0.)
@@ -116,9 +116,9 @@ void scr_print_bottom(int row, int col, const char *fmt, ...)
     va_list args;
     va_start(args, fmt);
 
-    mvwprintw(wn_middle, row, col, fmt, args);   
+    mvwprintw(wn_middle, row, col, fmt, args);
     wrefresh(wn_bottom);
-    
+
     va_end(args);
 }
 
@@ -130,16 +130,16 @@ void scr_print_middle(const char *fmt, ...)
     va_list args;
     va_start(args, fmt);
 
-    wprintw(wn_middle, fmt, args);   
+    wprintw(wn_middle, fmt, args);
     wrefresh(wn_middle);
-    
+
     va_end(args);
 }
 
 #else
 
 /*
- * Functions with no ncurses
+ * Functions with no ncurses, print to screen only
  */
 
 void scr_init()
@@ -159,7 +159,7 @@ void scr_update(const char * info)
         cnt++;
 
         if (cid == NULL) break;
-        
+
         if (cid->m_data_received > 0.)
         {
             printf("CID [Usage] = %06u [%02u] (%.0f kB) file %s, SSI =",
@@ -182,7 +182,7 @@ void scr_update(const char * info)
 
         printf("\n");
     }
-    
+
     // for (size_t cnt = 0; cnt < cid_list.size(); cnt++)                    // update caller id list
     // {
     //     if (cid_list[cnt].m_data_received > 0.)
@@ -220,9 +220,9 @@ void scr_print_bottom(int row, int col, const char *fmt, ...)
     va_list args;
     va_start(args, fmt);
 
-    printf(fmt, args);   
+    printf(fmt, args);
     printf("\n");
-    
+
     va_end(args);
 }
 
@@ -234,8 +234,8 @@ void scr_print_middle(const char *fmt, ...)
     va_list args;
     va_start(args, fmt);
 
-    printf(fmt, args);   
-    
+    printf(fmt, args);
+
     va_end(args);
 }
 

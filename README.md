@@ -4,18 +4,20 @@ TETRA downlink decoder/recorder kit
 
 ![](screenshots/main.png)
 
-# Generalities
+Generalities
+============
 
 This project aim is to provide an extensible TETRA downlink receiver kit for RTL-SDR dongle with following ideas:
 - Stays as close as possible to TETRA specification layers defined in `ETSI EN 300 392-2 v3.4.1
 (2010-08)`
 - Transmit downlink informations (including speech frames) in Json plain text format to be recorded or analyzed
 by an external program
-- Reassociate speech frames with a simple method based on associated `caller id` and `usage marker` (save messages transmited simultaneously in separated files)
+- Reassociate speech frames with a simple method based on associated `caller id` and `usage marker` (save messages transmitted simultaneously in separated files)
 
 The decoder implements a soft synchronizer allowing missing frames (50 bursts) before loosing synchronization.
 
-# Workflow
+Workflow
+========
 
 The decoder get physical layer bits from gnuradio PI/4 DQPSK receiver and transmit TETRA downlink
 informations in Json format to be analyzed and recorded.
@@ -26,20 +28,23 @@ The 3 parts are linked with UDP sockets:
 
     Physical (TX on UDP port 42000) -> receiver (TX on UDP port 42100) -> recorder
 
-# Physical layer
+Physical layer
+-------------
 
 The physical `PI/4 DQPSK` gnuradio receiver is inspired of [Tim's tetra-toolkit](https://github.com/Tim---/tetra-toolkit).
 It works fine with RTL-SDR dongles at 2Mbps.
 Results are much better than with HackRF which is more noisy.
 
-## Decoder
+Decoder
+-------
 
 The decoder role is to interpret and reconstruct TETRA packets and transmit it in Json format
 for recording and analysis. Only a few fields are transmitted for now, but using Json, it can
 be extensed very easily.
 It implements partially the downlink `MAC`, `LLC`, `MLE`, `CMCE` and `UPLANE` layers.
 
-## Recorder
+Recorder
+--------
 
 The recorder maintain a store of associated `caller id`, suscriber identities `ssi` and `usage marker` by interpreting Json text received. It also handles the `D-RELEASE` to remove a given `caller id` from list.
 
@@ -50,7 +55,8 @@ $ cd recorder/wav/
 $ ./out2wav.sh
 ```
 
-# Build
+Build
+=====
 
 You will need:
 * gnuradio and gnuradio-companion with rtl-sdr
@@ -87,12 +93,13 @@ $ cd phy
 $ gnuradio-companion pi4dqpsk_rx.grc
 ```
 
-# Usage
+Usage
+=====
 
-Open 3 shells:
-* In decoder/ run `./decoder`
-* In recorder/ run `./recorder`
-* In phy/ run `./pi4dqpsk_rx.py` and tunes the frequency (and eventually the baseband offset which may be positive or negative)
+Open 3 shells in the 3 folders:
+* In decoder one run `./decoder`
+* In recorder one run `./recorder`
+* In phy run `./pi4dqpsk_rx.py` and tunes the frequency (and eventually the baseband offset which may be positive or negative)
 
 Then you should see frames in `decoder`.
 You will see less data in `recorder` but it maintains all received frames into the file `log.txt`.

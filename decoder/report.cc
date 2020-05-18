@@ -35,12 +35,12 @@ void tetra_dl::report_start(const char* service, const char* pdu)
 
     json_object_object_add(jobj, "service", json_object_new_string(service));
     json_object_object_add(jobj, "pdu",     json_object_new_string(pdu));
-    
+
     // time information
     json_object_object_add(jobj, "tn", json_object_new_int(g_time.tn));
     json_object_object_add(jobj, "fn", json_object_new_int(g_time.fn));
     json_object_object_add(jobj, "mn", json_object_new_int(g_time.mn));
-    
+
     // mac informations
     json_object_object_add(jobj, "ssi",          json_object_new_int(mac_address.ssi));
     json_object_object_add(jobj, "usage marker", json_object_new_int(mac_address.usage_marker));
@@ -105,7 +105,7 @@ void tetra_dl::report_add(string field, uint16_t val)
 
 void tetra_dl::report_add(string field, uint32_t val)
 {
-    json_object_object_add(jobj, field.c_str(), json_object_new_int(val));    
+    json_object_object_add(jobj, field.c_str(), json_object_new_int(val));
 }
 
 /**
@@ -119,20 +119,35 @@ void tetra_dl::report_add(string field, uint64_t val)
 }
 
 /**
- * @brief Add list of integer data to report
+ * @brief Add vector of integer data to report as hexadecimal string.
+ *        Note that 0x is omitted to preserve space
  *
  */
 
-void tetra_dl::report_add(string field, vector<uint64_t> vec)
+void tetra_dl::report_add(string field, vector<uint8_t> vec)
 {
-    struct json_object *arr = json_object_new_array();
+    string txt = "";
+    char buf[32] = "";
 
-    for (size_t cnt = 0; cnt < vec.size(); cnt++ )
+    uint32_t pos = 0;
+    for (size_t cnt = 0; cnt < vec.size() / 8; cnt++)
     {
-        json_object_array_add(arr, json_object_new_int64(vec[cnt]));
+        uint8_t val = get_value(vec, pos, 8);
+        pos += 8;
+        
+        if (cnt > 0)
+        {
+            sprintf(buf, " %02x", val);
+        }
+        else
+        {
+            sprintf(buf, "%02x", val);
+        }
+
+        txt += buf;
     }
 
-    json_object_object_add(jobj, field.c_str(), arr);
+    json_object_object_add(jobj, field.c_str(), json_object_new_string(txt.c_str()));
 }
 
 /**
@@ -152,9 +167,9 @@ void tetra_dl::report_add_compressed(string field, const unsigned char * binary_
     uint64_t z_uncomp_size = (uLong) data_len;                                  // uncompressed length
     uint64_t z_comp_size   = compressBound(z_uncomp_size);                      // compressed length
     z_comp_size = compressBound(z_uncomp_size);                                 // compressed length
-    
+
     compress((Bytef *)buf_zlib, &z_comp_size, (Bytef *)binary_data, z_uncomp_size); // compress frame to buf_zlib
-    
+
     // Base64 encode
     char buf_b64[BUFSIZE] = {0};
     b64_encode((const unsigned char *)buf_zlib, z_comp_size, (unsigned char *)buf_b64);
@@ -184,6 +199,6 @@ void tetra_dl::report_send()
     write(socketfd, buf, sizeof(buf));
 
     //fprintf(stdout, "%s\n", json_object_to_json_string_ext(jobj, json_flags.flag)); // DEBUG print json packet
-    
+
     json_object_put(jobj);                                                      // delete the json object
 }

@@ -363,9 +363,14 @@ static void parse_pdu(const char * data, FILE * fd_log)
             cid_release(cid);
             scr_update(data);
         }
+        else if ((!pdu.compare("D-SDS-DATA")) ||
+                 (!pdu.compare("D-STATUS")))                                    // SDS messages
+        {
+            // do nothing for now
+        }
         else
         {
-            //scr_update(data);
+
         }
 
         //cid_clean_up();                                                         // call garbage collector

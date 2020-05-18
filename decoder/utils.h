@@ -34,7 +34,15 @@ vector<uint8_t> vector_extract(vector<uint8_t> source, uint32_t pos, uint32_t le
 vector<uint8_t> vector_append(vector<uint8_t> vec1, vector<uint8_t> vec2);                            // concatenate vectors
 void print_vector(vector<uint8_t> data, int len);
 
-// general functions
+// miscellaneous functions
+// TODO to sort
 int pattern_at_position_score(vector<uint8_t> data, vector<uint8_t> pattern, uint32_t position);
+
+char get_tetra_digit(const uint8_t val);
+
+string text_gsm_7_bit_decode(vector<uint8_t> data, const uint16_t len);
+string text_generic_8_bit_decode(vector<uint8_t> data, const uint16_t len);
+
+string location_nmea_decode(vector<uint8_t> data, const uint16_t len);
 
 #endif /* UTILS_H */

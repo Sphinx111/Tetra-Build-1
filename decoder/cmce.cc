@@ -30,7 +30,7 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
     string txt = "";
     uint32_t cid = 0;
 
-    bool print_flag = true;
+    bool b_complete_print_flag = true;
 
     uint32_t pos = 0;
     pdu_type = get_value(pdu, pos, 5);
@@ -98,7 +98,9 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
 
     case 0b01000:
         txt = "D-STATUS";
-        // TODO this pdu is handled by the SDS machine
+        cmce_sds_parse_d_status(pdu);                                           // this pdu is handled by the SDS sub-entity see 14.7.1.10
+        
+        b_complete_print_flag = false;
         break;
 
     case 0b01001:
@@ -120,7 +122,7 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
     case 0b01011:
         txt = "D-TX GRANTED";
         cmce_parse_d_tx_granted(pdu);
-
+        
         cid = get_value(pdu, pos, 14);
         pos += 14;
         break;
@@ -151,8 +153,9 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
 
     case 0b01111:
         txt = "D-SDS-DATA";
-        // TODO this pdu is handled by the SDS machine
-        print_flag = false;        
+        cmce_sds_parse_d_sds_data(pdu);                                         // this pdu is handled by the SDS sub-entity see 14.7.1.11
+        
+        b_complete_print_flag = false;        
         break;
 
     case 0b10000:
@@ -164,7 +167,7 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
         break;
     }
 
-    if (print_flag)
+    if (b_complete_print_flag)
     {
         printf("service_cmce: TN/FN/MN = %2d/%2d/%2d  %-20s  len=%3lu  cid=%u  ssi=%8u  usage_marker=%2u\n",
                g_time.tn,
@@ -175,6 +178,15 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
                cid,
                mac_address.ssi,
                mac_address.usage_marker);
+    }
+    else
+    {
+        printf("ser_cmce_sds: TN/FN/MN = %2d/%2d/%2d  %-20s  len=%3lu \n",
+               g_time.tn,
+               g_time.fn,
+               g_time.mn,
+               txt.c_str(),
+               pdu.size());
     }
 }
 

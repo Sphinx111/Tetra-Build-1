@@ -150,4 +150,110 @@ int pattern_at_position_score(vector<uint8_t> data, vector<uint8_t> pattern, uin
     return errors;
 }
 
+/**
+ * @brief Convert binary value to TETRA (external subscriber) digit
+ *
+ */
+
+ char get_tetra_digit(const uint8_t val)
+{
+    const char digits[14] = "0123456789*#+";
+    char res;
+
+    if (val < 13)
+    {
+        res = digits[val];
+    }
+    else
+    {
+        res = '?';
+    }
+
+    return res;
+}
+
+/**
+ * @brief Decode 7-bit alphabet 29.5.4.3
+ *
+ */
+
+string text_gsm_7_bit_decode(vector<uint8_t> data, const uint16_t len)
+{
+    // NOTE: { is a special char when we want to escape the character value
+    //                   0        10         20        30         40        50        60        70        80        90        100       110      120
+    //                   0123456789012345678901234567890123 4567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567
+    const string gsm7 = "@{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ !\"#{%&'()*+,-./0123456789:;<=>?{ABCDEFGHIJKLMNOPQRSTUVWXYZ{{{{{{abcdefghijklmnopqrstuvwxyz{{{{{";
+    string res = "";
+
+    for (uint16_t idx = 0; idx < len / 7; idx++)
+    {
+        uint8_t chr = get_value(data, idx * 7, 7);
+
+        char val = gsm7[chr];
+        if (val == '{')
+        {
+            char buf[16] = "";
+            sprintf(buf, "0x%02x", chr);
+            res += buf;
+        }
+        else
+        {
+            res += (char)chr;
+        }
+    }
+
+    return res;
+}
+
+/**
+ * @brief Decode 8-bit alphabets TODO very rough function only, doesn't check alphabet input type
+ *
+ */
+
+string text_generic_8_bit_decode(vector<uint8_t> data, const uint16_t len)
+{
+    string res = "";
+
+    for (uint16_t idx = 0; idx < len / 8; idx++)
+    {
+        uint8_t chr = get_value(data, idx * 8, 8);
+        if (isalnum(chr))
+        {
+            res += (char)chr;
+        }
+        else
+        {
+            char buf[16] = "";
+            sprintf(buf, "0x%02x", chr);
+            res += buf;
+        }
+    }
+
+    return res;
+}
+
+/**
+ * @brief NMEA location decode (NMEA 0183)
+ *        ASCII-8 plain text with CR/LF endline
+ *        with optional checksum separated by *
+ *
+ */
+
+string location_nmea_decode(vector<uint8_t> data, const uint16_t len)
+{
+    string res = "";
+
+    for (uint16_t idx = 0; idx < len / 8; idx++)
+    {
+        uint8_t chr = get_value(data, idx * 8, 8);
+
+        if ((chr != 10) && (chr != 13))                                         // skip CR/LF
+        {
+            res += (char)chr;
+        }
+    }
+
+    return res;
+}
+
 

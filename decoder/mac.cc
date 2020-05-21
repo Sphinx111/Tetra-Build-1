@@ -258,7 +258,7 @@ void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac
     case SCH_HD:
         // we are not in traffic mode
         pdu_type = get_value(data, 0, 2);
-        
+
         switch (pdu_type)
         {
         case 0b00:                                                              // MAC PDU structure for downlink (TMA) MAC-RESSOURCE
@@ -288,11 +288,11 @@ void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac
                 txt = "SYSINFO";
                 tm_sdu = mac_pdu_process_sysinfo(data);                         // TM-SDU (MLE data)
                 break;
-                
+
             case 0b01:                                                          // ACCESS-DEFINE see 21.4.4.3, no sdu
                 txt = "ACCESS-DEFINE";
                 break;
-                
+
             default:
                 txt = "RESERVED";
             }
@@ -300,7 +300,7 @@ void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac
 
         case 0b11:                                                              // MAC-D-BLOCK (TMA)
             sub_type = get_value(data, 2, 1);
-            
+
             if ((mac_logical_channel != STCH) && (mac_logical_channel != SCH_HD))
             {
                 txt = "MAC-D-BLCK";                                             // 21.4.1 not sent on SCH/HD or STCH
@@ -308,6 +308,7 @@ void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac
             }
             else
             {
+                txt = "MAC-ERROR";
                 printf("MAC error   : TN/FN/MN = %2d/%2d/%2d    supplementary block on channel %d\n", g_time.tn, g_time.fn, g_time.mn, mac_logical_channel);
             }
             break;
@@ -320,6 +321,8 @@ void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac
     default:
         break;
     }
+
+    //printf("%-10s : TN/FN/MN = %2d/%2d/%2d    dl_usage_marker=%d\n", txt.c_str(), g_time.tn, g_time.fn, g_time.mn, mac_state.downlink_usage_marker);
 
     if (tm_sdu.size() > 0)
     {
@@ -393,7 +396,7 @@ void tetra_dl::mac_pdu_process_aach(vector<uint8_t> pdu)
     }
     else                                                                        // frame 1-17
     {
-        if (header == 0)
+        if (header == 0b00)
         {
             mac_state.downlink_usage = COMMON_CONTROL;
         }
@@ -404,15 +407,19 @@ void tetra_dl::mac_pdu_process_aach(vector<uint8_t> pdu)
             case 0b000000:
                 mac_state.downlink_usage = UNALLOCATED;
                 break;
+
             case 0b000001:
                 mac_state.downlink_usage = ASSIGNED_CONTROL;
                 break;
+
             case 0b000010:
                 mac_state.downlink_usage = COMMON_CONTROL;
                 break;
+
             case 0b000011:
                 mac_state.downlink_usage = RESERVED;
                 break;
+
             default:
                 mac_state.downlink_usage = TRAFFIC;
                 mac_state.downlink_usage_marker = field1;                       // note: 3 < field1 <= 63
@@ -421,7 +428,15 @@ void tetra_dl::mac_pdu_process_aach(vector<uint8_t> pdu)
         }
     }
 
-    //if(mac_state.downlink_usage == TRAFFIC) printf("AACH        : TN/FN/MN = %2d/%2d/%2d                        burst=%d  marker=%d\n", g_time.tn, g_time.fn, g_time.mn, cur_burst_type, field1);
+    //if(mac_state.downlink_usage == TRAFFIC)
+    /*printf("AACH        : TN/FN/MN = %2d/%2d/%2d                        burst=%d  marker=%2u   field1 = %02u  field2 = %2u\n",
+           g_time.tn,
+           g_time.fn,
+           g_time.mn,
+           cur_burst_type,
+           mac_state.downlink_usage_marker,
+           field1,
+           field2);*/
 }
 
 /**
@@ -431,16 +446,15 @@ void tetra_dl::mac_pdu_process_aach(vector<uint8_t> pdu)
 
 vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> pdu)
 {
-    mac_address.address_type = 0;
-    mac_address.ssi          = 0;
-    mac_address.event_label  = 0;
-    mac_address.ussi         = 0;
-    mac_address.smi          = 0;
-    mac_address.usage_marker = 0;
+    // mac_address.address_type = 0;
+    // mac_address.ssi          = 0;
+    // mac_address.event_label  = 0;
+    // mac_address.ussi         = 0;
+    // mac_address.smi          = 0;
+    // mac_address.usage_marker = 0;
 
-    uint32_t pos = 2;
-    //uint8_t fill_bits = get_value(pdu, pos, 1);
-    pos += 1;
+    uint32_t pos = 2;                                                           // MAC pdu type
+    pos += 1;                                                                   // fill bit indication
     pos += 1;                                                                   // position of grant
     pos += 2;                                                                   // encryption mode
     pos += 1;                                                                   // random access flag
@@ -508,14 +522,22 @@ vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> pdu)
     }
 
     if (get_value(pdu, pos, 1))                                                 // power control flag
+    {
         pos += 1 + 4;
+    }
     else
+    {
         pos += 1;
+    }
 
     if (get_value(pdu, pos, 1))                                                 // slot granting flag
+    {
         pos += 1 + 8;
+    }
     else
+    {
         pos += 1;
+    }
 
     uint8_t flag = get_value(pdu, pos, 1);
     pos += 1;
@@ -598,10 +620,18 @@ vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> pdu)
 vector<uint8_t> tetra_dl::mac_pdu_process_sysinfo(vector<uint8_t> pdu)
 {
     uint32_t pos = 4;
-    pos += 12;                                                                  // MCCH frequency
-    pos += 4;                                                                   // MCCH band frequency
-    pos += 2;                                                                   // offset
-    pos += 3;                                                                   // duplex spacing;
+    uint16_t main_carrier = get_value(pdu, pos, 12);                            // main carrier frequency (1 / 25 kHz)
+    pos += 12;
+
+    uint8_t band_frequency = get_value(pdu, pos, 4);                            // frequency band (4 -> 400 MHz)
+    pos += 4;
+
+    uint8_t offset = get_value(pdu, pos, 2);                                    // offset (0, 1, 2, 3)-> (0, +6.25, -6.25, +12.5 kHz)
+    pos += 2;
+
+    //uint8_t duplex_spacing = get_value(pdu, pos, 3);                            // duplex spacing;
+    pos += 3;
+
     pos += 1;                                                                   // reverse operation
     pos += 2;                                                                   // number of common secondary control channels in use
     pos += 3;                                                                   // MS_TXPWR_MAX_CELL
@@ -622,6 +652,13 @@ vector<uint8_t> tetra_dl::mac_pdu_process_sysinfo(vector<uint8_t> pdu)
 
     pos += 2;                                                                   // optional field flag
     pos += 20;                                                                  // option value, always present
+
+    // calculate cell frequencies
+
+    const int32_t duplex[4] = {0, 6250, -6250, 12500};                          // 21.4.4.1
+
+    g_cell_infos.downlink_frequency = (int32_t)band_frequency * 100000000 + (int32_t)main_carrier * 25000 + duplex[offset];
+    g_cell_infos.uplink_frequency   = 0;                                        // TODO 
 
     vector<uint8_t> sdu = vector_extract(pdu, pos, 42);                         // TM-SDU (MLE data) clause 18
     return sdu;
@@ -698,7 +735,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(vector<uint8_t> pdu)
     vector<uint8_t> sdu;
     if (length > 0)
     {
-        sdu = vector_extract(pdu, pos, pdu.size()-pos); // (length*8 - pos));
+        sdu = vector_extract(pdu, pos, pdu.size() - pos);
     }
 
     return sdu;
@@ -761,13 +798,14 @@ vector<uint8_t> tetra_dl::mac_pdu_process_sync(vector<uint8_t> pdu)
 
     if ((g_time.fn == 18) && ((g_time.mn + g_time.tn) % 4 == 3))
     {
-        printf("BSCH        : TN/FN/MN = %2d/%2d/%2d  MAC-SYNC              ColorCode=%3d  MCC/MNC = %3d/ %3d  burst=%d\n",
+        printf("BSCH        : TN/FN/MN = %2u/%2u/%2u  MAC-SYNC              ColorCode=%3d  MCC/MNC = %3u/ %3u  Freq= %10.6f MHz  burst=%u\n",
                g_time.tn,
                g_time.fn,
                g_time.mn,
                g_cell_infos.color_code,
                g_cell_infos.mcc,
                g_cell_infos.mnc,
+               g_cell_infos.downlink_frequency / 1.0e6,
                cur_burst_type);
     }
 

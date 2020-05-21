@@ -134,7 +134,7 @@ void tetra_dl::report_add(string field, vector<uint8_t> vec)
     {
         uint8_t val = get_value(vec, pos, 8);
         pos += 8;
-        
+
         if (cnt > 0)
         {
             sprintf(buf, " %02x", val);

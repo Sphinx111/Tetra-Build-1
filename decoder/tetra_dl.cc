@@ -45,11 +45,13 @@ tetra_dl::tetra_dl()
     g_time.fn = 1;
 
     // initialize cell informations
-    g_cell_infos.color_code      = 0;
-    g_cell_infos.mcc             = 0;
-    g_cell_infos.mnc             = 0;
-    g_cell_infos.scrambling_code = 0;
-    g_cell_informations_acquired = false;
+    g_cell_infos.color_code         = 0;
+    g_cell_infos.mcc                = 0;
+    g_cell_infos.mnc                = 0;
+    g_cell_infos.scrambling_code    = 0;
+    g_cell_infos.downlink_frequency = 0;
+    g_cell_infos.uplink_frequency   = 0;
+    g_cell_informations_acquired    = false;
 
     /*
      * Initialize Viterbi coder/decoder for MAC

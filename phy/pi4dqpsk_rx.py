@@ -70,7 +70,7 @@ class pi4dqpsk_rx(gr.top_block, Qt.QWidget):
         self.nfilts = nfilts = 32
         self.samp_rate = samp_rate = 2000000
         self.rrc_taps = rrc_taps = firdes.root_raised_cosine(nfilts, nfilts, 1.0/float(sps), 0.35, 11*sps*nfilts)
-        self.ppm_corr = ppm_corr = -2
+        self.ppm_corr = ppm_corr = 0
         self.frequency_mhz = frequency_mhz = 467.5625
         self.freq_offset_khz = freq_offset_khz = 50
         self.decim = decim = 32
@@ -84,7 +84,7 @@ class pi4dqpsk_rx(gr.top_block, Qt.QWidget):
         ##################################################
         # Blocks
         ##################################################
-        self._ppm_corr_range = Range(-20, 15, 1, -2, 200)
+        self._ppm_corr_range = Range(-20, 15, 1, 0, 200)
         self._ppm_corr_win = RangeWidget(self._ppm_corr_range, self.set_ppm_corr, 'PPM correction', "counter_slider", int)
         self.top_grid_layout.addWidget(self._ppm_corr_win, 2, 0, 1, 2)
         for r in range(2, 3):

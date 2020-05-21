@@ -117,6 +117,9 @@ struct tetra_cell_infos_t {
     uint32_t mcc;                                                               ///< Cell MCC 
     uint32_t mnc;                                                               ///< Cell MNC
     uint32_t scrambling_code;                                                   ///< Cell Scrambling code
+
+    int32_t downlink_frequency;                                                 ///< Downlink frequency [Hz]
+    int32_t uplink_frequency;                                                   ///< Uplink frequency [Hz]
 };
 
 /**

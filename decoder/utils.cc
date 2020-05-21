@@ -128,6 +128,23 @@ void print_vector(vector<uint8_t> data, int len)
 }
 
 /**
+ * @brief Convert binary vector to text string 0/1
+ *
+ */
+
+string vector_to_string(vector<uint8_t> data, int len)
+{
+    string res = "";
+
+    for (int idx = 0; idx < len; idx++)
+    {
+        res += (char)(data[idx] + '0');
+    }
+    
+    return res;
+}
+
+/**
  * @brief Return pattern/data comparison errors count at position in data vector
  *
  * @param[in] data      Vector to look in from pattern

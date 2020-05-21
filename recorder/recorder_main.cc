@@ -344,7 +344,8 @@ static void parse_pdu(const char * data, FILE * fd_log)
             (!pdu.compare("D-CONNECT ACK")) ||
             (!pdu.compare("D-SETUP")) ||
             (!pdu.compare("D-STATUS")) ||
-            (!pdu.compare("D-SDS-DATA")))
+            (!pdu.compare("D-TX GRANTED")) ||
+            (!pdu.compare("D-TX CEASED")))
         {
             // register new cid and attach ssi and usage marker
             json_object_object_get_ex(jobj, "call identifier", &tmp);
@@ -366,7 +367,7 @@ static void parse_pdu(const char * data, FILE * fd_log)
         else if ((!pdu.compare("D-SDS-DATA")) ||
                  (!pdu.compare("D-STATUS")))                                    // SDS messages
         {
-            // do nothing for now
+            scr_print_middle(data);                                             // note that there is two lines printed for every message (for analyze, we provide full hexa + decoded message)
         }
         else
         {

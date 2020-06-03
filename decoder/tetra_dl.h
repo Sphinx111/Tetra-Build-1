@@ -253,6 +253,12 @@ public:
     void cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t len);
     void cmce_sds_parse_simple_text_messaging(vector<uint8_t> pdu, const uint16_t len);
     void cmce_sds_parse_simple_location_system(vector<uint8_t> pdu, const uint16_t len);
+    void cmce_sds_parse_text_messaging_with_sds_tl(vector<uint8_t> pdu);
+    void cmce_sds_parse_location_system_with_sds_tl(vector<uint8_t> pdu);
+
+    // CMCE SDS LIP service
+    void cmce_sds_service_location_information_protocol(vector<uint8_t> pdu);
+    void cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu);
     
     // U-plane
     void service_u_plane(vector<uint8_t> data, mac_logical_channel_t mac_logical_channel); // U-plane traffic
@@ -269,6 +275,7 @@ public:
     void report_add(string field, uint16_t val);
     void report_add(string field, uint32_t val);
     void report_add(string field, uint64_t val);
+    void report_add(string field, double val);
     void report_add(string field, vector<uint8_t> vec);
     void report_add_compressed(string field, const unsigned char * binary_data, uint16_t data_len);
     void report_send();

@@ -44,6 +44,8 @@
  *    usage_marker     (see 21.4.3.1 MAC-RESOURCE PDU address = SSI 24 bits + usage marker 6 bits (2^6=64)
  *                     possible values in usage marker 21.4.7 -> reserved 000000, 000001, 000010, 000011
  *
+ * Filtering log for SDS: sed -n '/SDS/ p' log.txt > out.txt
+ *
  */
 
 static vector<call_identifier_t> cid_list;                                      ///< call identifiers list

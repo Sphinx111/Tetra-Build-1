@@ -273,4 +273,29 @@ string location_nmea_decode(vector<uint8_t> data, const uint16_t len)
     return res;
 }
 
+/**
+ * @brief Decode floating point value coded as 2's complement integer
+ *
+ */
 
+double utils_decode_integer_twos_complement(uint32_t data, uint8_t n_bits, double mult)
+{
+    double res;
+    
+    uint32_t val = data;
+    
+    if (val & (1 << (n_bits - 1)))                                              // negative value, take the 2's complement
+    {
+        val = ~val;                                                             // flip bits
+        val += 1;                                                               // add one    
+        val &= (0xFFFFFFFF >> (32 - n_bits));                                   // mask bits
+
+        res = val * (-mult) / (double)(1 << (n_bits - 1));
+    }
+    else                                                                        // positive value
+    {
+        res = val * mult / (double)(1 << (n_bits - 1));
+    }
+
+    return res;
+}

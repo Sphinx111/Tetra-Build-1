@@ -168,7 +168,7 @@ void tetra_dl::cmce_sds_parse_d_status(vector<uint8_t> pdu)
             pos += 4;
         }
 
-        if ((digits_count % 2) != 0)                                        // check if we have a dummy digit
+        if ((digits_count % 2) != 0)                                            // check if we have a dummy digit
         {
             pos += 4;
         }
@@ -193,7 +193,8 @@ void tetra_dl::cmce_sds_parse_d_status(vector<uint8_t> pdu)
 void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len)
 {
     uint32_t pos = 0;
-
+    vector<uint8_t> sdu;
+    
     uint8_t protocol_id = get_value(pdu, pos, 8);
     pos += 8;
     report_add("protocol id", protocol_id);                                     // Note that report has been opened and will be send cmce_sds_parse_d_sds_data function
@@ -251,8 +252,9 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
             break;
 
         case 0b00001010:
-            report_add("protocol info", "location information protocol");
-            // 29.5.12
+            report_add("protocol info", "location information protocol");       // 29.5.12 - TS 100 392-18 v1.7.2
+            sdu = vector_extract(pdu, pos, len - pos);
+            cmce_sds_service_location_information_protocol(sdu);                // LIP service
             break;
 
         case 0b00001011:
@@ -329,12 +331,16 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
 /**
  * @brief Parser sub protocol SDS-TRANFER
  *
+ * {"service":"CMCE","pdu":"D-SDS-DATA","tn":1,"fn":2,"mn":43,"ssi":299906,"usage marker":0,"calling party type identifier":1,"calling party ssi":401101,"sds type identifier":3,"protocol id":130,"message type":0,"sds-pdu":"SDS-TRANSFER","message reference":227,"infos":"01 f0 80 00 c2 0c 12 07 29 05 99 05 82 01 0e 00 00 00"}
+ * {"service":"CMCE","pdu":"D-SDS-DATA","tn":1,"fn":2,"mn":43,"ssi":299906,"usage marker":0,"hex":"82 00 e3 01 f0 80 00 c2 0c 12 07 29 05 99 05 82 01 0e 00 00 00"}
+ *
  */
 
 void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t len)
 {
-    uint32_t pos = 8;                                                           // protocol id
-    pos += 4;                                                                   // message type
+    uint32_t pos = 0;
+    uint8_t protocol_id = get_value(pdu, pos, 8);                               // protocol id
+    pos += 4;                                                                   // message type (was SDS-TRANSFER)
     pos += 2;                                                                   // delivery report request
     pos += 1;                                                                   // service selection / short form report
 
@@ -403,7 +409,53 @@ void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t
         }
     }
 
-    report_add("infos", vector_extract(pdu, pos, len - pos));                   // remaining part of pdu is message
+    vector<uint8_t> sdu = vector_extract(pdu, pos, len - pos);
+
+    switch (protocol_id)                                                        // table 29.21
+    {
+    case 0b10000010:                                                            // 29.5.3
+        cmce_sds_parse_text_messaging_with_sds_tl(sdu);
+        report_add("protocol info", "text messaging (SDS-TL)");
+        break;
+        
+    case 0b10000011:                                                            // 29.5.6
+        cmce_sds_parse_location_system_with_sds_tl(sdu);
+        report_add("protocol info", "location system (SDS-TL)");
+        break;
+
+    case 0b10000100:                                                            // Wireless Datagram Protocol WAP - 29.5.8
+        report_add("protocol info", "WAP (SDS-TL)");
+        break;
+        
+    case 0b10000101:                                                            // Wireless Control Message Protocol WCMP - 29.5.8
+        report_add("protocol info", "WCMP (SDS-TL)");
+        break;
+        
+    case 0b10000110:                                                            // Managed DMO M-DMO - 29.5.1
+        report_add("protocol info", "M-DMO (SDS-TL)");
+        break;
+        
+    case 0b10001000:                                                            // end-to-end encrypted message
+        report_add("protocol info", "end-to-end encrypted message (SDS-TL)");
+        break;
+        
+    case 0b10001001:                                                            // 29.5.3
+        report_add("protocol info", "immediate text messaging (SDS-TL)");
+        break;
+        
+    case 0b10001010:                                                            // UDH - 29.5.9
+        report_add("protocol info", "message with user-data header");
+        break;
+        
+    case 0b10001100:                                                            // 29.5.14
+        report_add("protocol info", "concatenated sds message (SDS-TL)");
+        break;
+        
+    default:
+        break;
+    }
+
+    report_add("infos", sdu);                                                   // remaining part of pdu is sdu since we may be managed by SDS-TL
 }
 
 /**
@@ -420,6 +472,48 @@ void tetra_dl::cmce_sds_parse_simple_text_messaging(vector<uint8_t> pdu, const u
     pos += 7;
     report_add("text coding scheme", text_coding_scheme);
 
+    string txt = "";
+    if (text_coding_scheme == 0b0000000)                                        // GSM 7-bit alphabet - see 29.5.4.3
+    {
+        txt = text_gsm_7_bit_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        report_add("infos", txt);
+    }
+    else if (text_coding_scheme <= 0b0011001)                                   // 8 bit alphabets
+    {
+        txt = text_generic_8_bit_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        report_add("infos", txt);
+    }
+    else
+    {
+        report_add("infos", vector_extract(pdu, pos, len - pos));               // hexadecimal report
+    }
+}
+
+/**
+ * @brief Parse text messaging with SDS-TL - see 29.5.3
+ *
+ */
+
+void tetra_dl::cmce_sds_parse_text_messaging_with_sds_tl(vector<uint8_t> pdu)
+{
+    // Table 28.29 - 29.5.3.3
+    uint16_t len = pdu.size();
+    uint32_t pos = 0;
+    
+    uint8_t timestamp_flag = get_value(pdu, pos, 1);                            // timestamp flag
+    pos += 1;
+    
+    uint8_t text_coding_scheme = get_value(pdu, pos, 7);
+    pos += 7;
+    report_add("text coding scheme", text_coding_scheme);
+
+    if (timestamp_flag)
+    {
+        uint32_t timestamp = get_value(pdu, pos, 24);
+        pos += 24;
+        report_add("timestamp", timestamp);
+    }
+    
     string txt = "";
     if (text_coding_scheme == 0b0000000)                                        // GSM 7-bit alphabet - see 29.5.4.3
     {
@@ -460,8 +554,69 @@ void tetra_dl::cmce_sds_parse_simple_location_system(vector<uint8_t> pdu, const 
         report_add("infos", txt);
         break;
 
+    case 0b00000001:                                                            // TODO RTCM RC-104 - see Annex L
+        //txt = location_rtcm_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        report_add("infos", vector_extract(pdu, pos, len - pos));
+        break;
+
+    case 0b10000000:                                                            // Proprietary. Notes from SQ5BPF: some proprietary system seen in the wild in Spain, Itlay and France some speculate it's either from DAMM or SEPURA
+        report_add("infos", vector_extract(pdu, pos, len - pos));
+        break;
+
     default:
         report_add("infos", vector_extract(pdu, pos, len - pos));
         break;
     }
 }
+
+/**
+ * @brief Parse SDS simple location system - see 29.5.5
+ *
+ */
+
+void tetra_dl::cmce_sds_parse_location_system_with_sds_tl(vector<uint8_t> pdu)
+{
+    uint16_t len = pdu.size();
+    uint32_t pos = 0;
+
+    uint8_t location_system_coding = get_value(pdu, pos, 8);
+    pos += 8;
+    report_add("location coding system", location_system_coding);
+
+    string txt = "";
+
+    switch (location_system_coding)
+    {
+    case 0b00000000:                                                            // NMEA 0183 - see Annex L
+        txt = location_nmea_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        report_add("infos", txt);
+        break;
+
+    case 0b00000001:                                                            // TODO RTCM RC-104 - see Annex L
+        //txt = location_rtcm_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        report_add("infos", vector_extract(pdu, pos, len - pos));
+        break;
+
+    case 0b10000000:                                                            // Proprietary. Notes from SQ5BPF: some proprietary system seen in the wild in Spain, Itlay and France some speculate it's either from DAMM or SEPURA
+        report_add("infos", vector_extract(pdu, pos, len - pos));
+        break;
+
+    default:
+        report_add("infos", vector_extract(pdu, pos, len - pos));
+        break;
+    }
+}
+
+/**
+ * @brief LIP protocol (stack built over SDS) - TS 100 392-18 - v1.7.3
+ *
+ * TODO move to another file
+ *
+ */
+
+// void tetra_dl::cmce_sds_service_location_information_protocol(vector<uint8_t> pdu)
+// {
+//     uint16_t pos = 8;                                                           // protocol ID of Type 4 block
+
+    
+// }

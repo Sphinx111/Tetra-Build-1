@@ -46,4 +46,6 @@ string text_generic_8_bit_decode(vector<uint8_t> data, const uint16_t len);
 
 string location_nmea_decode(vector<uint8_t> data, const uint16_t len);
 
+double utils_decode_integer_twos_complement(uint32_t data, uint8_t n_bits, double mult);
+
 #endif /* UTILS_H */

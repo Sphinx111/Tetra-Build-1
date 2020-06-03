@@ -119,6 +119,16 @@ void tetra_dl::report_add(string field, uint64_t val)
 }
 
 /**
+ * @brief Add double data to report
+ *
+ */
+
+void tetra_dl::report_add(string field, double val)
+{
+    json_object_object_add(jobj, field.c_str(), json_object_new_double(val));
+}
+
+/**
  * @brief Add vector of integer data to report as hexadecimal string.
  *        Note that 0x is omitted to preserve space
  *

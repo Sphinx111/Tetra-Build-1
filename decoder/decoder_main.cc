@@ -53,7 +53,6 @@ static void sigint_handler(int val)
 
 int main(int argc, char * argv[])
 {
-    //signal(SIGINT, sigint_handler);
     struct sigaction sa;
     sa.sa_handler = sigint_handler;
     sigaction(SIGINT, &sa, 0);
@@ -62,7 +61,7 @@ int main(int argc, char * argv[])
     int udp_port_tx = 42100;                                                    // UDP TX port (ie. where to send Json data)
 
     const int FILENAME_LEN = 256;
-    char opt_filename_in[FILENAME_LEN] = "";                                    // input bits filename
+    char opt_filename_in[FILENAME_LEN]  = "";                                   // input bits filename
     char opt_filename_out[FILENAME_LEN] = "";                                   // output bits filename
 
     int program_mode = STANDARD_MODE;
@@ -95,8 +94,8 @@ int main(int argc, char * argv[])
                    "Options:\n"
                    "  -r <UDP socket> receiving from phy [default port is 42000]\n"
                    "  -t <UDP socket> sending Json data [default port is 42100]\n"
-                   "  -f <file> replay data from binary file instead of UDP\n"
-                   "  -d <file> record data to binary file (can be replayed with -f option)\n"
+                   "  -i <file> replay data from binary file instead of UDP\n"
+                   "  -o <file> record data to binary file (can be replayed with -i option)\n"
                    "  -h print this help\n\n");
             exit(EXIT_FAILURE);
             break;
@@ -176,7 +175,7 @@ int main(int argc, char * argv[])
 
         if (fd_input < 0)
         {
-            perror("Couldn't create input socket");
+            fprintf(stderr, "Couldn't create input socket");
             exit(EXIT_FAILURE);
         }
     }
@@ -190,6 +189,7 @@ int main(int argc, char * argv[])
 
         if (errno == EINTR)
         {
+            fprintf(stderr, "EINTR\n");                                         // print is required for ^C to be handled
             break;
         }
         else if (bytes_read < 0)

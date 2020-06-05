@@ -118,7 +118,6 @@ void tetra_dl::cmce_sds_parse_d_sds_data(vector<uint8_t> pdu)
         report_add("hex", sdu);
         report_send();
     }
-
 }
 
 /**
@@ -192,9 +191,15 @@ void tetra_dl::cmce_sds_parse_d_status(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len)
 {
+    if (pdu.size() < len)
+    {
+        report_add("type4", "invalid pdu");
+        return;                                                                 // invalid PDU
+    }
+
     uint32_t pos = 0;
     vector<uint8_t> sdu;
-    
+
     uint8_t protocol_id = get_value(pdu, pos, 8);
     pos += 8;
     report_add("protocol id", protocol_id);                                     // Note that report has been opened and will be send cmce_sds_parse_d_sds_data function
@@ -417,7 +422,7 @@ void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t
         cmce_sds_parse_text_messaging_with_sds_tl(sdu);
         report_add("protocol info", "text messaging (SDS-TL)");
         break;
-        
+
     case 0b10000011:                                                            // 29.5.6
         cmce_sds_parse_location_system_with_sds_tl(sdu);
         report_add("protocol info", "location system (SDS-TL)");
@@ -426,31 +431,31 @@ void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t
     case 0b10000100:                                                            // Wireless Datagram Protocol WAP - 29.5.8
         report_add("protocol info", "WAP (SDS-TL)");
         break;
-        
+
     case 0b10000101:                                                            // Wireless Control Message Protocol WCMP - 29.5.8
         report_add("protocol info", "WCMP (SDS-TL)");
         break;
-        
+
     case 0b10000110:                                                            // Managed DMO M-DMO - 29.5.1
         report_add("protocol info", "M-DMO (SDS-TL)");
         break;
-        
+
     case 0b10001000:                                                            // end-to-end encrypted message
         report_add("protocol info", "end-to-end encrypted message (SDS-TL)");
         break;
-        
+
     case 0b10001001:                                                            // 29.5.3
         report_add("protocol info", "immediate text messaging (SDS-TL)");
         break;
-        
+
     case 0b10001010:                                                            // UDH - 29.5.9
         report_add("protocol info", "message with user-data header");
         break;
-        
+
     case 0b10001100:                                                            // 29.5.14
         report_add("protocol info", "concatenated sds message (SDS-TL)");
         break;
-        
+
     default:
         break;
     }
@@ -499,10 +504,10 @@ void tetra_dl::cmce_sds_parse_text_messaging_with_sds_tl(vector<uint8_t> pdu)
     // Table 28.29 - 29.5.3.3
     uint16_t len = pdu.size();
     uint32_t pos = 0;
-    
+
     uint8_t timestamp_flag = get_value(pdu, pos, 1);                            // timestamp flag
     pos += 1;
-    
+
     uint8_t text_coding_scheme = get_value(pdu, pos, 7);
     pos += 7;
     report_add("text coding scheme", text_coding_scheme);
@@ -513,7 +518,7 @@ void tetra_dl::cmce_sds_parse_text_messaging_with_sds_tl(vector<uint8_t> pdu)
         pos += 24;
         report_add("timestamp", timestamp);
     }
-    
+
     string txt = "";
     if (text_coding_scheme == 0b0000000)                                        // GSM 7-bit alphabet - see 29.5.4.3
     {
@@ -618,5 +623,5 @@ void tetra_dl::cmce_sds_parse_location_system_with_sds_tl(vector<uint8_t> pdu)
 // {
 //     uint16_t pos = 8;                                                           // protocol ID of Type 4 block
 
-    
+
 // }

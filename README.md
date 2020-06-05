@@ -98,7 +98,30 @@ Usage
 
 Open 3 shells in the 3 folders:
 * In decoder one run `./decoder`
+
+```sh
+Usage: ./decoder [OPTIONS]
+
+Options:
+  -r <UDP socket> receiving from phy [default port is 42000]
+  -t <UDP socket> sending Json data [default port is 42100]
+  -i <file> replay data from binary file instead of UDP
+  -o <file> record data to binary file (can be replayed with -i option)
+  -h print this help
+```
+
 * In recorder one run `./recorder`
+
+```sh
+Usage: ./recorder [OPTIONS]
+
+Options:
+  -r <UDP socket> receiving Json data from decoder [default port is 42100]
+  -i <file> replay data from Json text file instead of UDP
+  -o <file> to record Json data in different text file [default file name is 'log.txt'] (can be replayed with -i option)
+  -h print this help
+```
+
 * In phy run `./pi4dqpsk_rx.py` and tunes the frequency (and eventually the baseband offset which may be positive or negative)
 
 Then you should see frames in `decoder`.

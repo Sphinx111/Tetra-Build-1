@@ -17,7 +17,7 @@
  *
  */
 #include "window.h"
-#include "recorder.h"
+#include "cid.h"
 #include "call_identifier.h"
 
 #ifdef WITH_NCURSES

@@ -16,10 +16,12 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef RECORDER_H
-#define RECORDER_H
+#ifndef CID_H
+#define CID_H
 #include <cstdint>
 #include <string>
+#include <vector>
+
 
 using namespace::std;
 
@@ -35,6 +37,9 @@ struct ssi_t {
 
 class call_identifier_t;                                                        // forward declaration
 
+void cid_init();
 call_identifier_t * get_cid(int index);
+void cid_clean();
+void cid_parse_pdu(const char * data, FILE * fd_log);
 
-#endif /* RECORDER_H */
+#endif /* CID_H */

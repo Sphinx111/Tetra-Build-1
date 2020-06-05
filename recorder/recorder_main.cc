@@ -20,13 +20,10 @@
 #include <vector>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include <json-c/json.h>
-#include <json-c/json_util.h>
-#include "base64.h"
-#include <zlib.h>
-
-#include "recorder.h"
-#include "call_identifier.h"
+#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include "cid.h"
 #include "window.h"
 
 /*
@@ -39,6 +36,10 @@
  *   2020-05-08  LT  0.1  Updated for Json input
  *
  * NOTES:
+ *   - output log file is always generated, default name is 'log.txt'
+ *   - output log files can be replayed with option -i
+ *
+ * MISCELLANEOUS:
  *    ssi              Short Suscriber Identity, identify all devices
  *    call_identifier  Call identifier, all communication are based on this
  *    usage_marker     (see 21.4.3.1 MAC-RESOURCE PDU address = SSI 24 bits + usage marker 6 bits (2^6=64)
@@ -47,226 +48,6 @@
  * Filtering log for SDS: sed -n '/SDS/ p' log.txt > out.txt
  *
  */
-
-static vector<call_identifier_t> cid_list;                                      ///< call identifiers list
-
-/**
- * @brief API to access to CID list from other modules
- *
- */
-
-call_identifier_t * get_cid(int index)
-{
-    call_identifier_t * res = NULL;
-
-    if (cid_list.size() > 0)
-    {
-        if (index < (int)cid_list.size())
-        {
-            res = &cid_list[index];
-        }
-    }
-
-    return res;
-}
-
-static const int TIME_WAIT_MS = 50;                                             // udp port maximum waiting time [ms]
-static const int UDP_PORT     = 42100;                                          // rx UDP port
-
-static int fd_sock_rx;                                                          // rx socket handle
-
-/**
- * @brief Returns true if CID exists is in list
- *
- */
-
-static bool cid_exists(uint32_t cid)
-{
-    bool b_exists = false;
-
-    for (size_t cnt = 0; cnt < cid_list.size(); cnt++)
-    {
-        if (cid_list[cnt].m_cid == cid)
-        {
-            b_exists = true;
-            break;
-        }
-    }
-
-    return b_exists;
-}
-
-/**
- * @brief Return CID index in list or ((size_t)-1) if not.
- *        This last value shouldn't be used since we have to check
- *        if the CID exists before
- *
- */
-
-static size_t cid_index(uint32_t cid)
-{
-    size_t index = -1;
-
-    for (size_t cnt = 0; cnt < cid_list.size(); cnt++)
-    {
-        if (cid_list[cnt].m_cid == cid)
-        {
-            index = cnt;
-            break;
-        }
-    }
-
-    return index;
-}
-
-/**
- * @brief Return CID index in list for a given usage marker or ((size_t)-1) if there is none associated.
- *
- */
-
-static bool cid_index_by_usage_marker(uint8_t usage_marker, size_t * index)
-{
-    bool ret = false;
-
-    for (size_t cnt = 0; cnt < cid_list.size(); cnt++)
-    {
-        if (cid_list[cnt].m_usage_marker == usage_marker)
-        {
-            *index = cnt;
-            ret = true;
-            break;
-        }
-    }
-
-    return ret;
-}
-
-/**
- * @brief Add CID in list if not already there
- *
- */
-
-static void cid_add(uint32_t cid)
-{
-    if (!cid_exists(cid))
-    {
-        cid_list.push_back(call_identifier_t(cid));
-    }
-}
-
-/**
- * @brief Associate a SSI to a given CID. Add the CID is it doesn't exists.
- *        Update last seen SSI time.
- *
- */
-
-static void add_ssi_to_cid(uint32_t cid, uint32_t ssi)
-{
-    if (ssi <= 0) return;
-
-    if (!cid_exists(cid))
-    {
-        cid_add(cid);
-    }
-
-    size_t index = cid_index(cid);
-
-    // check if ssi already exists in cid list
-    bool b_exists = false;
-
-    for (size_t cnt = 0; cnt < cid_list[index].m_ssi.size(); cnt++)
-    {
-        if (cid_list[index].m_ssi[cnt].ssi == ssi)
-        {
-            time(&cid_list[index].m_ssi[cnt].last_seen);                        // SSI exists, update its last seen time
-            b_exists = true;
-            break;
-        }
-    }
-
-    if (!b_exists)                                                              // if not exists, add new ssi to list
-    {
-        ssi_t new_ssi;
-        new_ssi.ssi = ssi;
-        time(&new_ssi.last_seen);
-        cid_list[index].m_ssi.push_back(new_ssi);
-    }
-}
-
-/**
- * @brief Update CID usage marker
- *
- * TODO check CID value to ensure CID is a valid number
- *
- */
-
-static void cid_update_usage_marker(uint32_t cid, uint8_t usage_marker)
-{
-    if (!cid_exists(cid))                                                       // if cid doesn't exists, create it
-    {
-        cid_add(cid);
-    }
-
-    size_t index = cid_index(cid);
-    cid_list[index].update_usage_marker(usage_marker);
-}
-
-/**
- * @brief Release a given CID from list
- *
- */
-
-static void cid_release(uint32_t cid)
-{
-    if (!cid_exists(cid)) return;
-
-    for (vector<call_identifier_t>::iterator it = cid_list.begin(); it != cid_list.end();)
-    {
-        if ((*it).m_cid == cid)
-        {
-            it = cid_list.erase(it);                                            // erase current id and get pointer to next one
-        }
-        else
-        {
-            ++it;                                                               // go to next element
-        }
-    }
-}
-
-/**
- * @brief Clean up CID/SSI with their last seen time
- *
- * TODO to finish and test in class_itentifier_t
- *
- */
-
-static void cid_clean_up()
-{
-    time_t now;
-    time(&now);
-
-    for (size_t idx = 0; idx < cid_list.size(); idx++)
-    {
-        cid_list[idx].clean_up();
-    }
-}
-
-/**
- * @brief Send traffic speech frame to a CID identified by a given usage marker
- *
- */
-
-static void send_traffic_to_cid_by_usage_marker(uint8_t usage_marker, const char * data, uint32_t len)
-{
-    if (usage_marker > 63) return;                                              // only values from 0-63 are relevant for TETRA
-
-    size_t index;
-
-    if (cid_index_by_usage_marker(usage_marker, &index))
-    {
-        cid_list[index].push_traffic(data, len);                                // push traffic to this cid
-    }
-}
 
 #if 0
 static void push_traffic(const char * data, uint32_t len, uint8_t usage_marker)
@@ -281,142 +62,14 @@ static void push_traffic(const char * data, uint32_t len, uint8_t usage_marker)
 #endif
 
 /**
- * @brief Main function which process Json traffic and associate SSI, CID, etc...
- *
- * WARNING: D-INFO PDU mustn't be used to allocate a call id (see p. 136)
- *
- */
-
-static void parse_pdu(const char * data, FILE * fd_log)
-{
-    struct json_object * jobj = json_tokener_parse(data);                       // parse informations from buffer
-
-    if (jobj == NULL) return;                                                   // can't parse Json
-
-    struct json_object * tmp;
-
-    // extract data common to all pdu
-    json_object_object_get_ex(jobj, "service", &tmp);
-    string service = json_object_get_string(tmp);
-
-    json_object_object_get_ex(jobj, "pdu", &tmp);
-    string pdu = json_object_get_string(tmp);
-
-    json_object_object_get_ex(jobj, "usage marker", &tmp);
-    uint8_t usage_marker = (uint8_t)json_object_get_int(tmp);
-
-    json_object_object_get_ex(jobj, "ssi", &tmp);
-    uint32_t ssi = (uint32_t)json_object_get_int(tmp);
-
-    bool b_log = true;
-
-    if (!service.compare("MAC"))                                                // MAC service (don't print)
-    {
-        b_log = false;                                                          // too much packets to log
-    }
-    else if (!service.compare("UPLANE"))                                        // traffic speech frame
-    {
-
-        json_object_object_get_ex(jobj, "uzsize", &tmp);                        // uncompressed frame length 2 * 690 + 1 bytes
-        uint64_t zlib_uncomp_size = json_object_get_int(tmp);
-
-        json_object_object_get_ex(jobj, "zsize", &tmp);                         // compressed frame length (before B64 since B64 add overhead)
-        uint64_t zlib_comp_size = json_object_get_int(tmp);
-
-        json_object_object_get_ex(jobj, "frame", &tmp);                         // zlib + B64 frame
-        string frame = json_object_get_string(tmp);
-
-        const int BUFSIZE = 4096;
-
-        // base64 decode
-        unsigned char buf_b64out[BUFSIZE] = {0};
-        //uint32_t len_out =
-        b64_decode((const unsigned char *)frame.c_str(), frame.length(), buf_b64out);
-
-        // zlib uncompress
-        char buf_zlib_out[BUFSIZE] = {0};
-        int ret = uncompress((Bytef *)buf_zlib_out, &zlib_uncomp_size, (Bytef *)buf_b64out, zlib_comp_size);
-
-        if (!ret) send_traffic_to_cid_by_usage_marker(usage_marker, buf_zlib_out, zlib_uncomp_size); // process it
-    }
-    else                                                                        // other services
-    {
-        if ((!pdu.compare("D-ALERT")) ||
-            (!pdu.compare("D-CONNECT")) ||
-            (!pdu.compare("D-CONNECT ACK")) ||
-            (!pdu.compare("D-SETUP")) ||
-            (!pdu.compare("D-STATUS")) ||
-            (!pdu.compare("D-TX GRANTED")) ||
-            (!pdu.compare("D-TX CEASED")))
-        {
-            // register new cid and attach ssi and usage marker
-            json_object_object_get_ex(jobj, "call identifier", &tmp);
-            uint32_t cid = (uint32_t)json_object_get_int(tmp);
-
-            cid_update_usage_marker(cid, usage_marker);                         // CID will be added to list if it doesn't exists yet
-            add_ssi_to_cid(cid, ssi);
-            scr_update(data);
-        }
-        else if (!pdu.compare("D-RELEASE"))                                     // || (!pdu.compare("D-TX WAIT")))
-        {
-            // release cid
-            json_object_object_get_ex(jobj, "call identifier", &tmp);
-            uint32_t cid = (uint32_t)json_object_get_int(tmp);
-
-            cid_release(cid);
-            scr_update(data);
-        }
-        else if ((!pdu.compare("D-SDS-DATA")) ||
-                 (!pdu.compare("D-STATUS")))                                    // SDS messages
-        {
-            scr_print_middle(data);                                             // note that there is two lines printed for every message (for analyze, we provide full hexa + decoded message)
-        }
-        else
-        {
-
-        }
-
-        //cid_clean_up();                                                         // call garbage collector
-    }
-
-    if (b_log)                                                                  // append to log file
-    {
-        struct {
-            int flag;
-            const char *flag_str;
-        } json_flags = { JSON_C_TO_STRING_NOZERO, "JSON_C_TO_STRING_NOZERO" };  // remove all empty spaces between fields
-
-        fprintf(fd_log, "%s\n", json_object_to_json_string_ext(jobj, json_flags.flag));
-        fflush(fd_log);
-    }
-
-    json_object_put(tmp);                                                       // clean objects
-    json_object_put(jobj);
-}
-
-/**
- * @brief Initialize all required stuff
- *
- */
-
-void init()
-{
-    // initialize screen and data
-    scr_init();
-
-    // other data
-    cid_list.clear();
-}
-
-/**
  * @brief Receive from UDP socket with time-out
  *
  */
 
-int timed_recv(char * msg, size_t max_size, int max_wait_ms)
+int timed_recv(int fd_sock_rx, char * msg, size_t max_size, int max_wait_ms)
 {
-    struct sockaddr_in si_other;
-    socklen_t socket_len = sizeof(si_other);
+    struct sockaddr_in saddr_in;
+    socklen_t socket_len = sizeof(saddr_in);
 
     fd_set fdset;
     FD_ZERO(&fdset);                                                            // clear fd set
@@ -431,7 +84,7 @@ int timed_recv(char * msg, size_t max_size, int max_wait_ms)
 
     if (ret > 0)                                                                // socket has data, then receive it
     {
-        val = recvfrom(fd_sock_rx, msg, max_size, 0, (struct sockaddr *)&si_other, &socket_len);
+        val = recvfrom(fd_sock_rx, msg, max_size, 0, (struct sockaddr *)&saddr_in, &socket_len);
     }
     else                                                                        // invalid or no data
     {
@@ -441,28 +94,25 @@ int timed_recv(char * msg, size_t max_size, int max_wait_ms)
     return val;
 }
 
+/** @brief Program working mode enumeration */
+
+enum program_mode_t {
+    STANDARD_MODE            = 0,
+    READ_FROM_JSON_TEXT_FILE = 1
+};
+
+/** @brief interrupt flag */
+
+static volatile int sigint_flag = 0;
+
 /**
- * @brief Debug function to replay from a log.txt like's text file (Json)
+ * @brief handle SIGINT to clean up
  *
  */
 
-void replay_from_input_log_file(const char * file_name)
+static void sigint_handler(int val)
 {
-    const int BUFLEN = 8192;
-
-    char buf[BUFLEN];
-
-    FILE * fd_in = fopen(file_name, "rt");
-    FILE * fd_log = fopen("replayed.txt", "wt");
-
-    while (fgets(buf, sizeof(buf), fd_in))
-    {
-        parse_pdu(buf, fd_log);
-        printf("%s", buf);
-    }
-
-    fclose(fd_in);
-    fclose(fd_log);
+    sigint_flag = 1;
 }
 
 /**
@@ -470,54 +120,139 @@ void replay_from_input_log_file(const char * file_name)
  *
  */
 
-int main()
+int main(int argc, char * argv[])
 {
-    init();
+    struct sigaction sa;
+    sa.sa_handler = sigint_handler;
+    sigaction(SIGINT, &sa, 0);
 
-    /*replay_from_input_log_file("input.txt"); // DEBUG read input.txt (copy your log.txt file to input.txt so it is not overwritten)
-    scr_clean();
-    exit(0);*/
+    int udp_port_rx = 42100;                                                    // UDP RX port (ie. where to receive Json text from decoder)
 
-    // listening RX socket
-    struct sockaddr_in sockfd_in;
-    memset(&sockfd_in, 0, sizeof(sockfd_in));                                   // prepare socket for listening
-    sockfd_in.sin_family      = AF_INET;
-    sockfd_in.sin_port        = htons(UDP_PORT);
-    sockfd_in.sin_addr.s_addr = htonl(INADDR_ANY);
+    const int FILENAME_LEN = 256;
+    char opt_filename_in[FILENAME_LEN]  = "";                                   // input Json text filename
+    char opt_filename_out[FILENAME_LEN] = "log.txt";                            // output Json text filename
 
-    fd_sock_rx = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    int program_mode = STANDARD_MODE;
 
-    if (fd_sock_rx == -1)
+    int option;
+    while ((option = getopt(argc, argv, ":hr:i:o:")) != -1)
     {
-        perror("socket error");
-    }
-
-    if (bind(fd_sock_rx, (struct sockaddr *)&sockfd_in, sizeof(sockfd_in)) == -1)
-    {
-        perror("bind error");
-    }
-
-    // log file
-    FILE * fd_log = fopen("log.txt", "at");
-
-    const int BUFLEN = 8192;
-    char buf_rx[BUFLEN];
-
-    while (1)
-    {
-        int len = timed_recv(buf_rx, BUFLEN, TIME_WAIT_MS);
-
-        if (len > 0)
+        switch (option)
         {
-            parse_pdu(buf_rx, fd_log);
+        case 'r':
+            udp_port_rx = atoi(optarg);
+            break;
+
+        case 'i':
+            strncpy(opt_filename_in, optarg, FILENAME_LEN);
+            program_mode |= READ_FROM_JSON_TEXT_FILE;
+            break;
+
+        case 'o':
+            strncpy(opt_filename_out, optarg, FILENAME_LEN);
+            break;
+
+        case 'h':
+            printf("\nUsage: ./recorder [OPTIONS]\n\n"
+                   "Options:\n"
+                   "  -r <UDP socket> receiving Json data from decoder [default port is 42100]\n"
+                   "  -i <file> replay data from Json text file instead of UDP\n"
+                   "  -o <file> to record Json data in different text file [default file name is 'log.txt'] (can be replayed with -i option)\n"
+                   "  -h print this help\n\n");
+            exit(EXIT_FAILURE);
+            break;
+
+        case '?':
+            printf("unkown option, run ./recorder -h to list available options\n");
+            exit(EXIT_FAILURE);
+            break;
+        }
+    }
+
+    FILE * file_in = NULL;                                                      // for Json text read
+    int fd_input = 0;                                                           // for UDP read
+
+    if (program_mode & READ_FROM_JSON_TEXT_FILE)                                // read input text from file
+    {
+        file_in = fopen(opt_filename_in, "rt");
+
+        if (file_in == NULL)
+        {
+            fprintf(stderr, "Couldn't open input Json text file");
+            exit(EXIT_FAILURE);
+        }
+    }
+    else                                                                        // read input bits from UDP socket
+    {
+        struct sockaddr_in addr;
+        memset(&addr, 0, sizeof(struct sockaddr_in));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(udp_port_rx);
+        inet_aton("127.0.0.1", &addr.sin_addr);
+
+        fd_input = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        bind(fd_input, (struct sockaddr *)&addr, sizeof(struct sockaddr));
+
+        if (fd_input < 0)
+        {
+            fprintf(stderr, "Input socket 0x%04x on port %d\n", fd_input, udp_port_rx);
+            fprintf(stderr, "Couldn't create input socket");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // output log file
+    FILE * file_out = fopen(opt_filename_out, "at");                            // default name is 'log.txt' unless modified by user with options
+
+    if (file_out == 0)
+    {
+        fprintf(stderr, "Couldn't open output Json text file");
+        exit(EXIT_FAILURE);
+    }
+
+    // initialize display and CID list
+    scr_init();
+    cid_init();
+
+    const int RX_BUFLEN = 8192;
+    char rx_buf[RX_BUFLEN];
+
+    if (program_mode & READ_FROM_JSON_TEXT_FILE)                                // read from Json text file file_in
+    {
+        while (!sigint_flag)
+        {
+            while (fgets(rx_buf, sizeof(rx_buf), file_in))
+            {
+                cid_parse_pdu(rx_buf, file_out);
+                //printf("%s", buf);
+            }
         }
 
+        fclose(file_in);
+    }
+    else                                                                        // read from UDP socket fd_input
+    {
+        const int TIME_WAIT_MS = 50;                                            // udp port maximum waiting time [ms]
+
+        while (!sigint_flag)
+        {
+            int len = timed_recv(fd_input, rx_buf, RX_BUFLEN, TIME_WAIT_MS);
+
+            if (len > 0)
+            {
+                cid_parse_pdu(rx_buf, file_out);
+            }
+        }
+
+        close(fd_input);
     }
 
-    fclose(fd_log);
-    close(fd_sock_rx);
+    fclose(file_out);
 
     scr_clean();
+    cid_clean();
 
-    return 0;
+    printf("Clean exit\n");
+
+    return EXIT_SUCCESS;
 }

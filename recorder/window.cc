@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#include <cstdarg>
 #include "window.h"
 #include "cid.h"
 #include "call_identifier.h"
@@ -88,29 +89,6 @@ void scr_update(const char * info)
             wprintw(wn_bottom, " %08u", cid->m_ssi[idx].ssi);
         }
     }
-
-    // for (size_t cnt = 0; cnt < cid_list.size(); cnt++)                    // update caller id list
-    // {
-    //     if (cid_list[cnt].m_data_received > 0.)
-    //     {
-    //         mvwprintw(wn_bottom, cnt + 2, 2, "CID [Usage] = %06d [%02d] (%.0f kB) file %s, SSI =",
-    //                   cid_list[cnt].m_cid,
-    //                   cid_list[cnt].m_usage_marker,
-    //                   cid_list[cnt].m_data_received,
-    //                   cid_list[cnt].m_file_name[cid_list[cnt].m_usage_marker].c_str());
-    //     }
-    //     else
-    //     {
-    //         mvwprintw(wn_bottom, cnt + 2, 2, "CID [Usage] = %06d [%02d], SSI =",
-    //                   cid_list[cnt].m_cid,
-    //                   cid_list[cnt].m_usage_marker);
-    //     }
-
-    //     for (size_t idx = 0; idx < cid_list[cnt].m_ssi.size(); idx++)       // print cid ssi
-    //     {
-    //         wprintw(wn_bottom, " %08d", cid_list[cnt].m_ssi[idx].ssi);
-    //     }
-    // }
 
     wrefresh(wn_top);
     wrefresh(wn_middle);
@@ -200,29 +178,6 @@ void scr_update(const char * info)
 
         printf("\n");
     }
-
-    // for (size_t cnt = 0; cnt < cid_list.size(); cnt++)                    // update caller id list
-    // {
-    //     if (cid_list[cnt].m_data_received > 0.)
-    //     {
-    //         mvwprintw(wn_bottom, cnt + 2, 2, "CID [Usage] = %06d [%02d] (%.0f kB) file %s, SSI =",
-    //                   cid_list[cnt].m_cid,
-    //                   cid_list[cnt].m_usage_marker,
-    //                   cid_list[cnt].m_data_received,
-    //                   cid_list[cnt].m_file_name[cid_list[cnt].m_usage_marker].c_str());
-    //     }
-    //     else
-    //     {
-    //         mvwprintw(wn_bottom, cnt + 2, 2, "CID [Usage] = %06d [%02d], SSI =",
-    //                   cid_list[cnt].m_cid,
-    //                   cid_list[cnt].m_usage_marker);
-    //     }
-
-    //     for (size_t idx = 0; idx < cid_list[cnt].m_ssi.size(); idx++)       // print cid ssi
-    //     {
-    //         wprintw(wn_bottom, " %08d", cid_list[cnt].m_ssi[idx].ssi);
-    //     }
-    // }
 }
 
 

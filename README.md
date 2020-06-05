@@ -73,7 +73,20 @@ $ cd decoder
 $ make
 ```
 
-Build recorder
+Build recorder with ncurses
+```sh
+$ cd recorder
+$ make
+```
+
+Build recorder without ncurses
+
+```sh
+cd recorder
+edit window.h
+replace #define WITH_NCURSES by #undef WITH_NCURSES
+```
+
 ```sh
 $ cd recorder
 $ make
@@ -97,7 +110,7 @@ Usage
 =====
 
 Open 3 shells in the 3 folders:
-* In decoder one run `./decoder`
+* In decoder/ run `./decoder`
 
 ```sh
 Usage: ./decoder [OPTIONS]
@@ -110,7 +123,7 @@ Options:
   -h print this help
 ```
 
-* In recorder one run `./recorder`
+* In recorder/ run `./recorder`
 
 ```sh
 Usage: ./recorder [OPTIONS]
@@ -122,7 +135,7 @@ Options:
   -h print this help
 ```
 
-* In phy run `./pi4dqpsk_rx.py` and tunes the frequency (and eventually the baseband offset which may be positive or negative)
+* In phy/ run `./pi4dqpsk_rx.py` and tunes the frequency (and eventually the baseband offset which may be positive or negative)
 
 Then you should see frames in `decoder`.
 You will see less data in `recorder` but it maintains all received frames into the file `log.txt`.

@@ -9,7 +9,7 @@ EXE = recorder
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(EXE): $(OBJ)
-	$(CC)  $(CFLAGS) $(OBJ) -o $@
+	$(CC) $(CFLAGS) $(OBJ) -o $@
 
 clean:
 	rm -f $(EXE) *.o *~

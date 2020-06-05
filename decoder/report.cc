@@ -208,5 +208,10 @@ void tetra_dl::report_send()
 
     write(socketfd, buf, sizeof(buf));
 
+    if (gb_debug_mode)
+    {
+        printf(buf);
+    }
+    
     json_object_put(jobj);                                                      // delete the json object
 }

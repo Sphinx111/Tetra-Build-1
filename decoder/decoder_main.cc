@@ -26,7 +26,8 @@
 enum program_mode_t {
     STANDARD_MODE         = 0,
     READ_FROM_BINARY_FILE = 1,
-    SAVE_TO_BINARY_FILE   = 2
+    SAVE_TO_BINARY_FILE   = 2,
+    DEBUG_MOD             = 4
 };
 
 /** @brief interrupt flag */
@@ -49,6 +50,8 @@ static void sigint_handler(int val)
  * Reads demodulated values from UDP port 42000 coming from physical demodulator
  * Writes decoded frames to UDP port 42100 to tetra interpreter
  *
+ * Filtering log for SDS: sed -n '/SDS/ p' log.txt > out.txt
+ *
  */
 
 int main(int argc, char * argv[])
@@ -67,7 +70,7 @@ int main(int argc, char * argv[])
     int program_mode = STANDARD_MODE;
 
     int option;
-    while ((option = getopt(argc, argv, ":hr:t:i:o:")) != -1)
+    while ((option = getopt(argc, argv, ":hr:t:i:o:d")) != -1)
     {
         switch (option)
         {
@@ -89,6 +92,10 @@ int main(int argc, char * argv[])
             program_mode |= SAVE_TO_BINARY_FILE;
             break;
 
+        case 'd':
+            program_mode |= DEBUG_MOD;
+            break;
+
         case 'h':
             printf("\nUsage: ./decoder [OPTIONS]\n\n"
                    "Options:\n"
@@ -96,6 +103,7 @@ int main(int argc, char * argv[])
                    "  -t <UDP socket> sending Json data [default port is 42100]\n"
                    "  -i <file> replay data from binary file instead of UDP\n"
                    "  -o <file> record data to binary file (can be replayed with -i option)\n"
+                   "  -d print debug information\n"
                    "  -h print this help\n\n");
             exit(EXIT_FAILURE);
             break;
@@ -110,6 +118,11 @@ int main(int argc, char * argv[])
     // create decoder
 
     tetra_dl * decoder = new tetra_dl();
+
+    if (program_mode & DEBUG_MOD)
+    {
+        decoder->gb_debug_mode = true;
+    }
 
     // output destination socket
 

@@ -44,7 +44,6 @@ using namespace std;
  *
  */
 
-
 /*
  * TETRA decoder for pi/4-DQPSK modulation
  *
@@ -265,8 +264,9 @@ public:
 
     // for reporting informations in Json format
     struct json_object * jobj;                                                  ///< Json object
-    int socketfd;                                                               ///< UDP socket to write to
-
+    int socketfd = 0;                                                           ///< UDP socket to write to
+    bool gb_debug_mode = false;                                                 ///< Flag to indicate we want to print each Json text to screen
+    
     void report_start(const string service, const string pdu);
     void report_start(const char * service, const char * pdu);
     void report_add(const char * field, const char *val);

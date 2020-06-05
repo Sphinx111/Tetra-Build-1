@@ -1,5 +1,6 @@
 #include "tetra_dl.h"
 #include "utils.h"
+#include <math.h>
 
 /**
  * @brief LIP protocol (stack built over SDS) - TS 100 392-18 - v1.7.3
@@ -55,6 +56,63 @@ static double utils_decode_lip_longitude(uint32_t longitude)
 }
 
 /**
+ * @brief Decode LIP horizontal velocity - 6.3.17
+ *
+ */
+
+static double utils_decode_lip_horizontal_velocity(uint8_t val)
+{
+    double res;
+
+    if (val == 127)
+    {
+        res = -1.0;                                                             // unknown
+    }
+    else
+    { 
+        const double C = 16.;
+        const double x = 0.038;
+        const double A = 13.;
+        const double B = 0.;
+        
+        res = C * pow(1. + x, A - (double)val) + B;
+    }
+
+    return res;
+}
+
+/**
+ * @brief Decode LIP direction on travel - 6.3.5
+ *
+ */
+
+static string utils_decode_lip_direction_of_travel(uint8_t val)
+{
+    const string directions[] = {
+        "0 N",   "22.5 NNE",  "45 NE",  "67.5 ENE",
+        "90 E",  "112.5 ESE", "135 SE", "157.5 SSE",
+        "180 S", "202.5 SSW", "225 SW", "247.5 WSW",
+        "270 W", "292.5 WNW", "315 NW", "337.5 NNW"
+    };
+
+    return directions[val];
+}
+
+/**
+ * @brief Decode LIP position error - 6.3.63
+ *
+ */
+
+static string utils_decode_lip_position_error(uint8_t val)
+{
+    const string pos_error[] = {
+        "< 2 m", "< 20 m", "< 200 m", "< 2 km", "< 20 km", "<= 200 km", "> 200 km", "unknown"
+    };
+
+    return pos_error[val];
+};
+
+/**
  * @brief Short location report PDU - 6.2.1
  *
  */
@@ -77,13 +135,17 @@ void tetra_dl::cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu)
 
     uint8_t position_error = get_value(pdu, pos, 3);
     pos += 3;
+    report_add("position error", utils_decode_lip_position_error(position_error));
 
     uint8_t horizontal_velocity = get_value(pdu, pos, 7);
     pos += 7;
-
+    report_add("horizontal_velocity uint8", horizontal_velocity);
+    report_add("horizontal_velocity", utils_decode_lip_horizontal_velocity(horizontal_velocity));
+        
     uint8_t direction_of_travel = get_value(pdu, pos, 4);
     pos += 4;
-
+    report_add("direction of travel", utils_decode_lip_direction_of_travel(direction_of_travel));
+               
     uint8_t type_of_additional_data = get_value(pdu, pos, 1);                   // 6.3.87 - Table 6.120
     pos += 1;
 
@@ -98,6 +160,4 @@ void tetra_dl::cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu)
     {
         report_add("user-defined additional data", additional_data);
     }
-
-
 }

@@ -208,7 +208,5 @@ void tetra_dl::report_send()
 
     write(socketfd, buf, sizeof(buf));
 
-    //fprintf(stdout, "%s\n", json_object_to_json_string_ext(jobj, json_flags.flag)); // DEBUG print json packet
-
     json_object_put(jobj);                                                      // delete the json object
 }

@@ -32,7 +32,6 @@
 
 tetra_dl::tetra_dl()
 {
-    // constructor
     g_frame_len = 510;                                                          // burst length [510 bits]
     g_frame_data.clear();
 

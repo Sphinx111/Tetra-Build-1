@@ -18,15 +18,15 @@ void tetra_dl::cmce_sds_service_location_information_protocol(vector<uint8_t> pd
     {
     case 0b00:                                                                  // short location report
          report_add("sds-lip", "short location report");
-         cmce_sds_lip_parse_short_location_report(pdu);           
+         cmce_sds_lip_parse_short_location_report(pdu);
          break;
-        
+
     case 0b01:                                                                  // location protocol PDU with extension
         break;
 
-    case 0b10:                                                                  // reserved 
+    case 0b10:                                                                  // reserved
     case 0b11:
-        break;        
+        break;
     }
 }
 
@@ -64,12 +64,12 @@ void tetra_dl::cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu)
     uint32_t pos = 2;                                                           // PDU type
 
     pos += 2;                                                                   // time elapsed
-    
+
     uint32_t longitude = get_value(pdu, pos, 25);
     pos += 25;
     report_add("longitude uint32", longitude);
     report_add("longitude", utils_decode_lip_longitude(longitude));
-    
+
     uint32_t latitude = get_value(pdu, pos, 24);
     pos += 24;
     report_add("latitude uint32", longitude);
@@ -80,7 +80,7 @@ void tetra_dl::cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu)
 
     uint8_t horizontal_velocity = get_value(pdu, pos, 7);
     pos += 7;
-    
+
     uint8_t direction_of_travel = get_value(pdu, pos, 4);
     pos += 4;
 
@@ -89,7 +89,7 @@ void tetra_dl::cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu)
 
     uint8_t additional_data = get_value(pdu, pos, 8);
     pos += 8;
-    
+
     if (type_of_additional_data == 0)                                           // reason for sending
     {
         report_add("reason for sending", additional_data);
@@ -98,6 +98,6 @@ void tetra_dl::cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu)
     {
         report_add("user-defined additional data", additional_data);
     }
-    
-    
+
+
 }

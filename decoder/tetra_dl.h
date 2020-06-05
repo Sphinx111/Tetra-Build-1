@@ -37,7 +37,7 @@
 
 using namespace std;
 
-/** 
+/**
  * @defgroup tetra_dl TETRA decoder
  *
  * @{
@@ -114,7 +114,7 @@ struct tetra_time_t {
 
 struct tetra_cell_infos_t {
     uint16_t color_code;                                                        ///< Cell Color code
-    uint32_t mcc;                                                               ///< Cell MCC 
+    uint32_t mcc;                                                               ///< Cell MCC
     uint32_t mnc;                                                               ///< Cell MNC
     uint32_t scrambling_code;                                                   ///< Cell Scrambling code
 
@@ -183,7 +183,7 @@ public:
     // timing and burst synchronizer
     tetra_time_t       g_time;                                                  ///< Tetra timing
     tetra_cell_infos_t g_cell_infos;                                            ///< Cell informations
-    
+
     bool     g_cell_informations_acquired;                                      ///< Cell informations have been acquired
     bool     g_is_synchronized;                                                 ///< True is program is synchronized with burst
     uint64_t g_sync_bit_counter;                                                ///< Synchronization bits counter
@@ -259,7 +259,7 @@ public:
     // CMCE SDS LIP service
     void cmce_sds_service_location_information_protocol(vector<uint8_t> pdu);
     void cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu);
-    
+
     // U-plane
     void service_u_plane(vector<uint8_t> data, mac_logical_channel_t mac_logical_channel); // U-plane traffic
 

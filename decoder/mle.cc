@@ -32,7 +32,7 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
     string txt   = "";
     string infos = "";
     bool print_infos_flag = false;
-    
+
     if (mac_logical_channel == BSCH)                                            // TM-SDU is directly sent by MAC 18.4.2
     {
         print_infos_flag = true;
@@ -56,6 +56,7 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
         uint32_t pos = 0;
         uint8_t disc = get_value(pdu, pos, 3);
         pos += 3;
+
         switch (disc)
         {
         case 0b000:
@@ -82,7 +83,7 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
 
         case 0b101:
             print_infos_flag = true;                                            // allow report for MLE functions
-            
+
             txt = "MLE";
             pdu_type = get_value(pdu, pos, 3);
             pos += 3;
@@ -155,7 +156,7 @@ void tetra_dl::mle_process_d_nwrk_broadcast(vector<uint8_t> pdu)
     uint32_t pos = 0;
 
     pos += 3;
-    
+
     report_add("cell re-select parameter", get_value(pdu, pos, 16));
     pos += 16;
 
@@ -187,7 +188,7 @@ void tetra_dl::mle_process_d_nwrk_broadcast(vector<uint8_t> pdu)
         // TODO parse neighbour cells informations 18.5.17
     }
 
-    report_send();    
+    report_send();
 }
 
 /**
@@ -198,11 +199,11 @@ void tetra_dl::mle_process_d_nwrk_broadcast(vector<uint8_t> pdu)
 void tetra_dl::mle_process_d_nwrk_broadcast_extension(vector<uint8_t> pdu)
 {
     report_start("MLE", "D-NWRK-BROADCAST");
-    
+
     uint32_t pos = 0;
 
     pos += 3;
-    
+
     uint8_t o_flag = get_value(pdu, pos, 1);                                    // option flag
     pos += 1;
     if (o_flag)                                                                 // there is type2 or type3/4 fields
@@ -224,6 +225,5 @@ void tetra_dl::mle_process_d_nwrk_broadcast_extension(vector<uint8_t> pdu)
 
     }
 
-    report_send();    
+    report_send();
 }
-

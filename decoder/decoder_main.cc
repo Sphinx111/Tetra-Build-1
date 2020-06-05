@@ -18,9 +18,30 @@
  */
 #include "tetra_dl.h"
 #include <signal.h>
+#include <unistd.h>
+#include <fcntl.h>
 
-static const int UDP_PORT_RX = 42000;                                           ///< UDP RX port (ie. where to receive bits from PHY layer)
-static const int UDP_PORT_TX = 42100;                                           ///< UDP TX port (ie. where to send Json data)
+/** @brief Program working mode enumeration */
+
+enum program_mode_t {
+    STANDARD_MODE         = 0,
+    READ_FROM_BINARY_FILE = 1,
+    SAVE_TO_BINARY_FILE   = 2
+};
+
+/** @brief interrupt flag */
+
+static volatile int sigint_flag = 0;
+
+/**
+ * @brief handle SIGINT to clean up
+ *
+ */
+
+static void sigint_handler(int val)
+{
+    sigint_flag = 1;
+}
 
 /**
  * @brief Decoder program entry point
@@ -30,70 +51,180 @@ static const int UDP_PORT_TX = 42100;                                           
  *
  */
 
-int main()
+int main(int argc, char * argv[])
 {
-    tetra_dl *tetra_tetra_dl = new tetra_dl();        
+    //signal(SIGINT, sigint_handler);
+    struct sigaction sa;
+    sa.sa_handler = sigint_handler;
+    sigaction(SIGINT, &sa, 0);
 
-    // prepare output socket
+    int udp_port_rx = 42000;                                                    // UDP RX port (ie. where to receive bits from PHY layer)
+    int udp_port_tx = 42100;                                                    // UDP TX port (ie. where to send Json data)
+
+    const int FILENAME_LEN = 256;
+    char opt_filename_in[FILENAME_LEN] = "";                                    // input bits filename
+    char opt_filename_out[FILENAME_LEN] = "";                                   // output bits filename
+
+    int program_mode = STANDARD_MODE;
+
+    int option;
+    while ((option = getopt(argc, argv, ":hr:t:i:o:")) != -1)
+    {
+        switch (option)
+        {
+        case 'r':
+            udp_port_rx = atoi(optarg);
+            break;
+
+        case 't':
+            udp_port_tx = atoi(optarg);
+            break;
+
+        case 'i':
+            strncpy(opt_filename_in, optarg, FILENAME_LEN);
+            program_mode |= READ_FROM_BINARY_FILE;
+            break;
+
+        case 'o':
+            strncpy(opt_filename_out, optarg, FILENAME_LEN);
+            program_mode |= SAVE_TO_BINARY_FILE;
+            break;
+
+        case 'h':
+            printf("\nUsage: ./decoder [OPTIONS]\n\n"
+                   "Options:\n"
+                   "  -r <UDP socket> receiving from phy [default port is 42000]\n"
+                   "  -t <UDP socket> sending Json data [default port is 42100]\n"
+                   "  -f <file> replay data from binary file instead of UDP\n"
+                   "  -d <file> record data to binary file (can be replayed with -f option)\n"
+                   "  -h print this help\n\n");
+            exit(EXIT_FAILURE);
+            break;
+
+        case '?':
+            printf("unkown option, run ./decoder -h to list available options\n");
+            exit(EXIT_FAILURE);
+            break;
+        }
+    }
+
+    // create decoder
+
+    tetra_dl * decoder = new tetra_dl();
+
+    // output destination socket
+
     struct sockaddr_in addr_output;
     memset(&addr_output, 0, sizeof(struct sockaddr_in));
     addr_output.sin_family = AF_INET;
-    addr_output.sin_port = htons(UDP_PORT_TX);
+    addr_output.sin_port = htons(udp_port_tx);
     inet_aton("127.0.0.1", &addr_output.sin_addr);
-   
-    tetra_tetra_dl->socketfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    connect(tetra_tetra_dl->socketfd, (struct sockaddr *) & addr_output, sizeof(struct sockaddr));    
-    printf("Output fd socket = 0x%04x\n", tetra_tetra_dl->socketfd);
-    if (tetra_tetra_dl->socketfd < 0)
-    {
-        perror("open");
-        exit(2);
-    }
-    
-    //int fd = open("out.bits", O_RDONLY); // DEBUG
 
-    // prepare input socket
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(struct sockaddr_in));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(UDP_PORT_RX);
-    inet_aton("127.0.0.1", &addr.sin_addr);
+    decoder->socketfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);               // assign and connect UDP tx socket to decoder
+    connect(decoder->socketfd, (struct sockaddr *) & addr_output, sizeof(struct sockaddr));
 
-    int sockfd_input = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    bind(sockfd_input, (struct sockaddr *)&addr, sizeof(struct sockaddr));
-    printf("Input  fd socket = 0x%04x\n", sockfd_input);        
-    if (sockfd_input < 0)
+    printf("Output socket 0x%04x on port %d\n", decoder->socketfd, udp_port_tx);
+
+    if (decoder->socketfd < 0)
     {
-        perror("open");
-        exit(2);
+        perror("Couldn't create output socket");
+        exit(EXIT_FAILURE);
     }
 
-    uint8_t rx_buf[1024];                                                       // receive buffer
-    while (1)
+    // output file if any
+
+    int fd_save = 0;
+
+    if (program_mode & SAVE_TO_BINARY_FILE)                                     // save input bits to file
     {
-        //int bytes_read = read(fd, rx_buf, sizeof(rx_buf)); // DEBUG
-        int bytes_read = read(sockfd_input, rx_buf, sizeof(rx_buf));
-        
-        if (bytes_read < 0)
+        fd_save = open(opt_filename_out, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP);
+        if (fd_save < 0)
         {
-            perror("read error");
-            exit(1);
+            fprintf(stderr, "Couldn't open output file");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // input source
+
+    int fd_input = 0;
+
+    if (program_mode & READ_FROM_BINARY_FILE)                                   // read input bits from file
+    {
+        fd_input = open(opt_filename_in, O_RDONLY);
+
+        printf("Input from file '%s' 0x%04x\n", opt_filename_in, fd_input);
+
+        if (fd_input < 0)
+        {
+            fprintf(stderr, "Couldn't open input bits file");
+            exit(EXIT_FAILURE);
+        }
+    }
+    else                                                                        // read input bits from UDP socket
+    {
+        struct sockaddr_in addr;
+        memset(&addr, 0, sizeof(struct sockaddr_in));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(udp_port_rx);
+        inet_aton("127.0.0.1", &addr.sin_addr);
+
+        fd_input = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        bind(fd_input, (struct sockaddr *)&addr, sizeof(struct sockaddr));
+
+        printf("Input socket 0x%04x on port %d\n", fd_input, udp_port_rx);
+
+        if (fd_input < 0)
+        {
+            perror("Couldn't create input socket");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    const int RXBUF_LEN = 1024;
+    uint8_t rx_buf[RXBUF_LEN];                                                  // receive buffer
+
+    while (!sigint_flag)
+    {
+        int bytes_read = read(fd_input, rx_buf, sizeof(rx_buf));
+
+        if (errno == EINTR)
+        {
+            break;
+        }
+        else if (bytes_read < 0)
+        {
+            fprintf(stderr, "Read error\n");
+            break;
         }
         else if (bytes_read == 0)
         {
             break;
         }
-        
+
+        if (program_mode & SAVE_TO_BINARY_FILE)
+        {
+            write(fd_save, rx_buf, bytes_read);
+        }
+
         for (int cnt = 0; cnt < bytes_read; cnt++)
         {
-            tetra_tetra_dl->rx_symbol(rx_buf[cnt]);                             // bytes must be pushed one at a time in decoder
+            decoder->rx_symbol(rx_buf[cnt]);                                    // bytes must be pushed one at a time into decoder
         }
     }
 
-    close(sockfd_input);
-    close(tetra_tetra_dl->socketfd);
+    close(decoder->socketfd);
 
-    //close(fd); // DEBUG
+    close(fd_input);                                                            // file or socket must be closed
 
-    return 0;
+    if (program_mode & SAVE_TO_BINARY_FILE)                                     // close save file only if openede
+    {
+        close(fd_save);
+    }
+
+    delete decoder;
+
+    printf("Clean exit\n");
+
+    return EXIT_SUCCESS;
 }

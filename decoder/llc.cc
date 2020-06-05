@@ -158,7 +158,7 @@ void tetra_dl::service_llc(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
         }
         else
         {
-            
+
         }
         break;
 

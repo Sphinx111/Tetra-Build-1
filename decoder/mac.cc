@@ -221,6 +221,16 @@ void tetra_dl::service_lower_mac(vector<uint8_t> data, int burst_type)
  *    TCH_S
  *    TCH              MAC-TRAFFIC
  *
+ *   AACH   = 0,
+ *   BLCH   = 1,
+ *   BNCH   = 2,
+ *   BSCH   = 3,
+ *   SCH_F  = 4,
+ *   SCH_HD = 5,
+ *   STCH   = 6,
+ *   TCH_S  = 7,
+ *   TCH    = 8,
+ *   unkown = 9 *
  */
 
 void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac_logical_channel)
@@ -328,6 +338,7 @@ void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac
     {
         service_llc(tm_sdu, mac_logical_channel);                               // service LLC
     }
+
 }
 
 /**
@@ -658,7 +669,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_sysinfo(vector<uint8_t> pdu)
     const int32_t duplex[4] = {0, 6250, -6250, 12500};                          // 21.4.4.1
 
     g_cell_infos.downlink_frequency = (int32_t)band_frequency * 100000000 + (int32_t)main_carrier * 25000 + duplex[offset];
-    g_cell_infos.uplink_frequency   = 0;                                        // TODO 
+    g_cell_infos.uplink_frequency   = 0;                                        // TODO
 
     vector<uint8_t> sdu = vector_extract(pdu, pos, 42);                         // TM-SDU (MLE data) clause 18
     return sdu;

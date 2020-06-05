@@ -53,7 +53,7 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
     case 0b00010:
         txt = "D-CONNECT";
         cmce_parse_d_connect(pdu);
-        
+
         cid = get_value(pdu, pos, 14);
         pos += 14;
         break;
@@ -61,7 +61,7 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
     case 0b00011:
         txt = "D-CONNECT ACK";
         cmce_parse_d_connect_ack(pdu);
-        
+
         cid = get_value(pdu, pos, 14);
         pos += 14;
         break;
@@ -69,7 +69,7 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
     case 0b00100:
         txt = "D-DISCONNECT";
         cmce_parse_d_disconnect(pdu);
-        
+
         cid = get_value(pdu, pos, 14);
         pos += 14;
         break;
@@ -99,14 +99,14 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
     case 0b01000:
         txt = "D-STATUS";
         cmce_sds_parse_d_status(pdu);                                           // this pdu is handled by the SDS sub-entity see 14.7.1.10
-        
+
         b_complete_print_flag = false;
         break;
 
     case 0b01001:
         txt = "D-TX CEASED";
         cmce_parse_d_tx_ceased(pdu);
-        
+
         cid = get_value(pdu, pos, 14);
         pos += 14;
         break;
@@ -114,7 +114,7 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
     case 0b01010:
         txt = "D-TX CONTINUE";
         cmce_parse_d_tx_continue(pdu);
-        
+
         cid = get_value(pdu, pos, 14);
         pos += 14;
         break;
@@ -122,7 +122,7 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
     case 0b01011:
         txt = "D-TX GRANTED";
         cmce_parse_d_tx_granted(pdu);
-        
+
         cid = get_value(pdu, pos, 14);
         pos += 14;
         break;
@@ -130,7 +130,7 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
     case 0b01100:
         txt = "D-TX WAIT";
         cmce_parse_d_tx_wait(pdu);
-        
+
         cid = get_value(pdu, pos, 14);
         pos += 14;
         break;
@@ -138,7 +138,7 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
     case 0b01101:
         txt = "D-TX INTERRUPT";
         cmce_parse_d_tx_interrupt(pdu);
-        
+
         cid = get_value(pdu, pos, 14);
         pos += 14;
         break;
@@ -154,8 +154,8 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
     case 0b01111:
         txt = "D-SDS-DATA";
         cmce_sds_parse_d_sds_data(pdu);                                         // this pdu is handled by the SDS sub-entity see 14.7.1.11
-        
-        b_complete_print_flag = false;        
+
+        b_complete_print_flag = false;
         break;
 
     case 0b10000:
@@ -198,12 +198,12 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
 void tetra_dl::cmce_parse_d_alert(vector<uint8_t> pdu)
 {
     report_start("CMCE", "D-ALERT");
-    
+
     uint32_t pos = 5;                                                           // pdu type
 
     report_add("call identifier", get_value(pdu, pos, 14));
     pos += 14;
-    
+
     report_send();
 }
 
@@ -215,12 +215,12 @@ void tetra_dl::cmce_parse_d_alert(vector<uint8_t> pdu)
 void tetra_dl::cmce_parse_d_call_restore(vector<uint8_t> pdu)
 {
     report_start("CMCE", "D-CALL RESTORE");
-    
+
     uint32_t pos = 5;                                                           // pdu type
 
     report_add("call identifier", get_value(pdu, pos, 14));
     pos += 14;
-    
+
     report_add("transmission grant", get_value(pdu, pos, 2));
     pos += 2;
 
@@ -275,7 +275,7 @@ void tetra_dl::cmce_parse_d_call_restore(vector<uint8_t> pdu)
             report_add("notification indicator", get_value(pdu, pos, 6));
             pos += 6;
         }
-        
+
         // TODO handle type3/4 elements
     }
 
@@ -290,7 +290,7 @@ void tetra_dl::cmce_parse_d_call_restore(vector<uint8_t> pdu)
 void tetra_dl::cmce_parse_d_connect(vector<uint8_t> pdu)
 {
     report_start("CMCE", "D-CONNECT");
-    
+
     uint32_t pos = 5;                                                           // pdu type
 
     report_add("call identifier", get_value(pdu, pos, 14));
@@ -352,7 +352,7 @@ void tetra_dl::cmce_parse_d_connect(vector<uint8_t> pdu)
             pos += 6;
         }
 
-        // TODO 
+        // TODO
         // uint8_t m_flag;                                                         // type 3/4 elements flag
         // m_flag = get_value(pdu, pos, 1);
         // pos += 1;
@@ -376,7 +376,7 @@ void tetra_dl::cmce_parse_d_connect(vector<uint8_t> pdu)
 void tetra_dl::cmce_parse_d_connect_ack(vector<uint8_t> pdu)
 {
     report_start("CMCE", "D-CONNECT ACK");
-    
+
     uint32_t pos = 5;                                                           // pdu type
 
     report_add("call identifier", get_value(pdu, pos, 14));
@@ -618,7 +618,7 @@ void tetra_dl::cmce_parse_d_tx_ceased(vector<uint8_t> pdu)
 
         // TODO handle type3/4
     }
-    
+
     report_send();
 }
 
@@ -659,7 +659,7 @@ void tetra_dl::cmce_parse_d_tx_continue(vector<uint8_t> pdu)
 
         // TODO handle type3/4
     }
-    
+
     report_send();
 }
 
@@ -702,7 +702,7 @@ void tetra_dl::cmce_parse_d_tx_granted(vector<uint8_t> pdu)
             report_add("notification indicator", get_value(pdu, pos, 6));
             pos += 6;
         }
-        
+
         p_flag = get_value(pdu, pos, 1);
         pos += 1;
         if (p_flag)
@@ -733,7 +733,7 @@ void tetra_dl::cmce_parse_d_tx_granted(vector<uint8_t> pdu)
 
         // TODO handle type3/4
     }
-    
+
     report_send();
 }
 
@@ -776,7 +776,7 @@ void tetra_dl::cmce_parse_d_tx_interrupt(vector<uint8_t> pdu)
             report_add("notification indicator", get_value(pdu, pos, 6));
             pos += 6;
         }
-        
+
         p_flag = get_value(pdu, pos, 1);
         pos += 1;
         if (p_flag)
@@ -807,7 +807,7 @@ void tetra_dl::cmce_parse_d_tx_interrupt(vector<uint8_t> pdu)
 
         // TODO handle type3/4
     }
-    
+
     report_send();
 }
 
@@ -845,6 +845,6 @@ void tetra_dl::cmce_parse_d_tx_wait(vector<uint8_t> pdu)
 
         // TODO handle type3/4
     }
-    
+
     report_send();
 }

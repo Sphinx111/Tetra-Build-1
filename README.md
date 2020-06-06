@@ -31,7 +31,7 @@ The 3 parts are linked with UDP sockets:
 Physical layer
 -------------
 
-The physical `PI/4 DQPSK` gnuradio receiver is inspired of [Tim's tetra-toolkit](https://github.com/Tim---/tetra-toolkit).
+The physical `PI/4 DQPSK` gnuradio receiver is inspired from [Tim's tetra-toolkit](https://github.com/Tim---/tetra-toolkit).
 It works fine with RTL-SDR dongles at 2Mbps.
 Results are much better than with HackRF which is more noisy.
 
@@ -79,13 +79,7 @@ $ cd recorder
 $ make
 ```
 
-Build recorder without ncurses
-
-```sh
-cd recorder
-edit window.h
-replace #define WITH_NCURSES by #undef WITH_NCURSES
-```
+Build recorder
 
 ```sh
 $ cd recorder
@@ -161,4 +155,5 @@ Base64 decoder
 
 * Defragmentation is not implemented yet
 * No FEC correction
-* No SDS handling
+* Partial SDS handling
+* UDP packet size is limited to 2048 bytes, may be small for all Json text informations

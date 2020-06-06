@@ -14,19 +14,92 @@ void tetra_dl::cmce_sds_service_location_information_protocol(vector<uint8_t> pd
 
     uint8_t pdu_type = get_value(pdu, pos, 2);                                  // see 6.2
     pos += 2;
-
+    
     switch (pdu_type)                                                           // table 6.29
     {
-    case 0b00:                                                                  // short location report
+    case 0b00:                                                                  // short location report - 6.2.1
          report_add("sds-lip", "short location report");
          cmce_sds_lip_parse_short_location_report(pdu);
          break;
 
-    case 0b01:                                                                  // location protocol PDU with extension
+    case 0b01:                                                                  // PDU with extension - 6.3.62 table 6.92
+        report_add("sds-lip", "extension pdu");
+        cmce_sds_lip_parse_extended_message(pdu);        
         break;
 
     case 0b10:                                                                  // reserved
     case 0b11:
+        break;
+    }
+}
+
+/**
+ * @brief Parse LIP extension - see 6.3.62 table 6.92
+ *
+ */
+
+void tetra_dl::cmce_sds_lip_parse_extended_message(vector<uint8_t> pdu)
+{
+    uint32_t pos = 2;                                                           // pdu type
+    
+    uint8_t extension = get_value(pdu, pos, 4);
+    pos += 4;
+
+    switch (extension)                                                          // table 6.92
+    {
+    case 0b0000:                                                                // reserved
+    case 0b0010:
+    case 0b1101:
+    case 0b1110:
+    case 0b1111:
+        report_add("extension", "reserved");
+        break;
+
+    case 0b0001:
+        report_add("extension", "immediate location report request");           // TODO 6.2.16
+        break;
+        
+    case 0b0011:
+        report_add("extension", "long location report");                        // TODO 6.2.2
+        break;
+        
+    case 0b0100:
+        report_add("extension", "location report ack");                         // TODO 6.2.3
+        break;
+        
+    case 0b0101:
+        report_add("extension", "basic location parameters request/response");  // TODO 6.2.4 - 6.2.5
+        break;
+        
+    case 0b0110:
+        report_add("extension", "add/modify trigger request/response");         // TODO 6.2.8 - 6.2.9
+        break;
+        
+    case 0b0111:
+        report_add("extension", "remove trigger request/response");             // TODO 6.2.10 - 6.2.11
+        break;
+        
+    case 0b1000:
+        report_add("extension", "report trigger request/response");             // TODO 6.2.12 - 6.2.13
+        break;
+        
+    case 0b1001:
+        report_add("extension", "report basic location parameters request/response"); // TODO 6.2.4 - 6.2.5
+        break;
+        
+    case 0b1010:
+        report_add("extension", "location reporting enable/disable request/response"); // TODO 6.2.14 - 6.2.15
+        break;
+        
+    case 0b1011:
+        report_add("extension", "location reporting temporary control request/response"); // TODO 6.2.17 - 6.2.18
+        break;
+        
+    case 0b1100:
+        report_add("extension", "backlog request/response");                    // TODO 6.2.19 - 6.2.20
+        break;
+        
+    default:
         break;
     }
 }

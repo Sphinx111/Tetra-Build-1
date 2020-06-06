@@ -258,7 +258,8 @@ public:
     // CMCE SDS LIP service
     void cmce_sds_service_location_information_protocol(vector<uint8_t> pdu);
     void cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu);
-
+    void cmce_sds_lip_parse_extended_message(vector<uint8_t> pdu);
+    
     // U-plane
     void service_u_plane(vector<uint8_t> data, mac_logical_channel_t mac_logical_channel); // U-plane traffic
 

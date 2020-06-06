@@ -191,7 +191,7 @@ void tetra_dl::cmce_sds_parse_d_status(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len)
 {
-    if (pdu.size() < len)
+    if ((pdu.size() < len) || (len > 2047))
     {
         report_add("type4", "invalid pdu");
         return;                                                                 // invalid PDU
@@ -238,22 +238,20 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
             break;
 
         case 0b00000110:
-            report_add("protocol info", "M-DMO");                               // EN 300 396-10 [26]
-            // 29.5.1
+            report_add("protocol info", "M-DMO");                               // EN 300 396-10 [26] - 29.5.1
             break;
 
         case 0b00000111:
-            report_add("protocol info", "pin authentification");
-            // 29.5.1
+            report_add("protocol info", "pin authentification");                // 29.5.1
             break;
 
         case 0b00001000:
-            report_add("protocol info", "end-to-end encrypted message");
+            report_add("protocol info", "end-to-end encrypted message");        // 29.5.1
             break;
 
         case 0b00001001:
-            report_add("protocol info", "simple intermediated text messaging");
-            // 29.5.2
+            report_add("protocol info", "simple immediate text messaging");     // 29.5.2 - same message than "simple text messaging". Only the handling by the MS differs 
+            cmce_sds_parse_simple_text_messaging(pdu, len);                   
             break;
 
         case 0b00001010:
@@ -263,18 +261,15 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
             break;
 
         case 0b00001011:
-            report_add("protocol info", "net assist protocol");
-            // 29.5.13
+            report_add("protocol info", "net assist protocol");                 // 29.5.13
             break;
 
         case 0b00001100:
-            report_add("protocol info", "concatenated sds message");
-            // 29.5.14
+            report_add("protocol info", "concatenated sds message");            // TODO 29.5.14 - make the UDH protocol handling to reconsrtuct full message
             break;
 
         case 0b00001101:
-            report_add("protocol info", "DOTAM");                               // TS 100 392-18-3 [48]
-            // 29.5.1
+            report_add("protocol info", "DOTAM");                               // TS 100 392-18-3 [48] - 29.5.1
             break;
 
         default:
@@ -298,7 +293,9 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
     {
         // Annex J.1 - Table SDS-TL
         // protocol values in the scope of norm: 0b11000000 to 0b1111110
-
+        //
+        // Note: protocol id is not use here and will be handled by SDS TL service so the sdu is the full pdu
+        
         uint8_t message_type = get_value(pdu, pos, 4);
         pos += 4;
         report_add("message type", message_type);
@@ -419,13 +416,13 @@ void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t
     switch (protocol_id)                                                        // table 29.21
     {
     case 0b10000010:                                                            // 29.5.3
-        cmce_sds_parse_text_messaging_with_sds_tl(sdu);
         report_add("protocol info", "text messaging (SDS-TL)");
+        cmce_sds_parse_text_messaging_with_sds_tl(sdu);
         break;
 
     case 0b10000011:                                                            // 29.5.6
-        cmce_sds_parse_location_system_with_sds_tl(sdu);
         report_add("protocol info", "location system (SDS-TL)");
+        cmce_sds_parse_location_system_with_sds_tl(sdu);
         break;
 
     case 0b10000100:                                                            // Wireless Datagram Protocol WAP - 29.5.8
@@ -446,13 +443,14 @@ void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t
 
     case 0b10001001:                                                            // 29.5.3
         report_add("protocol info", "immediate text messaging (SDS-TL)");
+        cmce_sds_parse_text_messaging_with_sds_tl(sdu);                         // same as text messaging, only the handling by MS differs
         break;
 
-    case 0b10001010:                                                            // UDH - 29.5.9
+    case 0b10001010:                                                            // TODO UDH - 29.5.9
         report_add("protocol info", "message with user-data header");
         break;
 
-    case 0b10001100:                                                            // 29.5.14
+    case 0b10001100:                                                            // TODO 29.5.14
         report_add("protocol info", "concatenated sds message (SDS-TL)");
         break;
 
@@ -564,7 +562,7 @@ void tetra_dl::cmce_sds_parse_simple_location_system(vector<uint8_t> pdu, const 
         report_add("infos", vector_extract(pdu, pos, len - pos));
         break;
 
-    case 0b10000000:                                                            // Proprietary. Notes from SQ5BPF: some proprietary system seen in the wild in Spain, Itlay and France some speculate it's either from DAMM or SEPURA
+    case 0b10000000:                                                            // TODO Proprietary. Notes from SQ5BPF: some proprietary system seen in the wild in Spain, Itlay and France some speculate it's either from DAMM or SEPURA
         report_add("infos", vector_extract(pdu, pos, len - pos));
         break;
 
@@ -575,7 +573,7 @@ void tetra_dl::cmce_sds_parse_simple_location_system(vector<uint8_t> pdu, const 
 }
 
 /**
- * @brief Parse SDS simple location system - see 29.5.5
+ * @brief Parse SDS location system with SDS-TL - see 29.5.6
  *
  */
 
@@ -602,7 +600,7 @@ void tetra_dl::cmce_sds_parse_location_system_with_sds_tl(vector<uint8_t> pdu)
         report_add("infos", vector_extract(pdu, pos, len - pos));
         break;
 
-    case 0b10000000:                                                            // Proprietary. Notes from SQ5BPF: some proprietary system seen in the wild in Spain, Itlay and France some speculate it's either from DAMM or SEPURA
+    case 0b10000000:                                                            // TODO Proprietary. Notes from SQ5BPF: some proprietary system seen in the wild in Spain, Itlay and France some speculate it's either from DAMM or SEPURA
         report_add("infos", vector_extract(pdu, pos, len - pos));
         break;
 
@@ -611,17 +609,3 @@ void tetra_dl::cmce_sds_parse_location_system_with_sds_tl(vector<uint8_t> pdu)
         break;
     }
 }
-
-/**
- * @brief LIP protocol (stack built over SDS) - TS 100 392-18 - v1.7.3
- *
- * TODO move to another file
- *
- */
-
-// void tetra_dl::cmce_sds_service_location_information_protocol(vector<uint8_t> pdu)
-// {
-//     uint16_t pos = 8;                                                           // protocol ID of Type 4 block
-
-
-// }

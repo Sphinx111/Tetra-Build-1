@@ -83,12 +83,12 @@ int main(int argc, char * argv[])
             break;
 
         case 'i':
-            strncpy(opt_filename_in, optarg, FILENAME_LEN);
+            strncpy(opt_filename_in, optarg, FILENAME_LEN - 1);
             program_mode |= READ_FROM_BINARY_FILE;
             break;
 
         case 'o':
-            strncpy(opt_filename_out, optarg, FILENAME_LEN);
+            strncpy(opt_filename_out, optarg, FILENAME_LEN - 1);
             program_mode |= SAVE_TO_BINARY_FILE;
             break;
 

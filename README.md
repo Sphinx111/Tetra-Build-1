@@ -61,7 +61,7 @@ Build
 You will need:
 * gnuradio and gnuradio-companion with rtl-sdr
 * gcc
-* json-c
+* json-c v0.12
 * zlib
 * sox
 * ncurses (optional interface for the recorder. If you don't want it, set `#undef WITH_NCURSES` in file `recorder/window.h`)

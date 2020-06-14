@@ -61,8 +61,8 @@ Build
 You will need:
 * gnuradio and gnuradio-companion with rtl-sdr
 * gcc
-* json-c v0.12
-* zlib
+* [json-c v0.12](https://github.com/json-c/json-c/tree/json-c-0.12) (may have problems with newer versions)
+* zlib v1.2.11 (other versions may work)
 * sox
 * ncurses (optional interface for the recorder. If you don't want it, set `#undef WITH_NCURSES` in file `recorder/window.h`)
 
@@ -104,10 +104,10 @@ Usage
 =====
 
 Open 3 shells in the 3 folders:
-* In decoder/ run `./decoder`
+* In decoder/ run `./decoder` or `decoder`
 
 ```sh
-Usage: ./decoder [OPTIONS]
+Usage: decoder [OPTIONS]
 
 Options:
   -r <UDP socket> receiving from phy [default port is 42000]
@@ -117,10 +117,10 @@ Options:
   -h print this help
 ```
 
-* In recorder/ run `./recorder`
+* In recorder/ run `./recorder` or `recorder`
 
 ```sh
-Usage: ./recorder [OPTIONS]
+Usage: recorder [OPTIONS]
 
 Options:
   -r <UDP socket> receiving Json data from decoder [default port is 42100]
@@ -129,12 +129,17 @@ Options:
   -h print this help
 ```
 
-* In phy/ run `./pi4dqpsk_rx.py` and tunes the frequency (and eventually the baseband offset which may be positive or negative)
+* In phy/ run `./pi4dqpsk_rx.py` or `pi4dqpsk_rx.py` and tunes the frequency (and eventually the baseband offset which may be positive or negative)
 
 Then you should see frames in `decoder`.
 You will see less data in `recorder` but it maintains all received frames into the file `log.txt`.
 Notice that this file may become big since it is never overwritten between sessions.
 
+# Submitting bugs
+
+When you find a bug, it is very important to record the incoming bits so I can check what's going on.
+This is done with `decoder -o out.bits` command.
+You can zip and attach the `out.bits` file to the issue, it is very useful.
 
 # Previous work
 
@@ -153,7 +158,8 @@ Base64 decoder
 
 # To be done
 
-* Defragmentation is not implemented yet
-* No FEC correction
-* Partial SDS handling
+* MAC defragmentation
+* LLC reassembly of segmented TL-SDU
+* SDS handling is early beta
+* FEC correction
 * UDP packet size is limited to 2048 bytes, may be small for all Json text informations

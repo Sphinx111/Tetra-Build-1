@@ -59,7 +59,7 @@ Build
 =====
 
 You will need:
-* gnuradio and gnuradio-companion with rtl-sdr
+* gnuradio v3.7.14 and gnuradio-companion with rtl-sdr (I added a flowchart with Wx widgets instead of Qt for older GnuRadio 3.7.11)
 * gcc
 * [json-c v0.12](https://github.com/json-c/json-c/tree/json-c-0.12) (may have problems with newer versions)
 * zlib v1.2.11 (other versions may work)

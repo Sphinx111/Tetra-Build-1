@@ -231,7 +231,7 @@ string text_gsm_7_bit_decode(vector<uint8_t> data, const uint16_t len)
 
 /**
  * @brief Decode 8-bit alphabets TODO very rough function only, doesn't check alphabet input type
- *        Unknown symbols are replaced with '.' since we already have hex dump
+ *        Unknown symbols are replaced with '_' since we already have hex dump
  *
  */
 
@@ -242,15 +242,13 @@ string text_generic_8_bit_decode(vector<uint8_t> data, const uint16_t len)
     for (uint16_t idx = 0; idx < len / 8; idx++)
     {
         uint8_t chr = get_value(data, idx * 8, 8);
-        if (isalnum(chr))
+        if (isprint(chr))
         {
             res += (char)chr;
         }
         else
         {
-            //char buf[16] = "";
-            //sprintf(buf, "0x%02x", chr);
-            res += '.';
+            res += '_';
         }
     }
 

@@ -33,7 +33,9 @@
 #include <json-c/json.h>
 #include <json-c/json_util.h>
 
+#include "tetra_common.h"
 #include "viterbi.h"
+#include "mac_defrag.h"
 
 using namespace std;
 
@@ -55,112 +57,11 @@ using namespace std;
  * NOTE:
  *  - only decode downlink
  *  - only decode continuous downlink burst channel
- *  - MAC fragmentation not handled
+ *  - MAC PDU association not handled - see 23.4.2.3
  *  - LLC fragmentation not handled
  *  - Viterbi codec is handling string, not optimized
  *
  */
-
-/**
- * @brief Burst type
- *
- * 9.4.4 - type of bursts
- *
- * NOTE:
- *   - we only decode continuous downlink bursts
- *
- */
-
-enum burst_t {
-    SB     = 0,                                                                 // synchronisation downlink burst 9.4.4.3.4
-    NDB    = 1,                                                                 // 1 logical channel in time slot TCH or SCH/F
-    NDB_SF = 2                                                                  // 2 logical channels in time slot STCH+TCH or STCH+STCH or SCH/HD+SCH/HD or SCH/HD+BNCH 9.4.4.3.2
-};
-
-/**
- * @brief Logical channels enum
- *
- */
-
-enum mac_logical_channel_t {                                                    // CP only
-    AACH   = 0,
-    BLCH   = 1,
-    BNCH   = 2,
-    BSCH   = 3,
-    SCH_F  = 4,
-    SCH_HD = 5,
-    STCH   = 6,
-    TCH_S  = 7,
-    TCH    = 8,
-    unkown = 9
-};
-
-/**
- * @brief Tetra sub-system synchronisation - ch. 7
- *
- */
-
-struct tetra_time_t {
-    uint16_t fn;                                                                ///< frame number
-    uint16_t mn;                                                                ///< multi-frame number
-    uint16_t tn;                                                                ///< time slot
-};
-
-/**
- * @brief Tetra cell information
- *
- */
-
-struct tetra_cell_infos_t {
-    uint16_t color_code;                                                        ///< Cell Color code
-    uint32_t mcc;                                                               ///< Cell MCC
-    uint32_t mnc;                                                               ///< Cell MNC
-    uint32_t scrambling_code;                                                   ///< Cell Scrambling code
-
-    int32_t downlink_frequency;                                                 ///< Downlink frequency [Hz]
-    int32_t uplink_frequency;                                                   ///< Uplink frequency [Hz]
-};
-
-/**
- * @brief Tetra MAC address
- *
- * Contains the current burst address state (21.4.3.1)
- *
- */
-
-struct mac_address_t {
-    uint8_t  address_type;
-    uint8_t  event_label;
-    uint8_t  usage_marker;
-    uint8_t  stolen_flag;
-    uint32_t smi;
-    uint32_t ssi;
-    uint32_t ussi;
-};
-
-/**
- * @brief Downlink usage values 21.4.7.2 table 21.77
- *
- */
-
-enum downlink_usage_t {
-    UNALLOCATED      = 0,
-    ASSIGNED_CONTROL = 1,
-    COMMON_CONTROL   = 2,
-    RESERVED         = 3,
-    TRAFFIC          = 4                                                        // traffic usage marker assigned in MAC-RESOURCE PDU
-};
-
-/**
- * @brief Contains the current MAC informations for routing to logical channels
- *
- */
-
-struct mac_state_t {
-    downlink_usage_t      downlink_usage;                                       ///< Downlink usage type
-    uint32_t              downlink_usage_marker;                                ///< Downlink usage marker
-    mac_logical_channel_t logical_channel;                                      ///< Current logical channel
-};
 
 /**
  * @brief TETRA downlink decoder class
@@ -172,8 +73,12 @@ struct mac_state_t {
 
 class tetra_dl {
 public:
-    tetra_dl();
+    tetra_dl(int debug_level, bool remove_fill_bit_flag);
     ~tetra_dl();
+
+    // general data
+    int g_debug_level;                                                          ///< Debug level
+    bool g_remove_fill_bit_flag;                                                ///< If true, the fill bits will be removed
 
     // burst data
     vector<uint8_t> g_frame_data;                                               ///< Burst data
@@ -207,6 +112,7 @@ public:
     int check_crc16ccitt(vector<uint8_t> data, int len);
 
     // MAC
+    mac_defrag_t  * mac_defrag;                                                 ///< MAC defragmenter class
     mac_state_t   mac_state;                                                    ///< Current MAC state (from ACCESS-ASSIGN PDU)
     mac_address_t mac_address;                                                  ///< Current MAc address (from MAC-RESOURCE PDU)
     uint8_t       second_slot_stolen_flag;                                      ///< 1 if second slot is stolen
@@ -214,11 +120,12 @@ public:
     void service_lower_mac(vector<uint8_t> data, int burst_type);
     void service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac_logical_channel);
 
+    vector<uint8_t> mac_remove_fill_bits(const vector<uint8_t> pdu);
     vector<uint8_t> mac_pdu_process_sync(vector<uint8_t> pdu);                  // process SYNC
     void            mac_pdu_process_aach(vector<uint8_t> data);                 // process ACCESS-ASSIGN - no SDU
-    vector<uint8_t> mac_pdu_process_ressource(vector<uint8_t> pdu);             // process MAC-RESSOURCE
+    vector<uint8_t> mac_pdu_process_ressource(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel, bool * b_fragmented_packet); // process MAC-RESSOURCE
     vector<uint8_t> mac_pdu_process_sysinfo(vector<uint8_t> pdu);               // process SYSINFO
-    vector<uint8_t> mac_pdu_process_mac_frag(vector<uint8_t> pdu);              // process MAC-FRAG
+    void            mac_pdu_process_mac_frag(vector<uint8_t> pdu);              // process MAC-FRAG
     vector<uint8_t> mac_pdu_process_mac_end(vector<uint8_t> pdu);               // process MAC-END
     vector<uint8_t> mac_pdu_process_d_block(vector<uint8_t> pdu);               // process MAC-D-BLCK
 
@@ -259,15 +166,14 @@ public:
     void cmce_sds_service_location_information_protocol(vector<uint8_t> pdu);
     void cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu);
     void cmce_sds_lip_parse_extended_message(vector<uint8_t> pdu);
-    
+
     // U-plane
     void service_u_plane(vector<uint8_t> data, mac_logical_channel_t mac_logical_channel); // U-plane traffic
 
     // for reporting informations in Json format
     struct json_object * jobj;                                                  ///< Json object
     int socketfd = 0;                                                           ///< UDP socket to write to
-    bool gb_debug_mode = false;                                                 ///< Flag to indicate we want to print each Json text to screen
-    
+
     void report_start(const string service, const string pdu);
     void report_start(const char * service, const char * pdu);
     void report_add(const char * field, const char *val);

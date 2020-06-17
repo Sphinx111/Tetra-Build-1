@@ -104,20 +104,8 @@ Usage
 =====
 
 Open 3 shells in the 3 folders:
-* In decoder/ run `./decoder` or `decoder`
 
-```sh
-Usage: decoder [OPTIONS]
-
-Options:
-  -r <UDP socket> receiving from phy [default port is 42000]
-  -t <UDP socket> sending Json data [default port is 42100]
-  -i <file> replay data from binary file instead of UDP
-  -o <file> record data to binary file (can be replayed with -i option)
-  -h print this help
-```
-
-* In recorder/ run `./recorder` or `recorder`
+* In recorder/ run `./recorder`
 
 ```sh
 Usage: recorder [OPTIONS]
@@ -129,7 +117,22 @@ Options:
   -h print this help
 ```
 
-* In phy/ run `./pi4dqpsk_rx.py` or `pi4dqpsk_rx.py` and tunes the frequency (and eventually the baseband offset which may be positive or negative)
+* In decoder/ run `./decoder`
+
+```sh
+Usage: decoder [OPTIONS]
+
+Options:
+  -r <UDP socket> receiving from phy [default port is 42000]
+  -t <UDP socket> sending Json data [default port is 42100]
+  -i <file> replay data from binary file instead of UDP
+  -o <file> record data to binary file (can be replayed with -i option)
+  -d <level> print debug information
+  -f keep fill bits
+  -h print this help
+```
+
+* In phy/ run your flowgraph from gnuradio-companion and tunes the frequency (and eventually the baseband offset which may be positive or negative)
 
 Then you should see frames in `decoder`.
 You will see less data in `recorder` but it maintains all received frames into the file `log.txt`.
@@ -138,8 +141,17 @@ Notice that this file may become big since it is never overwritten between sessi
 # Submitting bugs
 
 When you find a bug, it is very important to record the incoming bits so I can check what's going on.
-This is done with `decoder -o out.bits` command.
+This is done with `./decoder -o out.bits` command.
 You can zip and attach the `out.bits` file to the issue, it is very useful.
+
+Typical debug scenario is:
+1. you have some bits from `./decoder -o out.bits`
+2. in folder recorder remove file `log.txt`
+3. start `./recorder`
+4. in folder decoder, replay your bits file with `./decoder -i out.bits`
+5. go back to recorder folder and read the `log.txt` file
+
+Note that the `out.bits` file can be read by sq5bpf `tetra-rx out.bits`.
 
 # Previous work
 
@@ -158,7 +170,6 @@ Base64 decoder
 
 # To be done
 
-* MAC defragmentation
 * LLC reassembly of segmented TL-SDU
 * SDS handling is early beta
 * FEC correction

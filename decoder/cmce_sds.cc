@@ -333,18 +333,20 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
 /**
  * @brief Parser sub protocol SDS-TRANFER
  *
- * {"service":"CMCE","pdu":"D-SDS-DATA","tn":1,"fn":2,"mn":43,"ssi":299906,"usage marker":0,"calling party type identifier":1,"calling party ssi":401101,"sds type identifier":3,"protocol id":130,"message type":0,"sds-pdu":"SDS-TRANSFER","message reference":227,"infos":"01 f0 80 00 c2 0c 12 07 29 05 99 05 82 01 0e 00 00 00"}
- * {"service":"CMCE","pdu":"D-SDS-DATA","tn":1,"fn":2,"mn":43,"ssi":299906,"usage marker":0,"hex":"82 00 e3 01 f0 80 00 c2 0c 12 07 29 05 99 05 82 01 0e 00 00 00"}
  *
  */
 
 void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t len)
 {
     uint32_t pos = 0;
+    
     uint8_t protocol_id = get_value(pdu, pos, 8);                               // protocol id
-    pos += 4;                                                                   // message type (was SDS-TRANSFER)
+    pos += 8;
+
+    pos += 4;                                                                   // message type = SDS-TRANSFER
     pos += 2;                                                                   // delivery report request
     pos += 1;                                                                   // service selection / short form report
+
 
     uint8_t service_forward_control = get_value(pdu, pos, 1);
     pos += 1;
@@ -417,28 +419,32 @@ void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t
     {
     case 0b10000010:                                                            // 29.5.3
         report_add("protocol info", "text messaging (SDS-TL)");
-        cmce_sds_parse_text_messaging_with_sds_tl(sdu);
+        cmce_sds_parse_text_messaging_with_sds_tl(sdu);                         // "infos" block will be filled in function
         break;
 
     case 0b10000011:                                                            // 29.5.6
         report_add("protocol info", "location system (SDS-TL)");
-        cmce_sds_parse_location_system_with_sds_tl(sdu);
+        cmce_sds_parse_location_system_with_sds_tl(sdu);                        // "infos" block will be filled in function
         break;
 
     case 0b10000100:                                                            // Wireless Datagram Protocol WAP - 29.5.8
         report_add("protocol info", "WAP (SDS-TL)");
+        report_add("infos", sdu);                                               // remaining part of pdu is sdu since we may be managed by SDS-TL
         break;
 
     case 0b10000101:                                                            // Wireless Control Message Protocol WCMP - 29.5.8
         report_add("protocol info", "WCMP (SDS-TL)");
+        report_add("infos", sdu);                                               // remaining part of pdu is sdu since we may be managed by SDS-TL
         break;
 
     case 0b10000110:                                                            // Managed DMO M-DMO - 29.5.1
         report_add("protocol info", "M-DMO (SDS-TL)");
+        report_add("infos", sdu);                                               // remaining part of pdu is sdu since we may be managed by SDS-TL
         break;
 
     case 0b10001000:                                                            // end-to-end encrypted message
         report_add("protocol info", "end-to-end encrypted message (SDS-TL)");
+        report_add("infos", sdu);                                               // remaining part of pdu is sdu since we may be managed by SDS-TL
         break;
 
     case 0b10001001:                                                            // 29.5.3
@@ -448,17 +454,21 @@ void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t
 
     case 0b10001010:                                                            // TODO UDH - 29.5.9
         report_add("protocol info", "message with user-data header");
+        report_add("infos", sdu);                                               // remaining part of pdu is sdu since we may be managed by SDS-TL
         break;
 
     case 0b10001100:                                                            // TODO 29.5.14
         report_add("protocol info", "concatenated sds message (SDS-TL)");
+        report_add("infos", sdu);                                               // remaining part of pdu is sdu since we may be managed by SDS-TL
         break;
 
     default:
+        report_add("protocol info", "reserved/user-defined");                   // if reserved or user-defined, try a generic text read
+        cmce_sds_parse_text_messaging_with_sds_tl(sdu);                         // "infos" block will be filled in function
+        //cmce_sds_parse_location_system_with_sds_tl(sdu);                        // "infos" block will be filled in function
         break;
     }
 
-    report_add("infos", sdu);                                                   // remaining part of pdu is sdu since we may be managed by SDS-TL
 }
 
 /**
@@ -486,9 +496,10 @@ void tetra_dl::cmce_sds_parse_simple_text_messaging(vector<uint8_t> pdu, const u
         txt = text_generic_8_bit_decode(vector_extract(pdu, pos, len - pos), len - pos);
         report_add("infos", txt);
     }
-    else
+    else                                                                        // try generic 8 bits alphabet since we already have the full hexadecimal SDU
     {
-        report_add("infos", vector_extract(pdu, pos, len - pos));               // hexadecimal report
+        txt = text_generic_8_bit_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        report_add("infos", txt);
     }
 }
 
@@ -528,9 +539,10 @@ void tetra_dl::cmce_sds_parse_text_messaging_with_sds_tl(vector<uint8_t> pdu)
         txt = text_generic_8_bit_decode(vector_extract(pdu, pos, len - pos), len - pos);
         report_add("infos", txt);
     }
-    else
+    else                                                                        // try generic 8 bits alphabet since we already have the full hexadecimal SDU
     {
-        report_add("infos", vector_extract(pdu, pos, len - pos));               // hexadecimal report
+        txt = text_generic_8_bit_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        report_add("infos", txt);
     }
 }
 

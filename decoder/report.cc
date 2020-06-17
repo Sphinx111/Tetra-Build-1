@@ -208,7 +208,7 @@ void tetra_dl::report_send()
 
     write(socketfd, buf, sizeof(buf));
 
-    if (gb_debug_mode)
+    if (g_debug_level > 1)
     {
         printf(buf);
     }

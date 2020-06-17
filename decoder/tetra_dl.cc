@@ -30,8 +30,11 @@
  *
  */
 
-tetra_dl::tetra_dl()
+tetra_dl::tetra_dl(int debug_level, bool remove_fill_bit_flag)
 {
+    g_debug_level          = debug_level;
+    g_remove_fill_bit_flag = remove_fill_bit_flag;
+    
     g_frame_len = 510;                                                          // burst length [510 bits]
     g_frame_data.clear();
 
@@ -74,6 +77,9 @@ tetra_dl::tetra_dl()
     polynomials.push_back(0b10111);
     polynomials.push_back(0b11011);
     viterbi_codec16_14 = new ViterbiCodec(constraint, polynomials);
+
+    mac_defrag = new mac_defrag_t(g_debug_level);
+    
 }
 
 /**
@@ -83,7 +89,7 @@ tetra_dl::tetra_dl()
 
 tetra_dl::~tetra_dl()
 {
-
+    delete mac_defrag;
 }
 
 /**

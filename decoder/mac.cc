@@ -38,6 +38,8 @@ static int cur_burst_type;
  *
  * Notes:
  *   - AACH must be processed first to get traffic or signalling mode
+ *   - Fill bit deletion to be tested (see 23.4.3.2)
+ *   - TODO PDU dissociation (see 23.4.3.3)
  *
  */
 
@@ -60,6 +62,7 @@ void tetra_dl::service_lower_mac(vector<uint8_t> data, int burst_type)
         }
     }
 
+    //printf("BURST %d\n", burst_type);
     second_slot_stolen_flag = 0;                                                // stolen flag lifetime is NDB_SF burst life only
 
     vector<uint8_t> bkn1;                                                       // busrt block BKN1
@@ -235,11 +238,13 @@ void tetra_dl::service_lower_mac(vector<uint8_t> data, int burst_type)
 
 void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac_logical_channel)
 {
-    string txt = "";
+    string txt = "?";
     uint8_t pdu_type;
     uint8_t sub_type;
     uint8_t broadcast_type;
     vector<uint8_t> tm_sdu;
+    bool b_send_tm_sdu_to_llc = true;
+    bool b_fragmented_packet  = false;
 
     mac_state.logical_channel = mac_logical_channel;
 
@@ -247,18 +252,23 @@ void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac
     {
     case AACH:
         mac_pdu_process_aach(data);                                             // ACCESS-ASSIGN see 21.4.7 - stop after processing
+        txt = "  aach";
         break;
 
     case BSCH:                                                                  // SYNC PDU - stop after processing
+        txt = "  bsch";
         tm_sdu = mac_pdu_process_sync(data);
         break;
 
     case TCH_S:                                                                 // (TMD) MAC-TRAFFIC PDU full slot
         printf("TCH_S       : TN/FN/MN = %2d/%2d/%2d    dl_usage_marker=%d\n", g_time.tn, g_time.fn, g_time.mn, mac_state.downlink_usage_marker);
+        txt = "  tch_s";
         service_u_plane(data, TCH_S);
         break;
 
     case TCH:                                                                   // TCH half-slot TODO not taken into account for now
+        printf("TCH         : TN/FN/MN = %2d/%2d/%2d    dl_usage_marker=%d\n", g_time.tn, g_time.fn, g_time.mn, mac_state.downlink_usage_marker);
+        txt = "  tch";
         service_u_plane(data, TCH);
         break;
 
@@ -273,7 +283,14 @@ void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac
         {
         case 0b00:                                                              // MAC PDU structure for downlink (TMA) MAC-RESSOURCE
             txt = "MAC-RESSOURCE";
-            tm_sdu = mac_pdu_process_ressource(data);
+            tm_sdu = mac_pdu_process_ressource(data, mac_logical_channel, &b_fragmented_packet);
+
+            if (b_fragmented_packet)
+            {
+                // tm_sdu to be hold until MAC-END received
+                b_send_tm_sdu_to_llc = false;
+            }
+
             break;
 
         case 0b01:                                                              // MAC-FRAG or MAC-END (TMA)
@@ -281,12 +298,14 @@ void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac
             if (sub_type == 0)                                                  // MAC-FRAG 21.4.3.2
             {
                 txt = "MAC-FRAG";
-                tm_sdu = mac_pdu_process_mac_frag(data);                        // max 120 or 240 bits depending on channel
+                mac_pdu_process_mac_frag(data);                                 // no PDU returned // max 120 or 240 bits depending on channel
+                b_send_tm_sdu_to_llc = false;
             }
             else                                                                // MAC-END 21.4.3.3
             {
                 txt = "MAC-END";
                 tm_sdu = mac_pdu_process_mac_end(data);
+                b_send_tm_sdu_to_llc = true;
             }
             break;
 
@@ -324,17 +343,19 @@ void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac
             break;
 
         default:
+            txt = "pdu";
             break;
         }
         break;
 
     default:
+        txt = "rev";
         break;
     }
 
     //printf("%-10s : TN/FN/MN = %2d/%2d/%2d    dl_usage_marker=%d\n", txt.c_str(), g_time.tn, g_time.fn, g_time.mn, mac_state.downlink_usage_marker);
 
-    if (tm_sdu.size() > 0)
+    if ((tm_sdu.size() > 0) && b_send_tm_sdu_to_llc)
     {
         service_llc(tm_sdu, mac_logical_channel);                               // service LLC
     }
@@ -344,6 +365,7 @@ void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac
 /**
  * @brief Decode length of MAC-RESSOURCE PDU - see 21.4.3.1 table 21.55
  *
+ *        WARNING: length is in octet, not in bits
  *
  */
 
@@ -451,32 +473,88 @@ void tetra_dl::mac_pdu_process_aach(vector<uint8_t> pdu)
 }
 
 /**
- * @brief Process MAC-RESSOURCE and return TM-SDU (LLC) - see 21.4.3.1 table 329
+ * @brief Remove fill bits - see 23.4.3.2
+ *
  *
  */
 
-vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> pdu)
+vector<uint8_t> tetra_dl::mac_remove_fill_bits(const vector<uint8_t> pdu)
 {
-    // mac_address.address_type = 0;
-    // mac_address.ssi          = 0;
-    // mac_address.event_label  = 0;
-    // mac_address.ussi         = 0;
-    // mac_address.smi          = 0;
-    // mac_address.usage_marker = 0;
+    vector<uint8_t> ret = pdu;
+
+    if (g_remove_fill_bit_flag)
+    {
+        if (g_debug_level > 2)
+        {
+            printf(" ------- mac_remove_fill_bits BEFORE -- %u bits\n", (uint32_t)ret.size());
+            print_vector(ret, ret.size());
+        }
+
+        if (ret[ret.size() - 1] == 1)
+        {
+            ret.resize(ret.size() - 1);                                         // 23.4.3.2 remove last 1
+        }
+        else
+        {
+            while (ret[ret.size() - 1] == 0)
+            {
+                ret.resize(ret.size() - 1);                                     // 23.4.3.2 remove all 0
+            }
+            ret.resize(ret.size() - 1);                                         // 23.4.3.2 then remove last 1
+        }
+
+        if (g_debug_level > 2)
+        {
+            printf(" ------- mac_remove_fill_bits AFTER --- %u bits\n", (uint32_t)ret.size());
+            print_vector(ret, ret.size());
+        }
+
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Process MAC-RESSOURCE and return TM-SDU (to LLC or MAC-FRAG) - see 21.4.3.1 table 329
+ *
+ * Maximum length (table 21.56):
+ *    SCH/F   239 bits
+ *    SCH/HD  95 bits
+ *    STCH    95 bits
+ *
+ */
+
+vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> mac_pdu, mac_logical_channel_t mac_logical_channel, bool * b_fragmented_packet)
+{
+    vector<uint8_t> pdu = mac_pdu;
+
+    *b_fragmented_packet = false;
 
     uint32_t pos = 2;                                                           // MAC pdu type
-    pos += 1;                                                                   // fill bit indication
+
+    uint8_t fill_bit_flag = get_value(pdu, pos, 1);                             // fill bit indication
+    pos += 1;
+
+    if (fill_bit_flag)
+    {
+        pdu = mac_remove_fill_bits(pdu);
+    }
+
     pos += 1;                                                                   // position of grant
     pos += 2;                                                                   // encryption mode
     pos += 1;                                                                   // random access flag
 
-    uint32_t val = get_value(pdu, pos, 6);                                      // length indication
+    uint32_t length = get_value(pdu, pos, 6);                                   // length indication
     pos += 6;
-    uint32_t length = decode_length(val);
 
-    if (length == 0b111110 || length == 0b111111)
+    if (length == 0b111110)
     {
         second_slot_stolen_flag = 1;
+    }
+    else if (length == 0b111111)                                                // beginning of a fragmenting signalling message
+    {
+        *b_fragmented_packet = true;
+        second_slot_stolen_flag = 0;
     }
 
     mac_address.address_type = get_value(pdu, pos, 3);
@@ -484,8 +562,8 @@ vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> pdu)
 
     if (mac_address.address_type == 0b000)                                      // NULL pdu, stop processing here
     {
-        vector<uint8_t> t;
-        return t;
+        vector<uint8_t> null_pdu;
+        return null_pdu;
     }
 
     switch (mac_address.address_type)
@@ -554,6 +632,8 @@ vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> pdu)
     pos += 1;
     if (flag)
     {
+        uint8_t val;
+
         // 21.5.2 channel allocation elements table 341
         pos += 2;                                                               // channel allocation type
         pos += 4;                                                               // timeslot assigned
@@ -615,10 +695,140 @@ vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> pdu)
     }
 
     vector<uint8_t> sdu;
-    if (length > 0)
+
+    uint32_t sdu_length = decode_length(length) * 8 - pos;
+
+    if (sdu_length > 0)
     {
-        sdu = vector_extract(pdu, pos, length * 8 - pos);
+        // longest recommended size for TM_SDU 1106 bits = 133 bytes (with FCS) or 137 bytes (without FCS)
+        // length includes MAC PDU header + TM_SDU length
+
+        if (*b_fragmented_packet)
+        {
+            mac_defrag->start(mac_address, g_time);
+            mac_defrag->append(vector_extract(pdu, pos, pdu.size()), mac_address);
+        }
+        else
+        {
+            sdu = vector_extract(pdu, pos, sdu_length);
+        }
     }
+
+    return sdu;
+}
+
+/**
+ * @brief MAC-FRAG see 23.4.2.1 / 21.4.3.2 / 23.4.3 (defragmentation)
+ *
+ * Maximum length depends on channel (table 21.58):
+ *   SCH/F  264 bits
+ *   SCH/HD 120 bits
+ *
+ * Maximum consecutive slots N.203 >= 4 (Annex B.2)
+ *
+ */
+
+void tetra_dl::mac_pdu_process_mac_frag(vector<uint8_t> mac_pdu)
+{
+    vector<uint8_t> pdu = mac_pdu;
+
+    uint32_t pos = 3;                                                           // MAC PDU type and subtype (MAC-FRAG)
+
+    uint8_t fill_bit_flag = get_value(pdu, pos, 1);
+    pos += 1;
+
+    if (fill_bit_flag)
+    {
+        pdu = mac_remove_fill_bits(pdu);
+    }
+
+    vector<uint8_t> sdu = vector_extract(pdu, pos, pdu.size() - pos);
+
+    mac_defrag->append(sdu, mac_address);
+}
+
+/**
+ * @brief MAC-END 21.4.3.4 / 23.4.3 (defragmentation)
+ *
+ * Maximum length depends on channel (table 21.60):
+ *   SCH/F  255 bits
+ *   SCH/HD 111 bits
+ *   STCH   111 bits
+ *
+ */
+
+vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(vector<uint8_t> mac_pdu)
+{
+    vector<uint8_t> pdu = mac_pdu;
+
+    uint32_t pos = 3;                                                           // MAC PDU type and subtype (MAC-END)
+
+    uint8_t fill_bit_flag = get_value(pdu, pos, 1);                             // fill bits
+    pos += 1;
+
+    if (fill_bit_flag)
+    {
+        pdu = mac_remove_fill_bits(pdu);
+    }
+
+    pos += 1;                                                                   // position of grant
+
+    uint32_t val = get_value(pdu, pos, 6);                                      // length of MAC pdu
+    pos += 6;
+
+    if ((val < 0b000010) || (val > 0b100010))                                   // reserved
+    {
+        vector<uint8_t> null_pdu;
+        return null_pdu;
+    }
+
+    uint32_t length = decode_length(val);                                       // convert length in bytes (includes MAC PDU header + TM_SDU length)
+
+    uint8_t flag = get_value(pdu, pos, 1);                                      // slot granting flag
+    pos += 1;
+    if (flag)
+    {
+        pos += 8;                                                               // slot granting element
+    }
+
+    flag = get_value(pdu, pos, 1);                                              // channel allocation flag
+    pos += 1;
+    if (flag)
+    {
+        // 21.5.2 channel allocation elements table 341
+        pos += 2;                                                               // channel allocation type
+        pos += 4;                                                               // timeslot assigned
+        pos += 2;                                                               // up/downlink assigned
+        pos += 1;                                                               // CLCH permission
+        pos += 1;                                                               // cell change flag
+        pos += 12;                                                              // carrier number
+        flag = get_value(pdu, pos, 1);                                          // extended carrier numbering flag
+        pos += 1;
+        if (flag)
+        {
+            pos += 4;                                                           // frequency band
+            pos += 2;                                                           // offset
+            pos += 3;                                                           // duplex spacing
+            pos += 1;                                                           // reverse operation
+        }
+        uint32_t val = get_value(pdu, pos, 2);                                  // monitoring pattern
+        pos += 2;
+        if ((val == 0b00) && (g_time.fn == 18))                                 // frame 18 conditional monitoring pattern
+        {
+            pos += 2;
+        }
+    }
+
+    vector<uint8_t> sdu;
+    // if (length > 0)                                                             // 23.4.3.1.1 in some case there is no user data (sdu length = 0)
+    // {
+    uint16_t sdu_length = length * 8 - pos;
+
+    //mac_defrag->append(vector_extract(pdu, pos, sdu_length), mac_address);
+    mac_defrag->append(vector_extract(pdu, pos, pdu.size()), mac_address);
+    sdu = mac_defrag->get_sdu();
+    mac_defrag->stop();
+    // }
 
     return sdu;
 }
@@ -676,91 +886,24 @@ vector<uint8_t> tetra_dl::mac_pdu_process_sysinfo(vector<uint8_t> pdu)
 }
 
 /**
- * @brief Process MAC-FRAG block - see 21.4.3.2
- *
- */
-
-vector<uint8_t> tetra_dl::mac_pdu_process_mac_frag(vector<uint8_t> pdu)
-{
-    uint32_t pos = 4;
-    vector<uint8_t> sdu = vector_extract(pdu, pos, pdu.size() - pos);
-
-    return sdu;
-}
-
-/**
- * @brief Process MAC-END block - see 21.4.3.3
- *
- */
-
-vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(vector<uint8_t> pdu)
-{
-    uint32_t pos = 3;
-    pos += 1;                                                                   // fill bit indication
-    pos += 1;                                                                   // position of grant
-
-    uint32_t length = get_value(pdu, pos, 6);                                   // length of MAC pdu
-    pos += 6;
-
-    if ((length < 0b000010) || (length > 0b100010))                             // reserved
-    {
-        vector<uint8_t> r;
-        return r;
-    }
-
-    uint8_t flag = get_value(pdu, pos, 1);                                      // slot granting flag
-    pos += 1;
-    if (flag)
-    {
-        pos += 8;                                                               // slot granting element
-    }
-
-    flag = get_value(pdu, pos, 1);                                              // channel allocation flag
-    pos += 1;
-    if (flag)
-    {
-        // 21.5.2 channel allocation elements table 341
-        pos += 2;                                                               // channel allocation type
-        pos += 4;                                                               // timeslot assigned
-        pos += 2;                                                               // up/downlink assigned
-        pos += 1;                                                               // CLCH permission
-        pos += 1;                                                               // cell change flag
-        pos += 12;                                                              // carrier number
-        flag = get_value(pdu, pos, 1);                                          // extended carrier numbering flag
-        pos += 1;
-        if (flag)
-        {
-            pos += 4;                                                           // frequency band
-            pos += 2;                                                           // offset
-            pos += 3;                                                           // duplex spacing
-            pos += 1;                                                           // reverse operation
-        }
-        uint32_t val = get_value(pdu, pos, 2);                                  // monitoring pattern
-        pos += 2;
-        if ((val == 0b00) && (g_time.fn == 18))                                 // frame 18 conditional monitoring pattern
-        {
-            pos += 2;
-        }
-    }
-
-    vector<uint8_t> sdu;
-    if (length > 0)
-    {
-        sdu = vector_extract(pdu, pos, pdu.size() - pos);
-    }
-
-    return sdu;
-}
-
-/**
  * @brief Process MAC-D-BLCK - see 21.4.3.4 table 21.61
  *
  */
 
-vector<uint8_t> tetra_dl::mac_pdu_process_d_block(vector<uint8_t> pdu)
+vector<uint8_t> tetra_dl::mac_pdu_process_d_block(vector<uint8_t> mac_pdu)
 {
+    vector<uint8_t> pdu = mac_pdu;
+
     uint32_t pos = 3;
-    pos += 1;                                                                   // fill bit
+
+    uint8_t fill_bit_flag = get_value(pdu, pos, 1);                             // fill bits
+    pos += 1;
+
+    if (fill_bit_flag)
+    {
+        pdu = mac_remove_fill_bits(pdu);
+    }
+
     pos += 2;                                                                   // encryption mode
     mac_address.event_label = get_value(pdu, pos, 10);                          // address
     pos += 10;

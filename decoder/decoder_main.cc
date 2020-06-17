@@ -27,7 +27,6 @@ enum program_mode_t {
     STANDARD_MODE         = 0,
     READ_FROM_BINARY_FILE = 1,
     SAVE_TO_BINARY_FILE   = 2,
-    DEBUG_MOD             = 4
 };
 
 /** @brief interrupt flag */
@@ -68,9 +67,11 @@ int main(int argc, char * argv[])
     char opt_filename_out[FILENAME_LEN] = "";                                   // output bits filename
 
     int program_mode = STANDARD_MODE;
-
+    int debug_level = 0;
+    bool fill_bit_flag = true;
+    
     int option;
-    while ((option = getopt(argc, argv, ":hr:t:i:o:d")) != -1)
+    while ((option = getopt(argc, argv, ":hr:t:i:o:d:f")) != -1)
     {
         switch (option)
         {
@@ -93,7 +94,11 @@ int main(int argc, char * argv[])
             break;
 
         case 'd':
-            program_mode |= DEBUG_MOD;
+            debug_level = atoi(optarg);
+            break;
+            
+        case 'f':
+            fill_bit_flag = false;
             break;
 
         case 'h':
@@ -103,7 +108,8 @@ int main(int argc, char * argv[])
                    "  -t <UDP socket> sending Json data [default port is 42100]\n"
                    "  -i <file> replay data from binary file instead of UDP\n"
                    "  -o <file> record data to binary file (can be replayed with -i option)\n"
-                   "  -d print debug information\n"
+                   "  -d <level> print debug information\n"
+                   "  -f keep fill bits\n"
                    "  -h print this help\n\n");
             exit(EXIT_FAILURE);
             break;
@@ -117,12 +123,7 @@ int main(int argc, char * argv[])
 
     // create decoder
 
-    tetra_dl * decoder = new tetra_dl();
-
-    if (program_mode & DEBUG_MOD)
-    {
-        decoder->gb_debug_mode = true;
-    }
+    tetra_dl * decoder = new tetra_dl(debug_level, fill_bit_flag);
 
     // output destination socket
 

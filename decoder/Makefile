@@ -3,7 +3,8 @@ CFLAGS = -O2 -fPIC -std=c++11 -Wall
 LDFLAGS = -ljson-c -lz
 
 SRC = 	decoder_main.cc coding.cc report.cc utils.cc viterbi.cc  base64.cc \
-	tetra_dl.cc mac.cc llc.cc mle.cc cmce.cc cmce_sds.cc cmce_sds_lip.cc uplane.cc
+	tetra_dl.cc mac.cc llc.cc mle.cc cmce.cc cmce_sds.cc cmce_sds_lip.cc uplane.cc \
+	mac_defrag.cc
 
 OBJ = $(SRC:.cc=.o)
 EXE = decoder

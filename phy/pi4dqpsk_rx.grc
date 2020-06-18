@@ -222,33 +222,6 @@
     </param>
   </block>
   <block>
-    <key>variable</key>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(400, 140)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>freq_offset</value>
-    </param>
-    <param>
-      <key>value</key>
-      <value>200e3</value>
-    </param>
-  </block>
-  <block>
     <key>variable_qtgui_entry</key>
     <param>
       <key>comment</key>
@@ -264,11 +237,11 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(880, 84)</value>
+      <value>(896, 84)</value>
     </param>
     <param>
       <key>gui_hint</key>
-      <value>[1,1]</value>
+      <value>1,1</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -285,60 +258,6 @@
     <param>
       <key>type</key>
       <value>real</value>
-    </param>
-  </block>
-  <block>
-    <key>variable</key>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(288, 76)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>frequency</value>
-    </param>
-    <param>
-      <key>value</key>
-      <value>468.165e6</value>
-    </param>
-  </block>
-  <block>
-    <key>variable</key>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(288, 140)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>frequency</value>
-    </param>
-    <param>
-      <key>value</key>
-      <value>467.5625e6</value>
     </param>
   </block>
   <block>
@@ -361,7 +280,7 @@
     </param>
     <param>
       <key>gui_hint</key>
-      <value>[1,0]</value>
+      <value>1,0</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -369,7 +288,7 @@
     </param>
     <param>
       <key>id</key>
-      <value>frequency_mhz</value>
+      <value>frequency_Mhz</value>
     </param>
     <param>
       <key>label</key>
@@ -377,7 +296,7 @@
     </param>
     <param>
       <key>type</key>
-      <value>real</value>
+      <value>string</value>
     </param>
   </block>
   <block>
@@ -427,7 +346,7 @@
     </param>
     <param>
       <key>gui_hint</key>
-      <value>[2,0,1,2]</value>
+      <value>2,0,1,2</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1230,7 +1149,7 @@
     </param>
     <param>
       <key>gui_hint</key>
-      <value>[4,0,1,2]</value>
+      <value>4,0,1,2</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1585,7 +1504,7 @@
     </param>
     <param>
       <key>gui_hint</key>
-      <value>[3,0,1,2]</value>
+      <value>3,0,1,2</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1796,7 +1715,7 @@
     </param>
     <param>
       <key>freq0</key>
-      <value>frequency_mhz*1e6-freq_offset_khz*1e3</value>
+      <value>float(frequency_Mhz)*1e6-freq_offset_khz*1e3</value>
     </param>
     <param>
       <key>gain_mode0</key>

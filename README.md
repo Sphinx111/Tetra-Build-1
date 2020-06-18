@@ -58,24 +58,28 @@ $ ./out2wav.sh
 Build
 =====
 
+    Note: don't forget to run `make clean` and rebuild the decoder and recorder when the repositery is updated
+
+
 You will need:
-* gnuradio v3.7.14 and gnuradio-companion with rtl-sdr (I added a flowchart with Wx widgets instead of Qt for older GnuRadio 3.7.11)
+* gnuradio v3.7.14 and gnuradio-companion with rtl-sdr (fixed Qt Hint problem with GnuRadio 3.7.11)
 * gcc
 * [json-c v0.12](https://github.com/json-c/json-c/tree/json-c-0.12) (may have problems with newer versions)
 * zlib v1.2.11 (other versions may work)
 * sox
 * ncurses (optional interface for the recorder. If you don't want it, set `#undef WITH_NCURSES` in file `recorder/window.h`)
 
- 
 Build decoder
 ```sh
 $ cd decoder
+$ make clean
 $ make
 ```
 
 Build recorder with ncurses
 ```sh
 $ cd recorder
+$ make clean
 $ make
 ```
 
@@ -83,12 +87,14 @@ Build recorder
 
 ```sh
 $ cd recorder
+$ make clean
 $ make
 ```
 
 Build speech codec (source code from ETSI example)
 ```sh
 $ cd codec
+$ make clean
 $ make
 $ cp cdecoder ../recorder/wav/
 $ cp sdecoder ../recorder/wav/
@@ -144,14 +150,14 @@ When you find a bug, it is very important to record the incoming bits so I can c
 This is done with `./decoder -o out.bits` command.
 You can zip and attach the `out.bits` file to the issue, it is very useful.
 
-Typical debug scenario is:
+Typical debug session is:
 1. you have some bits from `./decoder -o out.bits`
 2. in folder recorder remove file `log.txt`
 3. start `./recorder`
 4. in folder decoder, replay your bits file with `./decoder -i out.bits`
 5. go back to recorder folder and read the `log.txt` file
 
-Note that the `out.bits` file can be read by sq5bpf `tetra-rx out.bits`.
+Note that the `out.bits` file can be read by sq5bpf program `tetra-rx out.bits`.
 
 # Previous work
 

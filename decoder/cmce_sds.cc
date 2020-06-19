@@ -250,8 +250,8 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
             break;
 
         case 0b00001001:
-            report_add("protocol info", "simple immediate text messaging");     // 29.5.2 - same message than "simple text messaging". Only the handling by the MS differs 
-            cmce_sds_parse_simple_text_messaging(pdu, len);                   
+            report_add("protocol info", "simple immediate text messaging");     // 29.5.2 - same message than "simple text messaging". Only the handling by the MS differs
+            cmce_sds_parse_simple_text_messaging(pdu, len);
             break;
 
         case 0b00001010:
@@ -295,7 +295,7 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
         // protocol values in the scope of norm: 0b11000000 to 0b1111110
         //
         // Note: protocol id is not use here and will be handled by SDS TL service so the sdu is the full pdu
-        
+
         uint8_t message_type = get_value(pdu, pos, 4);
         pos += 4;
         report_add("message type", message_type);
@@ -339,7 +339,7 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
 void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t len)
 {
     uint32_t pos = 0;
-    
+
     uint8_t protocol_id = get_value(pdu, pos, 8);                               // protocol id
     pos += 8;
 

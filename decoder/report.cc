@@ -18,33 +18,12 @@
  */
 #include "tetra_dl.h"
 #include "utils.h"
-#include <zlib.h>
 #include "base64.h"
 
-/**
- * @brief Prepare Json report
- *
- * Initialize Json object, add tetra common informations.
- * Must be terminated by send to free data
- *
- */
-
-void tetra_dl::report_start(const char* service, const char* pdu)
-{
-    jobj = json_object_new_object();                                            // initialize json object
-
-    json_object_object_add(jobj, "service", json_object_new_string(service));
-    json_object_object_add(jobj, "pdu",     json_object_new_string(pdu));
-
-    // time information
-    json_object_object_add(jobj, "tn", json_object_new_int(g_time.tn));
-    json_object_object_add(jobj, "fn", json_object_new_int(g_time.fn));
-    json_object_object_add(jobj, "mn", json_object_new_int(g_time.mn));
-
-    // mac informations
-    json_object_object_add(jobj, "ssi",          json_object_new_int(mac_address.ssi));
-    json_object_object_add(jobj, "usage marker", json_object_new_int(mac_address.usage_marker));
-}
+#include <zlib.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+//#include <rapidjson/error/en.h>
 
 /**
  * @brief Prepare Json report
@@ -56,17 +35,19 @@ void tetra_dl::report_start(const char* service, const char* pdu)
 
 void tetra_dl::report_start(string service, string pdu)
 {
-    report_start(service.c_str(), pdu.c_str());
-}
+    //report_start(service.c_str(), pdu.c_str());
 
-/**
- * @brief Add string data to report
- *
- */
+    jdoc.SetObject();                                                           // create empty Json DOM
 
-void tetra_dl::report_add(const char *field, const char *val)
-{
-    json_object_object_add(jobj, field, json_object_new_string(val));
+    report_add("service", service);
+    report_add("pdu",     pdu);
+
+    report_add("tn", g_time.tn);
+    report_add("fn", g_time.fn);
+    report_add("mn", g_time.mn);
+
+    report_add("ssi",          mac_address.ssi);
+    report_add("usage marker", mac_address.usage_marker);
 }
 
 /**
@@ -76,7 +57,12 @@ void tetra_dl::report_add(const char *field, const char *val)
 
 void tetra_dl::report_add(string field, string val)
 {
-    json_object_object_add(jobj, field.c_str(), json_object_new_string(val.c_str()));
+    rapidjson::Value key(field.c_str(), jdoc.GetAllocator());
+    rapidjson::Value dat(val.c_str(),   jdoc.GetAllocator());;
+
+    jdoc.AddMember(key, dat, jdoc.GetAllocator());
+
+    //json_object_object_add(jobj, field.c_str(), json_object_new_string(val.c_str()));
 }
 
 /**
@@ -86,7 +72,7 @@ void tetra_dl::report_add(string field, string val)
 
 void tetra_dl::report_add(string field, uint8_t val)
 {
-    json_object_object_add(jobj, field.c_str(), json_object_new_int(val));
+    report_add(field, (uint64_t)val);
 }
 
 /**
@@ -95,7 +81,7 @@ void tetra_dl::report_add(string field, uint8_t val)
  */
 void tetra_dl::report_add(string field, uint16_t val)
 {
-    json_object_object_add(jobj, field.c_str(), json_object_new_int(val));
+    report_add(field, (uint64_t)val);
 }
 
 /**
@@ -105,7 +91,7 @@ void tetra_dl::report_add(string field, uint16_t val)
 
 void tetra_dl::report_add(string field, uint32_t val)
 {
-    json_object_object_add(jobj, field.c_str(), json_object_new_int(val));
+    report_add(field, (uint64_t)val);
 }
 
 /**
@@ -115,7 +101,10 @@ void tetra_dl::report_add(string field, uint32_t val)
 
 void tetra_dl::report_add(string field, uint64_t val)
 {
-    json_object_object_add(jobj, field.c_str(), json_object_new_int64(val));
+    rapidjson::Value key(field.c_str(), jdoc.GetAllocator());
+    rapidjson::Value dat(val);
+
+    jdoc.AddMember(key, dat, jdoc.GetAllocator());
 }
 
 /**
@@ -125,7 +114,10 @@ void tetra_dl::report_add(string field, uint64_t val)
 
 void tetra_dl::report_add(string field, double val)
 {
-    json_object_object_add(jobj, field.c_str(), json_object_new_double(val));
+    rapidjson::Value key(field.c_str(), jdoc.GetAllocator());
+    rapidjson::Value dat(val);
+
+    jdoc.AddMember(key, dat, jdoc.GetAllocator());
 }
 
 /**
@@ -157,7 +149,7 @@ void tetra_dl::report_add(string field, vector<uint8_t> vec)
         txt += buf;
     }
 
-    json_object_object_add(jobj, field.c_str(), json_object_new_string(txt.c_str()));
+    report_add(field, txt);
 }
 
 /**
@@ -186,32 +178,30 @@ void tetra_dl::report_add_compressed(string field, const unsigned char * binary_
 
     report_add("uzsize", z_uncomp_size);                                        // uncompressed size (needed for zlib uncompress)
     report_add("zsize",  z_comp_size);                                          // compressed size
-    report_add(field, buf_b64);
+    report_add(field,    buf_b64);                                              // actual data
 }
 
 /**
- * @brief Send Json report and free data
+ * @brief Send Json report to UDP
  *
  */
 
 void tetra_dl::report_send()
 {
-    struct {
-        int flag;
-        const char *flag_str;
-    } json_flags = { JSON_C_TO_STRING_NOZERO, "JSON_C_TO_STRING_NOZERO" };      // remove all empty spaces between fields
+    rapidjson::StringBuffer buffer;                                             // the size of buffer is automatically increased by the writer
+    buffer.Clear();
 
-    char buf[8192] = {0};
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    jdoc.Accept(writer);
 
-    strncpy(buf, json_object_to_json_string_ext(jobj, json_flags.flag), 8192 - 2);
-    strcat(buf, "\n");                                                          // very important for the recorder
+    string output(buffer.GetString());
 
-    write(socketfd, buf, sizeof(buf));
+    char eol = '\n';
+    write(socketfd, output.c_str(), output.length() * sizeof(char));            // string doesn't contain newline
+    write(socketfd, &eol, sizeof(char));                                        // so send it alone
 
     if (g_debug_level > 1)
     {
-        printf(buf);
+        printf("%s\n", output.c_str());
     }
-    
-    json_object_put(jobj);                                                      // delete the json object
 }

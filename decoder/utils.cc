@@ -305,3 +305,26 @@ double utils_decode_integer_twos_complement(uint32_t data, uint8_t n_bits, doubl
 
     return res;
 }
+
+
+/**
+ * @brief Print formatted string like printf with variadic protection
+ *
+ */
+
+
+string format_str(const char *fmt, ...)
+{
+    // variadic format function to string
+    const size_t BUF_LEN = 8192;
+    char buf[BUF_LEN];
+
+    va_list args;
+    va_start(args, fmt);
+
+    vsnprintf(buf, BUF_LEN - 1, fmt, args);
+
+    va_end(args);
+
+    return string(buf);
+}

@@ -68,11 +68,11 @@ void mac_defrag_t::append(const vector<uint8_t> sdu, const mac_address_t address
     else if (address.ssi != mac_address.ssi)                                    // check mac addresses
     {
         stop();                                                                 // stop defragmenter
-        
+
         if (g_debug_level >= DEBUG_VAL)
         {
             printf("  * DEFRAG APPEND   : FAILED appending SSI = %u while fragment SSI = %u\n", mac_address.ssi, address.ssi);
-        }        
+        }
     }
     else
     {
@@ -101,7 +101,7 @@ vector<uint8_t> mac_defrag_t::get_sdu()
    if (b_stopped)
    {
        if (g_debug_level >= DEBUG_VAL)
-       {      
+       {
            printf("  * DEFRAG END      : FAILED SSI = %u - TN/FN/MN = %02u/%02u/%02u - fragment %d - length = %u\n",
                   mac_address.ssi,
                   start_time.tn,
@@ -112,11 +112,11 @@ vector<uint8_t> mac_defrag_t::get_sdu()
        }
    }
    else
-   {       
+   {
        // FIXME add check
        ret = tm_sdu;
    }
-   
+
     return ret;
 }
 

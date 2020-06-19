@@ -69,7 +69,7 @@ int main(int argc, char * argv[])
     int program_mode = STANDARD_MODE;
     int debug_level = 0;
     bool fill_bit_flag = true;
-    
+
     int option;
     while ((option = getopt(argc, argv, ":hr:t:i:o:d:f")) != -1)
     {
@@ -96,7 +96,7 @@ int main(int argc, char * argv[])
         case 'd':
             debug_level = atoi(optarg);
             break;
-            
+
         case 'f':
             fill_bit_flag = false;
             break;

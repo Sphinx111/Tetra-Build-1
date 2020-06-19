@@ -19,22 +19,6 @@
 #ifndef TETRA_COMMON_H
 #define TETRA_COMMON_H
 #include <cstdint>
-// #include <string.h>
-// #include <vector>
-// #include <sstream>
-
-// #include <unistd.h>
-// #include <netinet/udp.h>
-// #include <sys/socket.h>
-// #include <netinet/in.h>
-// #include <arpa/inet.h>
-// #include <sys/time.h>
-
-// #include <json-c/json.h>
-// #include <json-c/json_util.h>
-
-// #include "viterbi.h"
-// #include "mac_defrag.h"
 
 using namespace std;
 

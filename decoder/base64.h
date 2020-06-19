@@ -12,8 +12,6 @@
 
 #ifndef BASE64_H
 #define BASE64_H
-
-//#include <stdio.h>
 #include <cstdint>
 
 //Base64 char table function - used internally for decoding

@@ -18,7 +18,6 @@
  */
 #ifndef MAC_DEFRAG_H
 #define MAC_DEFRAG_H
-
 #include <cstdint>
 #include <vector>
 #include <string>

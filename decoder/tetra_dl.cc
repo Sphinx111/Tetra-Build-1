@@ -34,7 +34,7 @@ tetra_dl::tetra_dl(int debug_level, bool remove_fill_bit_flag)
 {
     g_debug_level          = debug_level;
     g_remove_fill_bit_flag = remove_fill_bit_flag;
-    
+
     g_frame_len = 510;                                                          // burst length [510 bits]
     g_frame_data.clear();
 
@@ -79,7 +79,6 @@ tetra_dl::tetra_dl(int debug_level, bool remove_fill_bit_flag)
     viterbi_codec16_14 = new ViterbiCodec(constraint, polynomials);
 
     mac_defrag = new mac_defrag_t(g_debug_level);
-    
 }
 
 /**
@@ -188,8 +187,6 @@ void tetra_dl::process_frame()
     int score_sync    = pattern_at_position_score(g_frame_data, synchronization_training_sequence, 214);
     int score_normal1 = pattern_at_position_score(g_frame_data, normal_training_sequence1, 244);
     int score_normal2 = pattern_at_position_score(g_frame_data, normal_training_sequence2, 244);
-
-    //printf("    scores: sync / norm1 / norm2 = %2d %2d %2d -> ", score_sync, score_normal1, score_normal2);
 
     // soft decision
     int score_min = score_sync;

@@ -21,7 +21,6 @@
  */
 #ifndef VITERBI2_H
 #define VITERBI2_H
-
 #include <ostream>
 #include <string>
 #include <utility>

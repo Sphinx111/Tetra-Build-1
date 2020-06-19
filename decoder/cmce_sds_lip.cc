@@ -14,7 +14,7 @@ void tetra_dl::cmce_sds_service_location_information_protocol(vector<uint8_t> pd
 
     uint8_t pdu_type = get_value(pdu, pos, 2);                                  // see 6.2
     pos += 2;
-    
+
     switch (pdu_type)                                                           // table 6.29
     {
     case 0b00:                                                                  // short location report - 6.2.1
@@ -24,7 +24,7 @@ void tetra_dl::cmce_sds_service_location_information_protocol(vector<uint8_t> pd
 
     case 0b01:                                                                  // PDU with extension - 6.3.62 table 6.92
         report_add("sds-lip", "extension pdu");
-        cmce_sds_lip_parse_extended_message(pdu);        
+        cmce_sds_lip_parse_extended_message(pdu);
         break;
 
     case 0b10:                                                                  // reserved
@@ -41,7 +41,7 @@ void tetra_dl::cmce_sds_service_location_information_protocol(vector<uint8_t> pd
 void tetra_dl::cmce_sds_lip_parse_extended_message(vector<uint8_t> pdu)
 {
     uint32_t pos = 2;                                                           // pdu type
-    
+
     uint8_t extension = get_value(pdu, pos, 4);
     pos += 4;
 
@@ -58,47 +58,47 @@ void tetra_dl::cmce_sds_lip_parse_extended_message(vector<uint8_t> pdu)
     case 0b0001:
         report_add("extension", "immediate location report request");           // TODO 6.2.16
         break;
-        
+
     case 0b0011:
         report_add("extension", "long location report");                        // TODO 6.2.2
         break;
-        
+
     case 0b0100:
         report_add("extension", "location report ack");                         // TODO 6.2.3
         break;
-        
+
     case 0b0101:
         report_add("extension", "basic location parameters request/response");  // TODO 6.2.4 - 6.2.5
         break;
-        
+
     case 0b0110:
         report_add("extension", "add/modify trigger request/response");         // TODO 6.2.8 - 6.2.9
         break;
-        
+
     case 0b0111:
         report_add("extension", "remove trigger request/response");             // TODO 6.2.10 - 6.2.11
         break;
-        
+
     case 0b1000:
         report_add("extension", "report trigger request/response");             // TODO 6.2.12 - 6.2.13
         break;
-        
+
     case 0b1001:
         report_add("extension", "report basic location parameters request/response"); // TODO 6.2.4 - 6.2.5
         break;
-        
+
     case 0b1010:
         report_add("extension", "location reporting enable/disable request/response"); // TODO 6.2.14 - 6.2.15
         break;
-        
+
     case 0b1011:
         report_add("extension", "location reporting temporary control request/response"); // TODO 6.2.17 - 6.2.18
         break;
-        
+
     case 0b1100:
         report_add("extension", "backlog request/response");                    // TODO 6.2.19 - 6.2.20
         break;
-        
+
     default:
         break;
     }
@@ -142,12 +142,12 @@ static double utils_decode_lip_horizontal_velocity(uint8_t val)
         res = -1.0;                                                             // unknown
     }
     else
-    { 
+    {
         const double C = 16.;
         const double x = 0.038;
         const double A = 13.;
         const double B = 0.;
-        
+
         res = C * pow(1. + x, A - (double)val) + B;
     }
 
@@ -214,11 +214,11 @@ void tetra_dl::cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu)
     pos += 7;
     report_add("horizontal_velocity uint8", horizontal_velocity);
     report_add("horizontal_velocity", utils_decode_lip_horizontal_velocity(horizontal_velocity));
-        
+
     uint8_t direction_of_travel = get_value(pdu, pos, 4);
     pos += 4;
     report_add("direction of travel", utils_decode_lip_direction_of_travel(direction_of_travel));
-               
+
     uint8_t type_of_additional_data = get_value(pdu, pos, 1);                   // 6.3.87 - Table 6.120
     pos += 1;
 

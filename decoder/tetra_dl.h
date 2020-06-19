@@ -30,9 +30,7 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 
-#include <json-c/json.h>
-#include <json-c/json_util.h>
-
+#include <rapidjson/document.h>
 #include "tetra_common.h"
 #include "viterbi.h"
 #include "mac_defrag.h"
@@ -171,12 +169,10 @@ public:
     void service_u_plane(vector<uint8_t> data, mac_logical_channel_t mac_logical_channel); // U-plane traffic
 
     // for reporting informations in Json format
-    struct json_object * jobj;                                                  ///< Json object
+    rapidjson::Document jdoc;                                                   ///< rapidjson document
     int socketfd = 0;                                                           ///< UDP socket to write to
 
     void report_start(const string service, const string pdu);
-    void report_start(const char * service, const char * pdu);
-    void report_add(const char * field, const char *val);
     void report_add(string field, string val);
     void report_add(string field, uint8_t val);
     void report_add(string field, uint16_t val);

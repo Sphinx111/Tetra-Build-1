@@ -16,7 +16,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#include <cstdint>
 #include <cstdarg>
+#include <string>
 #include "window.h"
 #include "cid.h"
 #include "call_identifier.h"
@@ -26,7 +28,8 @@
 #include <ncurses.h>
 
 static WINDOW * wn_top;                                                         // ncurses windows
-static WINDOW * wn_middle;
+static WINDOW * wn_infos;
+static WINDOW * wn_sds;                                                         // window for SDS messages
 static WINDOW * wn_bottom;
 
 /*
@@ -39,27 +42,33 @@ void scr_init()
     // ncurses screen
     initscr();
 
-    wn_top    = subwin(stdscr, 3,             COLS, 0,         0);              // define windows dimensions
-    wn_middle = subwin(stdscr, LINES / 2 - 3, COLS, 3,         0);
-    wn_bottom = subwin(stdscr, LINES / 2,     COLS, LINES / 2, 0);
+    wn_top    = subwin(stdscr, 3,             COLS, 0,             0);          // define windows dimensions
+    wn_infos  = subwin(stdscr, LINES / 4 - 3, COLS, 3,             0);
+    wn_sds    = subwin(stdscr, LINES / 4,     COLS, LINES / 4,     0);
+    wn_bottom = subwin(stdscr, LINES / 2,     COLS, LINES / 2,     0);
 
-    scrollok(wn_middle, TRUE);                                                  // automatic scroll for middle and bottom windows
+    scrollok(wn_infos,  TRUE);                                                  // automatic scroll
+    scrollok(wn_sds,    TRUE);
     scrollok(wn_bottom, TRUE);
 
-    box(wn_bottom, ACS_VLINE, ACS_HLINE);                                       // draw outline
+    //box(wn_infos,  ACS_VLINE, ACS_HLINE);                                       // draw outline
+    //box(wn_sds,    ACS_VLINE, ACS_HLINE);
+    box(wn_bottom, ACS_VLINE, ACS_HLINE);
 
     wrefresh(wn_top);
-    wrefresh(wn_middle);
+    wrefresh(wn_infos);
+    wrefresh(wn_sds);
     wrefresh(wn_bottom);
 }
 
 
-void scr_update(const char * info)
+void scr_update(string info)
 {
+    // update middle and bottom window
     wclear(wn_bottom);
     box(wn_bottom, ACS_VLINE, ACS_HLINE);
 
-    wprintw(wn_middle, "%s", info);
+    wprintw(wn_infos, "%s\n", info.c_str());
 
     int cnt = 0;
     while (true)
@@ -91,7 +100,8 @@ void scr_update(const char * info)
     }
 
     wrefresh(wn_top);
-    wrefresh(wn_middle);
+    wrefresh(wn_infos);
+    wrefresh(wn_sds);
     wrefresh(wn_bottom);
 }
 
@@ -100,36 +110,33 @@ void scr_clean()
 {
     // clean data
     delwin(wn_top);
-    delwin(wn_middle);
+    delwin(wn_infos);
+    delwin(wn_sds);
     delwin(wn_bottom);
     endwin();
 }
 
 
-void scr_print_bottom(int row, int col, const char *fmt, ...)
+void scr_print_sds(string msg)
 {
-    // print informations to bottom window
-    va_list args;
-    va_start(args, fmt);
-
-    mvwprintw(wn_middle, row, col, fmt, args);
-    wrefresh(wn_bottom);
-
-    va_end(args);
+    wprintw(wn_sds, "%s\n", msg.c_str());
+    wrefresh(wn_sds);
 }
 
 
+void scr_print_bottom(int row, int col, string msg)
+{
+    // print informations to bottom window
+    mvwprintw(wn_infos, row, col, "%s", msg.c_str());
+    wrefresh(wn_bottom);
+}
 
-void scr_print_middle(const char *fmt, ...)
+
+void scr_print_infos(string msg)
 {
     // print informations to middle window
-    va_list args;
-    va_start(args, fmt);
-
-    wprintw(wn_middle, fmt, args);
-    wrefresh(wn_middle);
-
-    va_end(args);
+    wprintw(wn_infos, "%s\n", msg.c_str());
+    wrefresh(wn_infos);
 }
 
 #else
@@ -144,9 +151,9 @@ void scr_init()
 }
 
 
-void scr_update(const char * info)
+void scr_update(string info)
 {
-    printf("%s", info);
+    printf("%s", info.c_str());
 
     int cnt = 0;
     while (true)
@@ -187,29 +194,21 @@ void scr_clean()
 }
 
 
-void scr_print_bottom(int row, int col, const char *fmt, ...)
+void scr_print_sds(string msg)
 {
-    // print informations to bottom window
-    va_list args;
-    va_start(args, fmt);
-
-    printf(fmt, args);
-    printf("\n");
-
-    va_end(args);
+    printf("%s\n", msg.c_str());
 }
 
 
-
-void scr_print_middle(const char *fmt, ...)
+void scr_print_bottom(int row, int col, string msg)
 {
-    // print informations to middle window
-    va_list args;
-    va_start(args, fmt);
+    printf("%s\n", msg.c_str());
+}
 
-    printf(fmt, args);
 
-    va_end(args);
+void scr_print_infos(string msg)
+{
+    printf("%s\n", msg.c_str());
 }
 
 #endif

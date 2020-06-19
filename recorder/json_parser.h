@@ -16,28 +16,39 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef CID_H
-#define CID_H
+#ifndef JSON_PARSER_H
+#define JSON_PARSER_H
 #include <cstdint>
 #include <string>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/error/en.h>
 
 using namespace::std;
 
 /**
- * @brief Short Subscriber Identity structure with last seen time for clean up
+ * @brief Json object parser with error handling
  *
  */
 
-struct ssi_t {
-    time_t last_seen;
-    uint32_t ssi;
+class json_parser_t {
+public:
+    json_parser_t(string data);
+    ~json_parser_t();
+
+    bool is_valid();
+    bool read(const string field, string   * result);
+    bool read(const string field, uint8_t  * result);
+    bool read(const string field, uint16_t * result);
+    bool read(const string field, uint32_t * result);
+    bool read(const string field, uint64_t * result);
+
+    void write_report(FILE * fd_file);
+    string to_string();
+private:
+    rapidjson::Document jdoc;
+    bool b_valid;
 };
 
-class call_identifier_t;                                                        // forward declaration
-
-void cid_init();
-call_identifier_t * get_cid(int index);
-void cid_clean();
-void cid_parse_pdu(string data, FILE * fd_log);
-
-#endif /* CID_H */
+#endif /* JSON_PARSER_H */

@@ -1,10 +1,11 @@
-#include <json-c/json.h>
-#include <json-c/json_util.h>
+#include <cstdint>
 #include <zlib.h>
 #include "base64.h"
 #include "cid.h"
 #include "call_identifier.h"
 #include "window.h"
+#include "json_parser.h"
+#include "utils.h"
 
 /**
  * @brief Internal call identifiers list
@@ -242,26 +243,33 @@ static void cid_send_traffic_to_cid_by_usage_marker(uint8_t usage_marker, const 
  *
  */
 
-void cid_parse_pdu(const char * data, FILE * fd_log)
+//void cid_parse_pdu(const char * data, FILE * fd_log)
+void cid_parse_pdu(string data, FILE * fd_log)
 {
-    struct json_object * jobj = json_tokener_parse(data);                       // parse informations from buffer
-
-    if (jobj == NULL) return;                                                   // can't parse Json
-
-    struct json_object * tmp;
+    json_parser_t * jparser = new json_parser_t(data);
 
     // extract data common to all pdu
-    json_object_object_get_ex(jobj, "service", &tmp);
-    string service = json_object_get_string(tmp);
+    string   service;
+    string   pdu;
+    uint8_t  usage_marker;
+    uint32_t ssi;
 
-    json_object_object_get_ex(jobj, "pdu", &tmp);
-    string pdu = json_object_get_string(tmp);
+    bool b_valid = true;                                                        // check if the pdu is valid
 
-    json_object_object_get_ex(jobj, "usage marker", &tmp);
-    uint8_t usage_marker = (uint8_t)json_object_get_int(tmp);
+    // cerr << jparser->to_string() <<endl;
+    // delete jparser;
+    // return;
 
-    json_object_object_get_ex(jobj, "ssi", &tmp);
-    uint32_t ssi = (uint32_t)json_object_get_int(tmp);
+    b_valid = b_valid && jparser->read("service",      &service);
+    b_valid = b_valid && jparser->read("pdu",          &pdu);
+    b_valid = b_valid && jparser->read("usage marker", &usage_marker);
+    b_valid = b_valid && jparser->read("ssi",          &ssi);
+
+    if (!b_valid)                                                               // invalid Json text, stop processing here
+    {
+        delete jparser;
+        return;
+    }
 
     bool b_log = true;
 
@@ -271,28 +279,31 @@ void cid_parse_pdu(const char * data, FILE * fd_log)
     }
     else if (!service.compare("UPLANE"))                                        // traffic speech frame
     {
+        uint64_t zlib_uncomp_size;
+        uint64_t zlib_comp_size;
+        string frame;
+        b_valid = true;
+        b_valid = b_valid && jparser->read("uzsize", &zlib_uncomp_size);        // uncompressed frame length 2 * 690 + 1 bytes
+        b_valid = b_valid && jparser->read("zsize",  &zlib_comp_size);          // compressed frame length (before B64 since B64 add overhead)
+        b_valid = b_valid && jparser->read("frame",  &frame);                   // zlib + B64 frame
 
-        json_object_object_get_ex(jobj, "uzsize", &tmp);                        // uncompressed frame length 2 * 690 + 1 bytes
-        uint64_t zlib_uncomp_size = json_object_get_int(tmp);
+        if (b_valid)                                                            // we can process current speech frame
+        {
+            const int BUFSIZE = 4096;
 
-        json_object_object_get_ex(jobj, "zsize", &tmp);                         // compressed frame length (before B64 since B64 add overhead)
-        uint64_t zlib_comp_size = json_object_get_int(tmp);
+            // base64 decode
+            unsigned char buf_b64out[BUFSIZE] = {0};
+            b64_decode((const unsigned char *)frame.c_str(), frame.length(), buf_b64out);
 
-        json_object_object_get_ex(jobj, "frame", &tmp);                         // zlib + B64 frame
-        string frame = json_object_get_string(tmp);
+            // zlib uncompress
+            char buf_zlib_out[BUFSIZE] = {0};
+            int ret = uncompress((Bytef *)buf_zlib_out, &zlib_uncomp_size, (Bytef *)buf_b64out, zlib_comp_size);
 
-        const int BUFSIZE = 4096;
-
-        // base64 decode
-        unsigned char buf_b64out[BUFSIZE] = {0};
-        //uint32_t len_out =
-        b64_decode((const unsigned char *)frame.c_str(), frame.length(), buf_b64out);
-
-        // zlib uncompress
-        char buf_zlib_out[BUFSIZE] = {0};
-        int ret = uncompress((Bytef *)buf_zlib_out, &zlib_uncomp_size, (Bytef *)buf_b64out, zlib_comp_size);
-
-        if (!ret) cid_send_traffic_to_cid_by_usage_marker(usage_marker, buf_zlib_out, zlib_uncomp_size); // process it
+            if (!ret)
+            {
+                cid_send_traffic_to_cid_by_usage_marker(usage_marker, buf_zlib_out, zlib_uncomp_size); // process it
+            }
+        }
     }
     else                                                                        // other services
     {
@@ -305,26 +316,48 @@ void cid_parse_pdu(const char * data, FILE * fd_log)
             (!pdu.compare("D-TX CEASED")))
         {
             // register new cid and attach ssi and usage marker
-            json_object_object_get_ex(jobj, "call identifier", &tmp);
-            uint32_t cid = (uint32_t)json_object_get_int(tmp);
+            uint32_t cid;
+            b_valid = jparser->read("call identifier", &cid);
 
-            cid_update_usage_marker(cid, usage_marker);                         // CID will be added to list if it doesn't exists yet
-            cid_add_ssi_to_cid(cid, ssi);
-            scr_update(data);
+            if (b_valid)
+            {
+                cid_update_usage_marker(cid, usage_marker);                     // CID will be added to list if it doesn't exists yet
+                cid_add_ssi_to_cid(cid, ssi);
+                scr_update(data);
+            }
         }
         else if (!pdu.compare("D-RELEASE"))                                     // || (!pdu.compare("D-TX WAIT")))
         {
             // release cid
-            json_object_object_get_ex(jobj, "call identifier", &tmp);
-            uint32_t cid = (uint32_t)json_object_get_int(tmp);
+            uint32_t cid;
+            b_valid = jparser->read("call identifier", &cid);
 
-            cid_release(cid);
-            scr_update(data);
+            if (b_valid)
+            {
+                cid_release(cid);
+                scr_update(data);
+            }
         }
         else if ((!pdu.compare("D-SDS-DATA")) ||
                  (!pdu.compare("D-STATUS")))                                    // SDS messages
         {
-            scr_print_middle(data);                                             // note that there is two lines printed for every message (for analyze, we provide full hexa + decoded message)
+            string sds_msg;
+            b_valid = jparser->read("infos", &sds_msg);
+
+            if (b_valid)                                                        // text message can be printed
+            {
+                uint8_t  msg_ref = 0;
+                uint32_t party_ssi = 0;
+                uint8_t  protocol_id = 0;
+
+                //{"service":"CMCE","pdu":"D-SDS-DATA","tn":2,"fn":13,"mn":41,"ssi":299906,"usage marker":47,"calling party type identifier":1,"calling party ssi":401101,"sds type identifier":3,"protocol id":130,"message type":0,"sds-pdu":"SDS-TRANSFER","message reference":225,"protocol info":"text messaging (SDS-TL)","text coding scheme":1,"infos":"_____ _)______(______b_)______(%"}
+
+                jparser->read("message reference", &msg_ref);
+                jparser->read("calling party ssi", &party_ssi);
+                jparser->read("protocol id", &protocol_id);
+                scr_print_sds(format_str("prot:%3u ssi:%6u calling:%6u ref:%3u  msg: '%s'", protocol_id, ssi, party_ssi, msg_ref, sds_msg.c_str()));
+            }
+            scr_update(data);                                                   // note that there is two lines printed for every message (for analyze, we provide full hexa + attempted decoded message with 8 bits charset)
         }
         else
         {
@@ -334,15 +367,8 @@ void cid_parse_pdu(const char * data, FILE * fd_log)
 
     if (b_log)                                                                  // append to log file
     {
-        struct {
-            int flag;
-            const char *flag_str;
-        } json_flags = { JSON_C_TO_STRING_NOZERO, "JSON_C_TO_STRING_NOZERO" };  // remove all empty spaces between fields
-
-        fprintf(fd_log, "%s\n", json_object_to_json_string_ext(jobj, json_flags.flag));
-        fflush(fd_log);
+        jparser->write_report(fd_log);
     }
 
-    json_object_put(tmp);                                                       // clean objects
-    json_object_put(jobj);
+    delete jparser;
 }

@@ -16,20 +16,13 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef WINDOW_H
-#define WINDOW_H
+#ifndef UTILS_H
+#define UTILS_H
 #include <cstdarg>
 #include <string>
 
 using namespace std;
 
-void scr_init();
-void scr_update(string info);
-void scr_clean();
-void scr_print_bottom(int row, int col, string msg);
-void scr_print_infos(string msg);
-void scr_print_sds(string msg);
+string format_str(const char *fmt, ...);
 
-#define WITH_NCURSES
-
-#endif /* WINDOW_H */
+#endif /* UTILS_H */

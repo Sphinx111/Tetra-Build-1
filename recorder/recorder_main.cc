@@ -236,11 +236,14 @@ int main(int argc, char * argv[])
 
         while (!sigint_flag)
         {
+            memset(rx_buf, 0, sizeof(rx_buf));
             int len = timed_recv(fd_input, rx_buf, RX_BUFLEN, TIME_WAIT_MS);
 
-            if (len > 0)
+            if (len > 32)                                                        // skip small packets
             {
-                cid_parse_pdu(rx_buf, file_out);
+                string data(rx_buf);
+                //cid_parse_pdu(rx_buf, file_out);
+                cid_parse_pdu(data, file_out);
             }
         }
 

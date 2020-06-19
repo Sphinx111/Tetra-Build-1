@@ -16,20 +16,21 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef WINDOW_H
-#define WINDOW_H
-#include <cstdarg>
-#include <string>
+#include "utils.h"
 
-using namespace std;
 
-void scr_init();
-void scr_update(string info);
-void scr_clean();
-void scr_print_bottom(int row, int col, string msg);
-void scr_print_infos(string msg);
-void scr_print_sds(string msg);
+string format_str(const char *fmt, ...)
+{
+    // variadic format function to string
+    const size_t BUF_LEN = 8192;
+    char buf[BUF_LEN];
 
-#define WITH_NCURSES
+    va_list args;
+    va_start(args, fmt);
 
-#endif /* WINDOW_H */
+    vsnprintf(buf, BUF_LEN - 1, fmt, args);
+
+    va_end(args);
+
+    return string(buf);
+}

@@ -62,11 +62,11 @@ Build
 
 
 You will need:
-* gnuradio v3.7.14 and gnuradio-companion with rtl-sdr (fixed Qt Hint problem with GnuRadio 3.7.11)
+* gnuradio v3.7.14 and gnuradio-companion with rtl-sdr (works also with GnuRadio 3.7.11)
 * gcc
-* [json-c v0.12](https://github.com/json-c/json-c/tree/json-c-0.12) (may have problems with newer versions)
+* rapidjson v1.1.0 (packages available in Ubuntu, Debian/Devuan and Slackware from SlackBuild.org)
 * zlib v1.2.11 (other versions may work)
-* sox
+* sox for audio processing
 * ncurses (optional interface for the recorder. If you don't want it, set `#undef WITH_NCURSES` in file `recorder/window.h`)
 
 Build decoder
@@ -177,6 +177,6 @@ Base64 decoder
 # To be done
 
 * LLC reassembly of segmented TL-SDU
-* SDS handling is early beta
+* SDS tries to decode unknown protocols with 8 bits alphabets
 * FEC correction
 * UDP packet size is limited to 2048 bytes, may be small for all Json text informations

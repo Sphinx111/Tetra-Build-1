@@ -185,7 +185,6 @@ void tetra_dl::service_llc(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
         break;
     }
 
-
     if (g_debug_level > 1)
     {
         printf("service_llc : TN/FN/MN = %2d/%2d/%2d  %-20s\n", g_time.tn, g_time.fn, g_time.mn, txt.c_str());

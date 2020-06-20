@@ -86,25 +86,18 @@ uint8_t get_value_8(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t f
 
 vector<uint8_t> vector_extract(vector<uint8_t> source, uint32_t pos, uint32_t length)
 {
-    if (source.size() <= 0)
-    {
-        vector<uint8_t> ret;
-
-        return ret;
-    }
-
-    uint32_t vec_len = source.size() - pos;
-
-    if (length > vec_len)
-    {
-        length = vec_len;
-    }
-    
     vector<uint8_t> ret;
-    
-    if (length > 0)
+
+    if ((int32_t)(source.size() - pos) > 0)
     {
-        std::copy(source.begin() + pos, source.begin() + pos + length, back_inserter(ret));
+        uint32_t len = source.size() - pos;                                     // actual length
+
+        if (len > length)                                                       // we have more bytes than requested
+        {
+            len = length;                                                       // so return only the requested ones
+        }
+
+        std::copy(source.begin() + pos, source.begin() + pos + len, back_inserter(ret));
     }
 
     return ret;

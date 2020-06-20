@@ -65,6 +65,7 @@ uint32_t get_value_32(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t
 uint16_t get_value_16(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t field_len)
 {
     uint16_t ret = get_value(vec, start_pos_in_vector, field_len);
+
     return ret;
 }
 
@@ -76,6 +77,7 @@ uint16_t get_value_16(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t
 uint8_t get_value_8(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t field_len)
 {
     uint8_t ret = get_value(vec, start_pos_in_vector, field_len);
+
     return ret;
 }
 
@@ -111,7 +113,9 @@ vector<uint8_t> vector_extract(vector<uint8_t> source, uint32_t pos, uint32_t le
 vector<uint8_t> vector_append(vector<uint8_t> vec1, vector<uint8_t> vec2)
 {
     vector<uint8_t> ret(vec1);
+
     ret.insert(ret.end(), vec2.begin(), vec2.end());
+
     return ret;
 }
 
@@ -122,12 +126,19 @@ vector<uint8_t> vector_append(vector<uint8_t> vec1, vector<uint8_t> vec2)
 
 void print_vector(vector<uint8_t> data, int len)
 {
-    for (int idx = 0; idx < len; idx++)
+    size_t count = data.size();
+
+    if (len < (int)count)
+    {
+        count = (size_t)len;
+    }
+
+    for (size_t idx = 0; idx < count; idx++)
     {
         cout << (char)(data[idx] + '0');
     }
 
-    if (len > 0)
+    if (count > 0)
     {
         cout << endl;
     }
@@ -142,7 +153,14 @@ string vector_to_string(vector<uint8_t> data, int len)
 {
     string res = "";
 
-    for (int idx = 0; idx < len; idx++)
+    size_t count = data.size();
+
+    if (len < (int)count)
+    {
+        count = (size_t)len;
+    }
+
+    for (size_t idx = 0; idx < count; idx++)
     {
         res += (char)(data[idx] + '0');
     }

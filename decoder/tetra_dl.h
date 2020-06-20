@@ -96,6 +96,9 @@ public:
     void reset_synchronizer();
     void increment_tn();
 
+    string mac_logical_channel_name(int val);
+    string burst_name(int val);
+
     void calculate_scrambling_code();
 
     // decoding functions per clause 8

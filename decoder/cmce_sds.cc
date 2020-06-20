@@ -25,7 +25,7 @@
  */
 
 /**
- * @brief CMCE D-SDS-DADA 14.7.1.10
+ * @brief CMCE D-SDS-DATA 14.7.1.10
  *
  * WARNING: this function generate two reports, the second one
  *          contains dump of user-defined type 4 message
@@ -34,6 +34,12 @@
 
 void tetra_dl::cmce_sds_parse_d_sds_data(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_sds_parse_d_sds_data", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("CMCE", "D-SDS-DATA");
 
     uint32_t pos = 5;                                                           // pdu type
@@ -110,13 +116,13 @@ void tetra_dl::cmce_sds_parse_d_sds_data(vector<uint8_t> pdu)
         // invalid data
     }
 
-    report_send();
+    report_send();                                                              // send the decoded report
 
     if (sdti == 3)                                                              // dump type 4 data sdu for analysis
     {
         report_start("CMCE", "D-SDS-DATA");
         report_add("hex", sdu);
-        report_send();
+        report_send();                                                          // send the hex dump report
     }
 }
 
@@ -127,6 +133,12 @@ void tetra_dl::cmce_sds_parse_d_sds_data(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_sds_parse_d_status(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_sds_parse_d_status", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("CMCE", "D-STATUS");
 
     uint32_t pos = 5;                                                           // pdu type
@@ -191,9 +203,17 @@ void tetra_dl::cmce_sds_parse_d_status(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - len = %u pdu = %s\n", "cmce_sds_parse_type4_data", len, vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     if ((pdu.size() < len) || (len > 2047))
     {
         report_add("type4", "invalid pdu");
+        report_add("type4 declared len", len);
+        report_add("type4 actual len", pdu.size());
         return;                                                                 // invalid PDU
     }
 
@@ -333,11 +353,16 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
 /**
  * @brief Parser sub protocol SDS-TRANFER
  *
- *
  */
 
 void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t len)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - len = %u pdu = %s\n", "cmce_sds_parse_sub_d_transfer", len, vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     uint32_t pos = 0;
 
     uint8_t protocol_id = get_value(pdu, pos, 8);                               // protocol id
@@ -478,6 +503,12 @@ void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t
 
 void tetra_dl::cmce_sds_parse_simple_text_messaging(vector<uint8_t> pdu, const uint16_t len)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - len = %u pdu = %s\n", "cmce_sds_parse_simple_text_messaging", len, vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     uint32_t pos = 8;                                                           // protocol id
     pos += 1;                                                                   // fill bit (should be 0) FIXME or timestamp 29.5.3.3 ?
 
@@ -510,6 +541,12 @@ void tetra_dl::cmce_sds_parse_simple_text_messaging(vector<uint8_t> pdu, const u
 
 void tetra_dl::cmce_sds_parse_text_messaging_with_sds_tl(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_sds_parse_text_messaging_with_sds_tl", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     // Table 28.29 - 29.5.3.3
     uint16_t len = pdu.size();
     uint32_t pos = 0;
@@ -553,6 +590,12 @@ void tetra_dl::cmce_sds_parse_text_messaging_with_sds_tl(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_sds_parse_simple_location_system(vector<uint8_t> pdu, const uint16_t len)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_sds_parse_simple_location_system", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     uint32_t pos = 8;                                                           // protocol id
 
     uint8_t location_system_coding = get_value(pdu, pos, 8);
@@ -591,6 +634,12 @@ void tetra_dl::cmce_sds_parse_simple_location_system(vector<uint8_t> pdu, const 
 
 void tetra_dl::cmce_sds_parse_location_system_with_sds_tl(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_sds_parse_location_system_with_sds_tl", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     uint16_t len = pdu.size();
     uint32_t pos = 0;
 

@@ -10,6 +10,12 @@
 
 void tetra_dl::cmce_sds_service_location_information_protocol(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_sds_service_location_information_protocol", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     uint32_t pos = 0;                                                           // protocol ID from SDS has been removed since LIP is a service with SDU
 
     uint8_t pdu_type = get_value(pdu, pos, 2);                                  // see 6.2
@@ -40,6 +46,12 @@ void tetra_dl::cmce_sds_service_location_information_protocol(vector<uint8_t> pd
 
 void tetra_dl::cmce_sds_lip_parse_extended_message(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_sds_lip_parse_extended_message", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     uint32_t pos = 2;                                                           // pdu type
 
     uint8_t extension = get_value(pdu, pos, 4);
@@ -192,45 +204,62 @@ static string utils_decode_lip_position_error(uint8_t val)
 
 void tetra_dl::cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu)
 {
-    uint32_t pos = 2;                                                           // PDU type
-
-    pos += 2;                                                                   // time elapsed
-
-    uint32_t longitude = get_value(pdu, pos, 25);
-    pos += 25;
-    report_add("longitude uint32", longitude);
-    report_add("longitude", utils_decode_lip_longitude(longitude));
-
-    uint32_t latitude = get_value(pdu, pos, 24);
-    pos += 24;
-    report_add("latitude uint32", longitude);
-    report_add("latitude", utils_decode_lip_latitude(latitude));
-
-    uint8_t position_error = get_value(pdu, pos, 3);
-    pos += 3;
-    report_add("position error", utils_decode_lip_position_error(position_error));
-
-    uint8_t horizontal_velocity = get_value(pdu, pos, 7);
-    pos += 7;
-    report_add("horizontal_velocity uint8", horizontal_velocity);
-    report_add("horizontal_velocity", utils_decode_lip_horizontal_velocity(horizontal_velocity));
-
-    uint8_t direction_of_travel = get_value(pdu, pos, 4);
-    pos += 4;
-    report_add("direction of travel", utils_decode_lip_direction_of_travel(direction_of_travel));
-
-    uint8_t type_of_additional_data = get_value(pdu, pos, 1);                   // 6.3.87 - Table 6.120
-    pos += 1;
-
-    uint8_t additional_data = get_value(pdu, pos, 8);
-    pos += 8;
-
-    if (type_of_additional_data == 0)                                           // reason for sending
+    if (g_debug_level >= 5)
     {
-        report_add("reason for sending", additional_data);
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_sds_lip_parse_short_location_report", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
     }
-    else                                                                        // user-defined data
+
+    static const size_t MIN_SIZE = 68;
+
+    if (pdu.size() >= MIN_SIZE)
     {
-        report_add("user-defined additional data", additional_data);
+        uint32_t pos = 2;                                                       // PDU type
+
+        pos += 2;                                                               // time elapsed
+
+        uint32_t longitude = get_value(pdu, pos, 25);
+        pos += 25;
+        report_add("longitude uint32", longitude);
+        report_add("longitude", utils_decode_lip_longitude(longitude));
+
+        uint32_t latitude = get_value(pdu, pos, 24);
+        pos += 24;
+        report_add("latitude uint32", longitude);
+        report_add("latitude", utils_decode_lip_latitude(latitude));
+
+        uint8_t position_error = get_value(pdu, pos, 3);
+        pos += 3;
+        report_add("position error", utils_decode_lip_position_error(position_error));
+
+        uint8_t horizontal_velocity = get_value(pdu, pos, 7);
+        pos += 7;
+        report_add("horizontal_velocity uint8", horizontal_velocity);
+        report_add("horizontal_velocity", utils_decode_lip_horizontal_velocity(horizontal_velocity));
+
+        uint8_t direction_of_travel = get_value(pdu, pos, 4);
+        pos += 4;
+        report_add("direction of travel", utils_decode_lip_direction_of_travel(direction_of_travel));
+
+        uint8_t type_of_additional_data = get_value(pdu, pos, 1);               // 6.3.87 - Table 6.120
+        pos += 1;
+
+        uint8_t additional_data = get_value(pdu, pos, 8);
+        pos += 8;
+
+        if (type_of_additional_data == 0)                                       // reason for sending
+        {
+            report_add("reason for sending", additional_data);
+        }
+        else                                                                    // user-defined data
+        {
+            report_add("user-defined additional data", additional_data);
+        }
     }
+    else
+    {
+        report_add("invalid pdu size", pdu.size());
+        report_add("pdu minimum size", MIN_SIZE);
+    }
+
 }

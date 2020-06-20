@@ -26,6 +26,12 @@
 
 void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - mac_channel = %s pdu = %s\n", "service_cmce", mac_logical_channel_name(mac_logical_channel).c_str(), vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     uint8_t pdu_type;
     string txt = "";
     uint32_t cid = 0;
@@ -197,6 +203,12 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
 
 void tetra_dl::cmce_parse_d_alert(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_alert", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("CMCE", "D-ALERT");
 
     uint32_t pos = 5;                                                           // pdu type
@@ -214,6 +226,12 @@ void tetra_dl::cmce_parse_d_alert(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_parse_d_call_restore(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_call_restore", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("CMCE", "D-CALL RESTORE");
 
     uint32_t pos = 5;                                                           // pdu type
@@ -289,6 +307,12 @@ void tetra_dl::cmce_parse_d_call_restore(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_parse_d_connect(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_connect", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("CMCE", "D-CONNECT");
 
     uint32_t pos = 5;                                                           // pdu type
@@ -375,6 +399,12 @@ void tetra_dl::cmce_parse_d_connect(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_parse_d_connect_ack(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_connect_ack", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("CMCE", "D-CONNECT ACK");
 
     uint32_t pos = 5;                                                           // pdu type
@@ -419,7 +449,13 @@ void tetra_dl::cmce_parse_d_connect_ack(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_parse_d_disconnect(vector<uint8_t> pdu)
 {
-     report_start("CMCE", "D-DISCONNECT");
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_disconnect", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
+    report_start("CMCE", "D-DISCONNECT");
 
     uint32_t pos = 5;                                                           // pdu type
 
@@ -457,7 +493,13 @@ void tetra_dl::cmce_parse_d_disconnect(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_parse_d_release(vector<uint8_t> pdu)
 {
-     report_start("CMCE", "D-RELEASE");
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_release", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
+    report_start("CMCE", "D-RELEASE");
 
     uint32_t pos = 5;                                                           // pdu type
 
@@ -496,6 +538,12 @@ void tetra_dl::cmce_parse_d_release(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_parse_d_setup(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_setup", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("CMCE", "D-SETUP");
 
     uint32_t pos = 5;                                                           // pdu type
@@ -591,6 +639,12 @@ void tetra_dl::cmce_parse_d_setup(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_parse_d_tx_ceased(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_tx_ceased", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("CMCE", "D-TX CEASED");
 
     uint32_t pos = 5;                                                           // pdu type
@@ -629,6 +683,12 @@ void tetra_dl::cmce_parse_d_tx_ceased(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_parse_d_tx_continue(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_tx_continue", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("CMCE", "D-TX CONTINUE");
 
     uint32_t pos = 5;                                                           // pdu type
@@ -670,6 +730,12 @@ void tetra_dl::cmce_parse_d_tx_continue(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_parse_d_tx_granted(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_tx_granted", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("CMCE", "D-TX GRANTED");
 
     uint32_t pos = 5;                                                           // pdu type
@@ -744,6 +810,12 @@ void tetra_dl::cmce_parse_d_tx_granted(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_parse_d_tx_interrupt(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_tx_interrupt", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("CMCE", "D-TX INTERRUPT");
 
     uint32_t pos = 5;                                                           // pdu type
@@ -818,6 +890,12 @@ void tetra_dl::cmce_parse_d_tx_interrupt(vector<uint8_t> pdu)
 
 void tetra_dl::cmce_parse_d_tx_wait(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_tx_wait", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("CMCE", "D-TX WAIT");
 
     uint32_t pos = 5;                                                           // pdu type

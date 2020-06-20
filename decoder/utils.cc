@@ -31,6 +31,7 @@ uint64_t get_value(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t fi
     {
         val += (vec[pos + start_pos_in_vector] << (field_len - pos - 1));
     }
+
     return val;
 }
 
@@ -85,7 +86,7 @@ uint8_t get_value_8(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t f
 
 vector<uint8_t> vector_extract(vector<uint8_t> source, uint32_t pos, uint32_t length)
 {
-    if (source.size() < 0)
+    if (source.size() <= 0)
     {
         vector<uint8_t> ret;
 
@@ -98,10 +99,15 @@ vector<uint8_t> vector_extract(vector<uint8_t> source, uint32_t pos, uint32_t le
     {
         length = vec_len;
     }
+    
+    vector<uint8_t> ret;
+    
+    if (length > 0)
+    {
+        std::copy(source.begin() + pos, source.begin() + pos + length, back_inserter(ret));
+    }
 
-    vector<uint8_t> ret(source.begin() + pos, source.begin() + pos + length);
     return ret;
-
 }
 
 /**
@@ -203,10 +209,10 @@ int pattern_at_position_score(vector<uint8_t> data, vector<uint8_t> pattern, uin
 
 string text_gsm_7_bit_decode(vector<uint8_t> data, const uint16_t len)
 {
-    // NOTE: { is a special char when we want to escape the character value
+    // NOTE: _ is a special char when we want to escape the character value
     //                   0        10         20        30         40        50        60        70        80        90        100       110      120
     //                   0123456789012345678901234567890123 4567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567
-    const string gsm7 = "@{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{ !\"#{%&'()*+,-./0123456789:;<=>?{ABCDEFGHIJKLMNOPQRSTUVWXYZ{{{{{{abcdefghijklmnopqrstuvwxyz{{{{{";
+    const string gsm7 = "@_______________________________ !\"#{%&'()*+,-./0123456789:;<=>?_ABCDEFGHIJKLMNOPQRSTUVWXYZ______abcdefghijklmnopqrstuvwxyz_____";
     string res = "";
 
     for (uint16_t idx = 0; idx < len / 7; idx++)

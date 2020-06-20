@@ -22,6 +22,91 @@
 static int cur_burst_type;
 
 /**
+ * @brief Returns MAC logical channel name
+ *
+ */
+
+string tetra_dl::mac_logical_channel_name(int val)
+{
+    string ret = "";
+
+    switch (val)
+    {
+    case AACH:
+        ret = "AACH";
+        break;
+
+    case BLCH:
+        ret = "BLCH";
+        break;
+
+    case BNCH:
+        ret = "BNCH";
+        break;
+
+    case BSCH:
+        ret = "BSCH";
+        break;
+
+    case SCH_F:
+        ret = "SCH_F";
+        break;
+
+    case SCH_HD:
+        ret = "SCH_HD";
+        break;
+
+    case STCH:
+        ret = "STCH";
+        break;
+
+    case TCH_S:
+        ret = "TCH_S";
+        break;
+
+    case unkown:
+        ret = "unknown";
+        break;
+
+    default:
+        ret = "out of range";
+        break;
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Returns PHY burst name
+ *
+ */
+
+string tetra_dl::burst_name(int val)                                                 ///< Return burst name
+{
+    string ret = "";
+
+    switch (val)
+    {
+    case SB:
+        ret = "SB";
+        break;
+
+    case NDB:
+        ret = "NDB";
+        break;
+
+    case NDB_SF:
+        ret = "NDB_SF";
+        break;
+
+    default:
+        break;
+    }
+
+    return ret;
+}
+
+/**
  * @brief Lower MAC entry point
  *
  * Mapping of logical channels see 9.5.1 CP, TP and 9.5.1b UP
@@ -45,6 +130,12 @@ static int cur_burst_type;
 
 void tetra_dl::service_lower_mac(vector<uint8_t> data, int burst_type)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - burst = %s data = %s\n", "service_lower_mac", burst_name(burst_type).c_str(), vector_to_string(data, data.size()).c_str());
+        fflush(stdout);
+    }
+
     bool bnch_flag = false;
     //bool bsch_flag = false;
 
@@ -238,6 +329,12 @@ void tetra_dl::service_lower_mac(vector<uint8_t> data, int burst_type)
 
 void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac_logical_channel)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - mac_channel = %s data = %s\n", "service_upper_mac", mac_logical_channel_name(mac_logical_channel).c_str(), vector_to_string(data, data.size()).c_str());
+        fflush(stdout);
+    }
+
     string txt = "?";
     uint8_t pdu_type;
     uint8_t sub_type;
@@ -413,6 +510,12 @@ static uint32_t decode_length(uint32_t val)
 
 void tetra_dl::mac_pdu_process_aach(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "mac_pdu_process_aach", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     uint8_t pos = 0;
     uint8_t header = get_value(pdu, pos, 2);
     pos += 2;
@@ -526,6 +629,12 @@ vector<uint8_t> tetra_dl::mac_remove_fill_bits(const vector<uint8_t> pdu)
 
 vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> mac_pdu, mac_logical_channel_t mac_logical_channel, bool * b_fragmented_packet)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "mac_pdu_process_ressource", vector_to_string(mac_pdu, mac_pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     vector<uint8_t> pdu = mac_pdu;
 
     *b_fragmented_packet = false;
@@ -730,6 +839,12 @@ vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> mac_pdu, mac
 
 void tetra_dl::mac_pdu_process_mac_frag(vector<uint8_t> mac_pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "mac_pdu_process_mac_frag", vector_to_string(mac_pdu, mac_pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     vector<uint8_t> pdu = mac_pdu;
 
     uint32_t pos = 3;                                                           // MAC PDU type and subtype (MAC-FRAG)
@@ -759,6 +874,12 @@ void tetra_dl::mac_pdu_process_mac_frag(vector<uint8_t> mac_pdu)
 
 vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(vector<uint8_t> mac_pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "mac_pdu_process_mac_end", vector_to_string(mac_pdu, mac_pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     vector<uint8_t> pdu = mac_pdu;
 
     uint32_t pos = 3;                                                           // MAC PDU type and subtype (MAC-END)
@@ -840,48 +961,67 @@ vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(vector<uint8_t> mac_pdu)
 
 vector<uint8_t> tetra_dl::mac_pdu_process_sysinfo(vector<uint8_t> pdu)
 {
-    uint32_t pos = 4;
-    uint16_t main_carrier = get_value(pdu, pos, 12);                            // main carrier frequency (1 / 25 kHz)
-    pos += 12;
-
-    uint8_t band_frequency = get_value(pdu, pos, 4);                            // frequency band (4 -> 400 MHz)
-    pos += 4;
-
-    uint8_t offset = get_value(pdu, pos, 2);                                    // offset (0, 1, 2, 3)-> (0, +6.25, -6.25, +12.5 kHz)
-    pos += 2;
-
-    //uint8_t duplex_spacing = get_value(pdu, pos, 3);                            // duplex spacing;
-    pos += 3;
-
-    pos += 1;                                                                   // reverse operation
-    pos += 2;                                                                   // number of common secondary control channels in use
-    pos += 3;                                                                   // MS_TXPWR_MAX_CELL
-    pos += 4;                                                                   // RXLEV_ACCESS_MIN
-    pos += 4;                                                                   // ACCESS_PARAMETER
-    pos += 4;                                                                   // RADIO_DOWNLINK_TIMEOUT
-
-    uint8_t flag = get_value(pdu, pos, 1);
-    pos += 1;                                                                   // hyperframe / cipher key identifier flag
-    if (flag)
+    if (g_debug_level >= 5)
     {
-        pos += 16;                                                              // cyclic count of hyperframe
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "mac_pdu_process_sysinfo", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
+    vector<uint8_t> sdu;
+
+    static const size_t MIN_SIZE = 82;
+
+    if (pdu.size() >= MIN_SIZE)
+    {
+        uint32_t pos = 4;
+        uint16_t main_carrier = get_value(pdu, pos, 12);                        // main carrier frequency (1 / 25 kHz)
+        pos += 12;
+
+        uint8_t band_frequency = get_value(pdu, pos, 4);                        // frequency band (4 -> 400 MHz)
+        pos += 4;
+
+        uint8_t offset = get_value(pdu, pos, 2);                                // offset (0, 1, 2, 3)-> (0, +6.25, -6.25, +12.5 kHz)
+        pos += 2;
+
+        //uint8_t duplex_spacing = get_value(pdu, pos, 3);                            // duplex spacing;
+        pos += 3;
+
+        pos += 1;                                                               // reverse operation
+        pos += 2;                                                               // number of common secondary control channels in use
+        pos += 3;                                                               // MS_TXPWR_MAX_CELL
+        pos += 4;                                                               // RXLEV_ACCESS_MIN
+        pos += 4;                                                               // ACCESS_PARAMETER
+        pos += 4;                                                               // RADIO_DOWNLINK_TIMEOUT
+
+        uint8_t flag = get_value(pdu, pos, 1);
+        pos += 1;                                                               // hyperframe / cipher key identifier flag
+        if (flag)
+        {
+            pos += 16;                                                          // cyclic count of hyperframe
+        }
+        else
+        {
+            pos += 16;                                                          // common cipherkey identifier or static cipher key version number
+        }
+
+        pos += 2;                                                               // optional field flag
+        pos += 20;                                                              // option value, always present
+
+        // calculate cell frequencies
+
+        const int32_t duplex[4] = {0, 6250, -6250, 12500};                      // 21.4.4.1
+
+        g_cell_infos.downlink_frequency = (int32_t)band_frequency * 100000000 + (int32_t)main_carrier * 25000 + duplex[offset];
+        g_cell_infos.uplink_frequency   = 0;                                    // TODO
+
+        sdu = vector_extract(pdu, pos, 42);                                     // TM-SDU (MLE data) clause 18
     }
     else
     {
-        pos += 16;                                                              // common cipherkey identifier or static cipher key version number
+        report_add("invalid pdu size", pdu.size());
+        report_add("pdu minimum size", MIN_SIZE);
     }
 
-    pos += 2;                                                                   // optional field flag
-    pos += 20;                                                                  // option value, always present
-
-    // calculate cell frequencies
-
-    const int32_t duplex[4] = {0, 6250, -6250, 12500};                          // 21.4.4.1
-
-    g_cell_infos.downlink_frequency = (int32_t)band_frequency * 100000000 + (int32_t)main_carrier * 25000 + duplex[offset];
-    g_cell_infos.uplink_frequency   = 0;                                        // TODO
-
-    vector<uint8_t> sdu = vector_extract(pdu, pos, 42);                         // TM-SDU (MLE data) clause 18
     return sdu;
 }
 
@@ -892,30 +1032,47 @@ vector<uint8_t> tetra_dl::mac_pdu_process_sysinfo(vector<uint8_t> pdu)
 
 vector<uint8_t> tetra_dl::mac_pdu_process_d_block(vector<uint8_t> mac_pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "mac_pdu_process_d_block", vector_to_string(mac_pdu, mac_pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     vector<uint8_t> pdu = mac_pdu;
+    vector<uint8_t> sdu;
 
-    uint32_t pos = 3;
+    static const size_t MIN_SIZE = 18;
 
-    uint8_t fill_bit_flag = get_value(pdu, pos, 1);                             // fill bits
-    pos += 1;
-
-    if (fill_bit_flag)
+    if (pdu.size() >= MIN_SIZE)
     {
-        pdu = mac_remove_fill_bits(pdu);
+        uint32_t pos = 3;
+
+        uint8_t fill_bit_flag = get_value(pdu, pos, 1);                         // fill bits
+        pos += 1;
+
+        if (fill_bit_flag)
+        {
+            pdu = mac_remove_fill_bits(pdu);
+        }
+
+        pos += 2;                                                               // encryption mode
+        mac_address.event_label = get_value(pdu, pos, 10);                      // address
+        pos += 10;
+        pos += 1;                                                               // immediate napping permission flag
+        uint8_t flag = get_value(pdu, pos, 1);                                  // slot granting flag
+        pos += 1;
+        if (flag)                                                               // basic slot granting element
+        {
+            pos += 8;
+        }
+        sdu = vector_extract(pdu, pos, pdu.size() - pos);
+    }
+    else
+    {
+        report_add("invalid pdu size", pdu.size());
+        report_add("pdu minimum size", MIN_SIZE);
     }
 
-    pos += 2;                                                                   // encryption mode
-    mac_address.event_label = get_value(pdu, pos, 10);                          // address
-    pos += 10;
-    pos += 1;                                                                   // immediate napping permission flag
-    uint8_t flag = get_value(pdu, pos, 1);                                      // slot granting flag
-    pos += 1;
-    if (flag)                                                                   // basic slot granting element
-    {
-        pos += 8;
-    }
-
-    vector<uint8_t> sdu = vector_extract(pdu, pos, pdu.size() - pos);
     return sdu;
 }
 
@@ -926,43 +1083,62 @@ vector<uint8_t> tetra_dl::mac_pdu_process_d_block(vector<uint8_t> mac_pdu)
 
 vector<uint8_t> tetra_dl::mac_pdu_process_sync(vector<uint8_t> pdu)
 {
-    uint32_t pos = 4;                                                           // system code
-    g_cell_infos.color_code = get_value(pdu, pos, 6);
-    pos += 6;
-    g_time.tn = get_value(pdu, pos, 2) + 1;
-    pos += 2;
-    g_time.fn = get_value(pdu, pos, 5);
-    pos += 5;
-    g_time.mn = get_value(pdu, pos, 6);
-    pos += 6;
-    pos += 2;                                                                   // sharing mode
-    pos += 3;                                                                   // reserved frames
-    pos += 1;                                                                   // U-plane DTX
-    pos += 1;                                                                   // frame 18 extension
-    pos += 1;                                                                   // reserved
-
-    g_cell_infos.mcc = get_value(pdu, 31, 10);                                  // should be done in MLE but we need it here to calculate scrambling code
-    g_cell_infos.mnc = get_value(pdu, 41, 14);
-
-    calculate_scrambling_code();
-    g_cell_informations_acquired = true;
-
-    report_start("MAC", "SYNC");
-    report_send();
-
-    if ((g_time.fn == 18) && ((g_time.mn + g_time.tn) % 4 == 3))
+    if (g_debug_level >= 5)
     {
-        printf("BSCH        : TN/FN/MN = %2u/%2u/%2u  MAC-SYNC              ColorCode=%3d  MCC/MNC = %3u/ %3u  Freq= %10.6f MHz  burst=%u\n",
-               g_time.tn,
-               g_time.fn,
-               g_time.mn,
-               g_cell_infos.color_code,
-               g_cell_infos.mcc,
-               g_cell_infos.mnc,
-               g_cell_infos.downlink_frequency / 1.0e6,
-               cur_burst_type);
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "mac_pdu_process_sync", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
     }
 
-    vector<uint8_t> sdu = vector_extract(pdu, pos, 29);
+    vector<uint8_t> sdu;
+
+    static const size_t MIN_SIZE = 60;
+
+    if (pdu.size() >= MIN_SIZE)
+    {
+        uint32_t pos = 4;                                                       // system code
+        g_cell_infos.color_code = get_value(pdu, pos, 6);
+        pos += 6;
+        g_time.tn = get_value(pdu, pos, 2) + 1;
+        pos += 2;
+        g_time.fn = get_value(pdu, pos, 5);
+        pos += 5;
+        g_time.mn = get_value(pdu, pos, 6);
+        pos += 6;
+        pos += 2;                                                               // sharing mode
+        pos += 3;                                                               // reserved frames
+        pos += 1;                                                               // U-plane DTX
+        pos += 1;                                                               // frame 18 extension
+        pos += 1;                                                               // reserved
+
+        g_cell_infos.mcc = get_value(pdu, 31, 10);                              // should be done in MLE but we need it here to calculate scrambling code
+        g_cell_infos.mnc = get_value(pdu, 41, 14);
+
+        calculate_scrambling_code();
+        g_cell_informations_acquired = true;
+
+        report_start("MAC", "SYNC");
+        report_send();
+
+        if ((g_time.fn == 18) && ((g_time.mn + g_time.tn) % 4 == 3))
+        {
+            printf("BSCH        : TN/FN/MN = %2u/%2u/%2u  MAC-SYNC              ColorCode=%3d  MCC/MNC = %3u/ %3u  Freq= %10.6f MHz  burst=%u\n",
+                   g_time.tn,
+                   g_time.fn,
+                   g_time.mn,
+                   g_cell_infos.color_code,
+                   g_cell_infos.mcc,
+                   g_cell_infos.mnc,
+                   g_cell_infos.downlink_frequency / 1.0e6,
+                   cur_burst_type);
+        }
+
+        sdu = vector_extract(pdu, pos, 29);
+    }
+    else
+    {
+        report_add("invalid pdu size", pdu.size());
+        report_add("pdu minimum size", MIN_SIZE);
+    }
+
     return sdu;
 }

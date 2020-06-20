@@ -28,6 +28,12 @@
 
 void tetra_dl::service_llc(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - mac_channel = %s pdu = %s\n", "service_llc", mac_logical_channel_name(mac_logical_channel).c_str(), vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     if (mac_logical_channel == BSCH)                                           // TM-SDU is directly sent to MLE
     {
         service_mle(pdu, mac_logical_channel);

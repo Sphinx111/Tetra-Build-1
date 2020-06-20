@@ -26,6 +26,12 @@
 
 void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - mac_channel = %s pdu = %s\n", "service_mle", mac_logical_channel_name(mac_logical_channel).c_str(), vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     vector<uint8_t> sdu;
 
     uint8_t pdu_type;
@@ -33,7 +39,7 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
     string infos = "";
     bool print_infos_flag = false;
 
-    if (mac_logical_channel == BSCH)                                            // TM-SDU is directly sent by MAC 18.4.2
+    if (mac_logical_channel == BSCH)                                            // TM-SDU was already sent directly by MAC 18.4.2. Report infos and stop here
     {
         print_infos_flag = true;
         txt = "MLE";
@@ -42,7 +48,7 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
         infos = tt.str();
         return;                                                                 // TODO clean up
     }
-    else if (mac_logical_channel == BNCH)                                       // TM-SDU is directly sent by MAC 18.4.2
+    else if (mac_logical_channel == BNCH)                                       // TM-SDU was alrdeady sent directly by MAC 18.4.2. Report infos and stop here
     {
         print_infos_flag = true;
         txt = "MLE";
@@ -152,6 +158,12 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
 
 void tetra_dl::mle_process_d_nwrk_broadcast(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "mle_process_d_nwrk_broadcast", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("MLE", "D-NWRK-BROADCAST");
 
     uint32_t pos = 0;
@@ -199,6 +211,12 @@ void tetra_dl::mle_process_d_nwrk_broadcast(vector<uint8_t> pdu)
 
 void tetra_dl::mle_process_d_nwrk_broadcast_extension(vector<uint8_t> pdu)
 {
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "mle_process_d_nwrk_broadcast_extension", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
     report_start("MLE", "D-NWRK-BROADCAST");
 
     uint32_t pos = 0;

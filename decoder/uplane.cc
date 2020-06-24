@@ -70,7 +70,7 @@ void tetra_dl::service_u_plane(vector<uint8_t> pdu, mac_logical_channel_t mac_lo
 
             // speech frame will be converted in base64 string
 
-            report_add("usage marker", mac_state.downlink_usage_marker);                  // current usage marker
+            report_add("downlink usage marker", mac_state.downlink_usage_marker);         // current usage marker
             report_add_compressed("frame", (const unsigned char *)speech_frame, 2 * 690); // actual binary frame 1380 bytes
         }
         else

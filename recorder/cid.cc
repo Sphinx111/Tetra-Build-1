@@ -252,6 +252,7 @@ void cid_parse_pdu(string data, FILE * fd_log)
     string   service;
     string   pdu;
     uint8_t  usage_marker;
+    uint8_t  downlink_usage_marker;
     uint32_t ssi;
 
     bool b_valid = true;                                                        // check if the pdu is valid
@@ -279,13 +280,14 @@ void cid_parse_pdu(string data, FILE * fd_log)
     }
     else if (!service.compare("UPLANE"))                                        // traffic speech frame
     {
+        
         uint64_t zlib_uncomp_size;
         uint64_t zlib_comp_size;
         string frame;
-        b_valid = true;
-        b_valid = b_valid && jparser->read("uzsize", &zlib_uncomp_size);        // uncompressed frame length 2 * 690 + 1 bytes
-        b_valid = b_valid && jparser->read("zsize",  &zlib_comp_size);          // compressed frame length (before B64 since B64 add overhead)
-        b_valid = b_valid && jparser->read("frame",  &frame);                   // zlib + B64 frame
+        b_valid = jparser->read("downlink usage marker", &downlink_usage_marker); // may differ from usage marker
+        b_valid = b_valid && jparser->read("uzsize", &zlib_uncomp_size);          // uncompressed frame length 2 * 690 + 1 bytes
+        b_valid = b_valid && jparser->read("zsize",  &zlib_comp_size);            // compressed frame length (before B64 since B64 add overhead)
+        b_valid = b_valid && jparser->read("frame",  &frame);                     // zlib + B64 frame
 
         if (b_valid)                                                            // we can process current speech frame
         {
@@ -301,7 +303,7 @@ void cid_parse_pdu(string data, FILE * fd_log)
 
             if (!ret)
             {
-                cid_send_traffic_to_cid_by_usage_marker(usage_marker, buf_zlib_out, zlib_uncomp_size); // process it
+                cid_send_traffic_to_cid_by_usage_marker(downlink_usage_marker, buf_zlib_out, zlib_uncomp_size); // process it
             }
         }
     }

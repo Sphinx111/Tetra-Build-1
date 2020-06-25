@@ -57,47 +57,47 @@ void tetra_dl::service_llc(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
         txt = "BL-ADATA";
         pos += 1;                                                               // nr
         pos += 1;                                                               // ns
-        tl_sdu = vector_extract(pdu, pos, pdu.size() - pos);
+        tl_sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos));
         break;
 
     case 0b0001:                                                                // BL-DATA
         txt = "BL-DATA";
         pos += 1;                                                               // ns
-        tl_sdu = vector_extract(pdu, pos, pdu.size() - pos);
+        tl_sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos));
         break;
 
     case 0b0010:                                                                // BL-UDATA
         txt = "BL-UDATA";
-        tl_sdu = vector_extract(pdu, pos, pdu.size() - pos);
+        tl_sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos));
         break;
 
     case 0b0011:                                                                // BL-ACK
         txt = "BL-ACK";
         pos += 1;                                                               // nr
-        tl_sdu = vector_extract(pdu, pos, pdu.size() - pos);
+        tl_sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos));
         break;
 
     case 0b0100:                                                                // BL-ADATA + FCS
         txt = "BL-ADATA + FCS";
-        pos += 1;                                                               // nr
-        pos += 1;                                                               // ns
-        tl_sdu = vector_extract(pdu, pos, pdu.size() - pos - 32);
+        pos += 1;                                                                 // nr
+        pos += 1;                                                                 // ns
+        tl_sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos) - 32); // TODO removed FCS for now
         break;
 
     case 0b0101:                                                                // BL-DATA + FCS
         txt = "BL-DATA + FCS";
-        tl_sdu = vector_extract(pdu, pos, pdu.size() - pos - 32);
+        tl_sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos) - 32); // TODO removed FCS for now
         break;
 
     case 0b0110:                                                                // BL-UDATA + FCS
         txt = "BL-UDATA + FCS";
-        tl_sdu = vector_extract(pdu, pos, pdu.size() - pos - 32);
+        tl_sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos) - 32); // TODO removed FCS for now
         break;
 
     case 0b0111:                                                                // BL-ACK + FCS
         txt = "BL-ACK + FCS";
         pos += 1;                                                               // nr
-        tl_sdu = vector_extract(pdu, pos, pdu.size() - pos - 32);
+        tl_sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos) - 32); // TODO removed FCS for now
         break;
 
     case 0b1000:                                                                // AL-SETUP
@@ -134,7 +134,7 @@ void tetra_dl::service_llc(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
         pos += 1;                                                               // ar
         pos += 3;                                                               // ns
         pos += 8;                                                               // ss
-        tl_sdu = vector_extract(pdu, pos, pdu.size() - pos);
+        tl_sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos));
         break;
 
     case 0b1010:                                                                // AL-UDATA/AL-UFINAL
@@ -149,7 +149,7 @@ void tetra_dl::service_llc(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
         }
         pos += 8;                                                               // ns
         pos += 8;                                                               // ss
-        tl_sdu = vector_extract(pdu, pos, pdu.size() - pos);
+        tl_sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos));
         break;
 
     case 0b1011:                                                                // AL-ACK/AL-UNR

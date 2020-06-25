@@ -107,7 +107,7 @@ void tetra_dl::cmce_sds_parse_d_sds_data(vector<uint8_t> pdu)
         uint16_t len = get_value(pdu, pos, 11);                                 // length indicator
         pos += 11;
 
-        sdu = vector_extract(pdu, pos, len);                                    // user-defined data 4
+        sdu = vector_extract(pdu, pos, (int32_t)len);                           // user-defined data 4
         pos += len;
         cmce_sds_parse_type4_data(sdu, len);                                    // parse type4 SDS message (message length is required to process user-defined type 4)
     }
@@ -276,7 +276,7 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
 
         case 0b00001010:
             report_add("protocol info", "location information protocol");       // 29.5.12 - TS 100 392-18 v1.7.2
-            sdu = vector_extract(pdu, pos, len - pos);
+            sdu = vector_extract(pdu, pos, utils_substract(len, pos));
             cmce_sds_service_location_information_protocol(sdu);                // LIP service
             break;
 
@@ -438,7 +438,7 @@ void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t
         }
     }
 
-    vector<uint8_t> sdu = vector_extract(pdu, pos, len - pos);
+    vector<uint8_t> sdu = vector_extract(pdu, pos, utils_substract(len, pos));
 
     switch (protocol_id)                                                        // table 29.21
     {
@@ -517,19 +517,21 @@ void tetra_dl::cmce_sds_parse_simple_text_messaging(vector<uint8_t> pdu, const u
     report_add("text coding scheme", text_coding_scheme);
 
     string txt = "";
+    int32_t sdu_length = utils_substract(len, pos);
+
     if (text_coding_scheme == 0b0000000)                                        // GSM 7-bit alphabet - see 29.5.4.3
     {
-        txt = text_gsm_7_bit_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        txt = text_gsm_7_bit_decode(vector_extract(pdu, pos, sdu_length), sdu_length);
         report_add("infos", txt);
     }
     else if (text_coding_scheme <= 0b0011001)                                   // 8 bit alphabets
     {
-        txt = text_generic_8_bit_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        txt = text_generic_8_bit_decode(vector_extract(pdu, pos, sdu_length), sdu_length);
         report_add("infos", txt);
     }
     else                                                                        // try generic 8 bits alphabet since we already have the full hexadecimal SDU
     {
-        txt = text_generic_8_bit_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        txt = text_generic_8_bit_decode(vector_extract(pdu, pos, sdu_length), sdu_length);
         report_add("infos", txt);
     }
 }
@@ -566,19 +568,21 @@ void tetra_dl::cmce_sds_parse_text_messaging_with_sds_tl(vector<uint8_t> pdu)
     }
 
     string txt = "";
+    int32_t sdu_length = utils_substract(len, pos);
+
     if (text_coding_scheme == 0b0000000)                                        // GSM 7-bit alphabet - see 29.5.4.3
     {
-        txt = text_gsm_7_bit_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        txt = text_gsm_7_bit_decode(vector_extract(pdu, pos, sdu_length), sdu_length);
         report_add("infos", txt);
     }
     else if (text_coding_scheme <= 0b0011001)                                   // 8 bit alphabets
     {
-        txt = text_generic_8_bit_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        txt = text_generic_8_bit_decode(vector_extract(pdu, pos, sdu_length), sdu_length);
         report_add("infos", txt);
     }
     else                                                                        // try generic 8 bits alphabet since we already have the full hexadecimal SDU
     {
-        txt = text_generic_8_bit_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        txt = text_generic_8_bit_decode(vector_extract(pdu, pos, sdu_length), sdu_length);
         report_add("infos", txt);
     }
 }
@@ -604,25 +608,26 @@ void tetra_dl::cmce_sds_parse_simple_location_system(vector<uint8_t> pdu, const 
 
     // remaining bits are len - 8 - 8 since len is size of pdu
     string txt = "";
+    int32_t sdu_length = utils_substract(len, pos);
 
     switch (location_system_coding)
     {
     case 0b00000000:                                                            // NMEA 0183 - see Annex L
-        txt = location_nmea_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        txt = location_nmea_decode(vector_extract(pdu, pos, sdu_length), sdu_length);
         report_add("infos", txt);
         break;
 
     case 0b00000001:                                                            // TODO RTCM RC-104 - see Annex L
         //txt = location_rtcm_decode(vector_extract(pdu, pos, len - pos), len - pos);
-        report_add("infos", vector_extract(pdu, pos, len - pos));
+        report_add("infos", vector_extract(pdu, pos, sdu_length));
         break;
 
     case 0b10000000:                                                            // TODO Proprietary. Notes from SQ5BPF: some proprietary system seen in the wild in Spain, Itlay and France some speculate it's either from DAMM or SEPURA
-        report_add("infos", vector_extract(pdu, pos, len - pos));
+        report_add("infos", vector_extract(pdu, pos, sdu_length));
         break;
 
     default:
-        report_add("infos", vector_extract(pdu, pos, len - pos));
+        report_add("infos", vector_extract(pdu, pos, sdu_length));
         break;
     }
 }
@@ -648,25 +653,26 @@ void tetra_dl::cmce_sds_parse_location_system_with_sds_tl(vector<uint8_t> pdu)
     report_add("location coding system", location_system_coding);
 
     string txt = "";
+    int32_t sdu_length = utils_substract(len, pos);
 
     switch (location_system_coding)
     {
     case 0b00000000:                                                            // NMEA 0183 - see Annex L
-        txt = location_nmea_decode(vector_extract(pdu, pos, len - pos), len - pos);
+        txt = location_nmea_decode(vector_extract(pdu, pos, sdu_length), sdu_length);
         report_add("infos", txt);
         break;
 
     case 0b00000001:                                                            // TODO RTCM RC-104 - see Annex L
         //txt = location_rtcm_decode(vector_extract(pdu, pos, len - pos), len - pos);
-        report_add("infos", vector_extract(pdu, pos, len - pos));
+        report_add("infos", vector_extract(pdu, pos, sdu_length));
         break;
 
     case 0b10000000:                                                            // TODO Proprietary. Notes from SQ5BPF: some proprietary system seen in the wild in Spain, Itlay and France some speculate it's either from DAMM or SEPURA
-        report_add("infos", vector_extract(pdu, pos, len - pos));
+        report_add("infos", vector_extract(pdu, pos, sdu_length));
         break;
 
     default:
-        report_add("infos", vector_extract(pdu, pos, len - pos));
+        report_add("infos", vector_extract(pdu, pos, sdu_length));
         break;
     }
 }

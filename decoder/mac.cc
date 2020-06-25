@@ -587,7 +587,7 @@ vector<uint8_t> tetra_dl::mac_remove_fill_bits(const vector<uint8_t> pdu)
 
     if (g_remove_fill_bit_flag)
     {
-        if (g_debug_level > 2)
+        if (g_debug_level > 6)
         {
             printf(" ------- mac_remove_fill_bits BEFORE -- %u bits\n", (uint32_t)ret.size());
             print_vector(ret, ret.size());
@@ -606,7 +606,7 @@ vector<uint8_t> tetra_dl::mac_remove_fill_bits(const vector<uint8_t> pdu)
             ret.resize(ret.size() - 1);                                         // 23.4.3.2 then remove last 1
         }
 
-        if (g_debug_level > 2)
+        if (g_debug_level > 6)
         {
             printf(" ------- mac_remove_fill_bits AFTER --- %u bits\n", (uint32_t)ret.size());
             print_vector(ret, ret.size());
@@ -674,138 +674,141 @@ vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> mac_pdu, mac
         vector<uint8_t> null_pdu;
         return null_pdu;
     }
-
-    switch (mac_address.address_type)
-    {
-    case 0b001:                                                                 // SSI
-        mac_address.ssi = get_value(pdu, pos, 24);
-        pos += 24;
-        break;
-
-    case 0b011:                                                                 // USSI
-        mac_address.ussi = get_value(pdu, pos, 24);
-        pos += 24;
-        break;
-
-    case 0b100:                                                                 // SMI
-        mac_address.smi = get_value(pdu, pos, 24);
-        pos += 24;
-        break;
-
-    case 0b010:                                                                 // event label
-        mac_address.event_label = get_value(pdu, pos, 10);
-        pos += 10;
-        break;
-
-    case 0b101:                                                                 // SSI + event label (event label assignment)
-        mac_address.ssi = get_value(pdu, pos, 24);
-        pos += 24;
-        mac_address.event_label = get_value(pdu, pos, 10);
-        pos += 10;
-        break;
-
-    case 0b110:                                                                 // SSI + usage marker (usage marker assignment)
-        mac_address.ssi = get_value(pdu, pos, 24);
-        pos += 24;
-        mac_address.usage_marker = get_value(pdu, pos, 6);
-        pos += 6;
-        break;
-
-    case 0b111:                                                                 // SMI + event label (event label assignment)
-        mac_address.smi = get_value(pdu, pos, 24);
-        pos += 24;
-        mac_address.event_label = get_value(pdu, pos, 10);
-        pos += 10;
-        break;
-    }
-
-    if (get_value(pdu, pos, 1))                                                 // power control flag
-    {
-        pos += 1 + 4;
-    }
     else
     {
-        pos += 1;
-    }
+        switch (mac_address.address_type)                                       // TODO see EN 300 392-1 clause 7
+        {
+        case 0b001:                                                             // SSI
+            mac_address.ssi = get_value(pdu, pos, 24);
+            pos += 24;
+            break;
 
-    if (get_value(pdu, pos, 1))                                                 // slot granting flag
-    {
-        pos += 1 + 8;
-    }
-    else
-    {
-        pos += 1;
-    }
+        case 0b011:                                                             // USSI
+            mac_address.ussi = get_value(pdu, pos, 24);
+            pos += 24;
+            break;
 
-    uint8_t flag = get_value(pdu, pos, 1);
-    pos += 1;
-    if (flag)
-    {
-        uint8_t val;
+        case 0b100:                                                             // SMI
+            mac_address.smi = get_value(pdu, pos, 24);
+            pos += 24;
+            break;
 
-        // 21.5.2 channel allocation elements table 341
-        pos += 2;                                                               // channel allocation type
-        pos += 4;                                                               // timeslot assigned
-        uint8_t ul_dl = get_value(pdu, pos, 2);
-        pos += 2;                                                               // up/downlink assigned
-        pos += 1;                                                               // CLCH permission
-        pos += 1;                                                               // cell change flag
-        pos += 12;                                                              // carrier number
-        flag = get_value(pdu, pos, 1);                                          // extended carrier numbering flag
+        case 0b010:                                                             // event label
+            mac_address.event_label = get_value(pdu, pos, 10);
+            pos += 10;
+            break;
+
+        case 0b101:                                                             // SSI + event label (event label assignment)
+            mac_address.ssi = get_value(pdu, pos, 24);
+            pos += 24;
+            mac_address.event_label = get_value(pdu, pos, 10);
+            pos += 10;
+            break;
+
+        case 0b110:                                                             // SSI + usage marker (usage marker assignment)
+            mac_address.ssi = get_value(pdu, pos, 24);
+            pos += 24;
+            mac_address.usage_marker = get_value(pdu, pos, 6);
+            pos += 6;
+            break;
+
+        case 0b111:                                                             // SMI + event label (event label assignment)
+            mac_address.smi = get_value(pdu, pos, 24);
+            pos += 24;
+            mac_address.event_label = get_value(pdu, pos, 10);
+            pos += 10;
+            break;
+        }
+
+        if (get_value(pdu, pos, 1))                                             // power control flag
+        {
+            pos += 1 + 4;
+        }
+        else
+        {
+            pos += 1;
+        }
+
+        if (get_value(pdu, pos, 1))                                             // slot granting flag
+        {
+            pos += 1 + 8;
+        }
+        else
+        {
+            pos += 1;
+        }
+
+        uint8_t flag = get_value(pdu, pos, 1);
         pos += 1;
         if (flag)
         {
-            pos += 4;                                                           // frequency band
-            pos += 2;                                                           // offset
-            pos += 3;                                                           // duplex spacing
-            pos += 1;                                                           // reverse operation
-        }
-        val = get_value(pdu, pos, 2);                                           // monitoring pattern
-        pos += 2;
-        if ((val == 0b00) && (g_time.fn == 18))                                 // frame 18 conditional monitoring pattern
-        {
-            pos += 2;
-        }
+            uint8_t val;
 
-	if (ul_dl == 0)                                                         // augmented channel allocation
-        {
-            pos += 2;
-            pos += 3;
-            pos += 3;
-            pos += 3;
-            pos += 3;
-            pos += 3;
-            pos += 4;
-            pos += 5;
-            val = get_value(pdu, pos, 2);                                       // napping_sts
-            pos += 2;
-            if (val == 1)
-            {
-                pos += 11;                                                      // 21.5.2c
-            }
-            pos += 4;
-
-            flag = get_value(pdu, pos, 1);
+            // 21.5.2 channel allocation elements table 341
+            pos += 2;                                                           // channel allocation type
+            pos += 4;                                                           // timeslot assigned
+            uint8_t ul_dl = get_value(pdu, pos, 2);
+            pos += 2;                                                           // up/downlink assigned
+            pos += 1;                                                           // CLCH permission
+            pos += 1;                                                           // cell change flag
+            pos += 12;                                                          // carrier number
+            flag = get_value(pdu, pos, 1);                                      // extended carrier numbering flag
             pos += 1;
             if (flag)
             {
-                pos += 16;
+                pos += 4;                                                       // frequency band
+                pos += 2;                                                       // offset
+                pos += 3;                                                       // duplex spacing
+                pos += 1;                                                       // reverse operation
             }
-
-            flag = get_value(pdu, pos, 1);
-            pos += 1;
-            if (flag)
+            val = get_value(pdu, pos, 2);                                       // monitoring pattern
+            pos += 2;
+            if ((val == 0b00) && (g_time.fn == 18))                             // frame 18 conditional monitoring pattern
             {
-                pos += 16;
+                pos += 2;
             }
 
-            pos += 1;
-	}
+            if (ul_dl == 0)                                                     // augmented channel allocation
+            {
+                pos += 2;
+                pos += 3;
+                pos += 3;
+                pos += 3;
+                pos += 3;
+                pos += 3;
+                pos += 4;
+                pos += 5;
+                val = get_value(pdu, pos, 2);                                   // napping_sts
+                pos += 2;
+                if (val == 1)
+                {
+                    pos += 11;                                                  // 21.5.2c
+                }
+                pos += 4;
+
+                flag = get_value(pdu, pos, 1);
+                pos += 1;
+                if (flag)
+                {
+                    pos += 16;
+                }
+
+                flag = get_value(pdu, pos, 1);
+                pos += 1;
+                if (flag)
+                {
+                    pos += 16;
+                }
+
+                pos += 1;
+            }
+        }
     }
 
     vector<uint8_t> sdu;
 
-    uint32_t sdu_length = decode_length(length) * 8 - pos;
+    // in case of NULL pdu, the length shall be 16 bits
+    int32_t sdu_length = (int32_t)decode_length(length) * 8 - (int32_t)pos;
 
     if (sdu_length > 0)
     {
@@ -815,7 +818,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> mac_pdu, mac
         if (*b_fragmented_packet)
         {
             mac_defrag->start(mac_address, g_time);
-            mac_defrag->append(vector_extract(pdu, pos, pdu.size()), mac_address);
+            mac_defrag->append(vector_extract(pdu, pos, utils_substract(pdu.size(), pos)), mac_address); // length is the whole packet size - pos
         }
         else
         {
@@ -857,13 +860,13 @@ void tetra_dl::mac_pdu_process_mac_frag(vector<uint8_t> mac_pdu)
         pdu = mac_remove_fill_bits(pdu);
     }
 
-    vector<uint8_t> sdu = vector_extract(pdu, pos, pdu.size() - pos);
+    vector<uint8_t> sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos));
 
     mac_defrag->append(sdu, mac_address);
 }
 
 /**
- * @brief MAC-END 21.4.3.4 / 23.4.3 (defragmentation)
+ * @brief MAC-END 21.4.3.3 / 23.4.3 (defragmentation)
  *
  * Maximum length depends on channel (table 21.60):
  *   SCH/F  255 bits
@@ -903,7 +906,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(vector<uint8_t> mac_pdu)
         return null_pdu;
     }
 
-    uint32_t length = decode_length(val);                                       // convert length in bytes (includes MAC PDU header + TM_SDU length)
+    //uint32_t length = decode_length(val);                                       // convert length in bytes (includes MAC PDU header + TM_SDU length)
 
     uint8_t flag = get_value(pdu, pos, 1);                                      // slot granting flag
     pos += 1;
@@ -941,15 +944,10 @@ vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(vector<uint8_t> mac_pdu)
     }
 
     vector<uint8_t> sdu;
-    // if (length > 0)                                                             // 23.4.3.1.1 in some case there is no user data (sdu length = 0)
-    // {
-    uint16_t sdu_length = length * 8 - pos;
 
-    //mac_defrag->append(vector_extract(pdu, pos, sdu_length), mac_address);
-    mac_defrag->append(vector_extract(pdu, pos, pdu.size()), mac_address);
+    mac_defrag->append(vector_extract(pdu, pos, utils_substract(pdu.size(), pos)), mac_address);
     sdu = mac_defrag->get_sdu();
     mac_defrag->stop();
-    // }
 
     return sdu;
 }
@@ -1065,7 +1063,8 @@ vector<uint8_t> tetra_dl::mac_pdu_process_d_block(vector<uint8_t> mac_pdu)
         {
             pos += 8;
         }
-        sdu = vector_extract(pdu, pos, pdu.size() - pos);
+
+        sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos));
     }
     else
     {

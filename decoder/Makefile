@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -O2 -std=c++11 -Wall
+CFLAGS = -O2 -std=c++11 -Wall -Wextra
 LDFLAGS = -lz
 
 SRC = 	decoder_main.cc coding.cc report.cc utils.cc viterbi.cc  base64.cc \

@@ -86,20 +86,20 @@ uint8_t get_value_8(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t f
  *
  */
 
-vector<uint8_t> vector_extract(vector<uint8_t> source, uint32_t pos, uint32_t length)
+vector<uint8_t> vector_extract(vector<uint8_t> source, uint32_t pos, int32_t length)
 {
     vector<uint8_t> ret;
 
-    if ((int32_t)(source.size() - pos) > 0)
-    {
-        uint32_t len = source.size() - pos;                                     // actual length
+    int32_t len = (int32_t)source.size() - (int32_t)pos;                        // actual remaining bytes in vector after pos
 
+    if (len > 0)
+    {
         if (len > length)                                                       // we have more bytes than requested
         {
             len = length;                                                       // so return only the requested ones
         }
 
-        std::copy(source.begin() + pos, source.begin() + pos + len, back_inserter(ret));
+        std::copy(source.begin() + pos, source.begin() + pos + (uint32_t)len, back_inserter(ret));
     }
 
     return ret;
@@ -218,7 +218,7 @@ int pattern_at_position_score(vector<uint8_t> data, vector<uint8_t> pattern, uin
  *
  */
 
-string text_gsm_7_bit_decode(vector<uint8_t> data, const uint16_t len)
+string text_gsm_7_bit_decode(vector<uint8_t> data, const int16_t len)
 {
     // NOTE: _ is a special char when we want to escape the character value
     //                   0        10         20        30         40        50        60        70        80        90        100       110      120
@@ -226,9 +226,9 @@ string text_gsm_7_bit_decode(vector<uint8_t> data, const uint16_t len)
     const string gsm7 = "@_______________________________ !\"#{%&'()*+,-./0123456789:;<=>?_ABCDEFGHIJKLMNOPQRSTUVWXYZ______abcdefghijklmnopqrstuvwxyz_____";
     string res = "";
 
-    for (uint16_t idx = 0; idx < len / 7; idx++)
+    for (int16_t idx = 0; idx < len / 7; idx++)
     {
-        uint8_t chr = get_value(data, idx * 7, 7);
+        uint8_t chr = get_value(data, (uint64_t)idx * 7, 7);
 
         char val = gsm7[chr];
         if (val == '{')
@@ -252,13 +252,13 @@ string text_gsm_7_bit_decode(vector<uint8_t> data, const uint16_t len)
  *
  */
 
-string text_generic_8_bit_decode(vector<uint8_t> data, const uint16_t len)
+string text_generic_8_bit_decode(vector<uint8_t> data, const int16_t len)
 {
     string res = "";
 
-    for (uint16_t idx = 0; idx < len / 8; idx++)
+    for (int16_t idx = 0; idx < len / 8; idx++)
     {
-        uint8_t chr = get_value(data, idx * 8, 8);
+        uint8_t chr = get_value(data, (uint64_t)idx * 8, 8);
         if (isprint(chr))
         {
             res += (char)chr;
@@ -279,13 +279,13 @@ string text_generic_8_bit_decode(vector<uint8_t> data, const uint16_t len)
  *
  */
 
-string location_nmea_decode(vector<uint8_t> data, const uint16_t len)
+string location_nmea_decode(vector<uint8_t> data, const int16_t len)
 {
     string res = "";
 
-    for (uint16_t idx = 0; idx < len / 8; idx++)
+    for (int16_t idx = 0; idx < len / 8; idx++)
     {
-        uint8_t chr = get_value(data, idx * 8, 8);
+        uint8_t chr = get_value(data, (uint64_t)idx * 8, 8);
 
         if ((chr != 10) && (chr != 13))                                         // skip CR/LF
         {
@@ -323,6 +323,17 @@ double utils_decode_integer_twos_complement(uint32_t data, uint8_t n_bits, doubl
     return res;
 }
 
+/**
+ * @brief Substract two 32 bits unsigned integers (val1 - val2) and return signed int 32
+ *
+ */
+
+int32_t utils_substract(int32_t val1, int32_t val2)
+{
+    int32_t res = (int32_t)val1 - (int32_t)val2;
+
+    return res;
+}
 
 /**
  * @brief Print formatted string like printf with variadic protection

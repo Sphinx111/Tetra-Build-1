@@ -135,6 +135,7 @@ public:
 
     // MLE
     void service_mle( vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
+    void service_mle_subsystem(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
     void mle_process_d_nwrk_broadcast(vector<uint8_t> pdu);
     void mle_process_d_nwrk_broadcast_extension(vector<uint8_t> pdu);
 

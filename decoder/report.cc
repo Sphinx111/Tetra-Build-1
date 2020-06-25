@@ -46,8 +46,56 @@ void tetra_dl::report_start(string service, string pdu)
     report_add("fn", g_time.fn);
     report_add("mn", g_time.mn);
 
+    // TODO improve SSI/USSI/EVENT label handling
+    // only SSI is used for now, it is not always relevant
+
     report_add("ssi",          mac_address.ssi);
     report_add("usage marker", mac_address.usage_marker);
+
+    // report_add("address_type", mac_address.address_type);
+    // switch (mac_address.address_type)
+    // {
+    // case 0b001:                                                                 // SSI
+    //     mac_address.ssi = get_value(pdu, pos, 24);
+    //     pos += 24;
+    //     break;
+
+    // case 0b011:                                                                 // USSI
+    //     mac_address.ussi = get_value(pdu, pos, 24);
+    //     pos += 24;
+    //     break;
+
+    // case 0b100:                                                                 // SMI
+    //     mac_address.smi = get_value(pdu, pos, 24);
+    //     pos += 24;
+    //     break;
+
+    // case 0b010:                                                                 // event label
+    //     mac_address.event_label = get_value(pdu, pos, 10);
+    //     pos += 10;
+    //     break;
+
+    // case 0b101:                                                                 // SSI + event label (event label assignment)
+    //     mac_address.ssi = get_value(pdu, pos, 24);
+    //     pos += 24;
+    //     mac_address.event_label = get_value(pdu, pos, 10);
+    //     pos += 10;
+    //     break;
+
+    // case 0b110:                                                                 // SSI + usage marker (usage marker assignment)
+    //     mac_address.ssi = get_value(pdu, pos, 24);
+    //     pos += 24;
+    //     mac_address.usage_marker = get_value(pdu, pos, 6);
+    //     pos += 6;
+    //     break;
+
+    // case 0b111:                                                                 // SMI + event label (event label assignment)
+    //     mac_address.smi = get_value(pdu, pos, 24);
+    //     pos += 24;
+    //     mac_address.event_label = get_value(pdu, pos, 10);
+    //     pos += 10;
+    //     break;
+    // }
 }
 
 /**
@@ -61,8 +109,6 @@ void tetra_dl::report_add(string field, string val)
     rapidjson::Value dat(val.c_str(),   jdoc.GetAllocator());;
 
     jdoc.AddMember(key, dat, jdoc.GetAllocator());
-
-    //json_object_object_add(jobj, field.c_str(), json_object_new_string(val.c_str()));
 }
 
 /**

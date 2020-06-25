@@ -32,9 +32,7 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
         fflush(stdout);
     }
 
-    vector<uint8_t> sdu;
-
-    uint8_t pdu_type;
+    //uint8_t pdu_type;
     string txt   = "";
     string infos = "";
     bool print_infos_flag = false;
@@ -57,7 +55,7 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
         infos = tt.str();
         return;                                                                 // TODO clean up
     }
-    else                                                                        // use discriminator
+    else                                                                        // use discriminator - see 18.5.21
     {
         uint32_t pos = 0;
         uint8_t disc = get_value(pdu, pos, 3);
@@ -69,14 +67,13 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
             txt = "reserved";
             break;
 
-        case 0b001:                                                             // transparent -> send directly to MM
+        case 0b001:                                                             // transparent -> remove discriminator and send directly to MM
             txt = "MM";
             break;
 
         case 0b010:
-            txt = "CMCE";                                                       // transparent -> send directly to CMCE
-            sdu = vector_extract(pdu, pos, pdu.size());
-            service_cmce(sdu, mac_logical_channel);
+            txt = "CMCE";                                                       // transparent -> remove discriminator and send directly to CMCE
+            service_cmce(vector_extract(pdu, pos, utils_substract(pdu.size(), pos)), mac_logical_channel);
             break;
 
         case 0b011:
@@ -84,53 +81,12 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
             break;
 
         case 0b100:
-            txt = "SDNCP";                                                      // transparent -> send directly to SDNCP
+            txt = "SDNCP";                                                      // transparent -> remove discriminator and send directly to SDNCP
             break;
 
-        case 0b101:
-            print_infos_flag = true;                                            // allow report for MLE functions
-
-            txt = "MLE";
-            pdu_type = get_value(pdu, pos, 3);
-            pos += 3;
-            switch (pdu_type)
-            {
-            case 0b000:
-                infos = "D-NEW-CELL";
-                break;
-
-            case 0b001:
-                infos = "D-PREPARE-FAIL";
-                break;
-
-            case 0b010:
-                infos = "D-NWRK-BROADCAST";
-                mle_process_d_nwrk_broadcast(pdu);
-                break;
-
-            case 0b011:
-                infos = "D-NWRK-BROADCAST-EXTENSION";
-                mle_process_d_nwrk_broadcast_extension(pdu);
-                break;
-
-            case 0b100:
-                infos = "D-RESTORE-ACK";
-                sdu = vector_extract(pdu, pos, pdu.size());
-                service_cmce(sdu, mac_logical_channel);
-                break;
-
-            case 0b101:
-                infos = "D-RESTORE-FAIL";
-                break;
-
-            case 0b110:
-                infos = "D-CHANNEL-RESPONSE";
-                break;
-
-            case 0b111:
-                infos = "reserved";
-                break;
-            }
+        case 0b101:                                                             // remove discriminator bits and send to MLE sub-system (for clarity only)
+            txt = "MLE subsystem";
+            service_mle_subsystem(vector_extract(pdu, pos, utils_substract(pdu.size(), pos)), mac_logical_channel);
             break;
 
         case 0b110:
@@ -152,6 +108,70 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
 }
 
 /**
+ * @brief Service MLE subsystem
+ *
+ */
+
+void tetra_dl::service_mle_subsystem(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
+{
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - mac_channel = %s pdu = %s\n", "service_mle_subsystem", mac_logical_channel_name(mac_logical_channel).c_str(), vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
+    string txt = "";
+
+    uint32_t pos = 0;
+    uint8_t pdu_type = get_value(pdu, pos, 3);
+    pos += 3;
+
+    switch (pdu_type)
+    {
+    case 0b000:
+        txt = "D-NEW-CELL";
+        break;
+
+    case 0b001:
+        txt = "D-PREPARE-FAIL";
+        break;
+
+    case 0b010:
+        txt = "D-NWRK-BROADCAST";
+        mle_process_d_nwrk_broadcast(pdu);
+        break;
+
+    case 0b011:
+        txt = "D-NWRK-BROADCAST-EXTENSION";
+        mle_process_d_nwrk_broadcast_extension(pdu);
+        break;
+
+    case 0b100:
+        txt = "D-RESTORE-ACK";
+        service_cmce(vector_extract(pdu, pos, utils_substract(pdu.size(), pos)), mac_logical_channel);
+        break;
+
+    case 0b101:
+        txt = "D-RESTORE-FAIL";
+        break;
+
+    case 0b110:
+        txt = "D-CHANNEL-RESPONSE";
+        break;
+
+    case 0b111:
+        txt = "reserved";
+        break;
+    }
+
+    printf("serv_mle_sub: TN/FN/MN = %2d/%2d/%2d  %-20s\n",                     // all MLE sub-system are printed
+           g_time.tn,
+           g_time.fn,
+           g_time.mn,
+           txt.c_str());
+}
+
+/**
  * @brief Process D-NWRK-BROADCAST 18.4.1.4.1
  *
  */
@@ -166,9 +186,7 @@ void tetra_dl::mle_process_d_nwrk_broadcast(vector<uint8_t> pdu)
 
     report_start("MLE", "D-NWRK-BROADCAST");
 
-    uint32_t pos = 0;
-
-    pos += 3;
+    uint32_t pos = 3;                                                           // PDU type
 
     report_add("cell re-select parameter", get_value(pdu, pos, 16));
     pos += 16;
@@ -196,9 +214,11 @@ void tetra_dl::mle_process_d_nwrk_broadcast(vector<uint8_t> pdu)
         {
             report_add("number of neighbour cells", get_value(pdu, pos, 3));
             pos += 3;
-        }
 
-        // TODO parse neighbour cells informations 18.5.17
+            // parse neighbour cells informations 18.5.17
+            int32_t len = utils_substract(pdu.size(), pos);
+            report_add("cells informations", vector_to_string(vector_extract(pdu, pos, len), len));
+        }
     }
 
     report_send();
@@ -219,9 +239,7 @@ void tetra_dl::mle_process_d_nwrk_broadcast_extension(vector<uint8_t> pdu)
 
     report_start("MLE", "D-NWRK-BROADCAST");
 
-    uint32_t pos = 0;
-
-    pos += 3;
+    uint32_t pos = 3;                                                           // PDU type
 
     uint8_t o_flag = get_value(pdu, pos, 1);                                    // option flag
     pos += 1;

@@ -97,7 +97,7 @@ void call_identifier_t::push_traffic(const char * data, uint32_t len)
     if (m_file_name[m_usage_marker] == "")
     {
         struct tm * timeinfo;
-        timeinfo = localtime (&now);
+        timeinfo = localtime(&now);
 
         char filename[512] = "";
         char tmp[16]       = "";

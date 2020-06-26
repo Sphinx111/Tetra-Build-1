@@ -51,9 +51,7 @@ void scr_init()
     scrollok(wn_sds,    TRUE);
     scrollok(wn_bottom, TRUE);
 
-    //box(wn_infos,  ACS_VLINE, ACS_HLINE);                                       // draw outline
-    //box(wn_sds,    ACS_VLINE, ACS_HLINE);
-    box(wn_bottom, ACS_VLINE, ACS_HLINE);
+    box(wn_bottom, ACS_VLINE, ACS_HLINE);                                       // draw outline
 
     wrefresh(wn_top);
     wrefresh(wn_infos);
@@ -68,7 +66,13 @@ void scr_update(string info)
     wclear(wn_bottom);
     box(wn_bottom, ACS_VLINE, ACS_HLINE);
 
-    wprintw(wn_infos, "%s\n", info.c_str());
+    const size_t TXT_LENGTH = 200;                                              // limit line length in infos window
+    string txt = info;
+    if (txt.size() > TXT_LENGTH)
+    {
+        txt = txt.substr(0, TXT_LENGTH);
+    }    
+    wprintw(wn_infos, "%s\n", txt.c_str());
 
     int cnt = 0;
     while (true)

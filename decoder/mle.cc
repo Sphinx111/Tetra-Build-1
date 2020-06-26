@@ -212,16 +212,133 @@ void tetra_dl::mle_process_d_nwrk_broadcast(vector<uint8_t> pdu)
         pos += 1;
         if (p_flag)
         {
-            report_add("number of neighbour cells", get_value(pdu, pos, 3));
+            uint8_t neighbour_cells_count = get_value(pdu, pos, 3);
             pos += 3;
+            report_add("number of neighbour cells", neighbour_cells_count);
 
-            // parse neighbour cells informations 18.5.17
-            int32_t len = utils_substract(pdu.size(), pos);
-            report_add("cells informations", vector_to_string(vector_extract(pdu, pos, len), len));
+            // for (uint8_t count = 0; count < neighbour_cells_count; count++)
+            // {
+            //     pos = mle_parse_neighbour_cell_information(pdu, pos, count);
+            // }
         }
     }
 
     report_send();
+}
+
+/**
+ * @brief Parse neighbour cell information 18.5.17 and return actual data length read
+ *        to increase flux position. This function used by mle_process_d_nwrk_broadcast
+ *
+ */
+
+uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, uint32_t pos_start, uint8_t idx)
+{
+    uint32_t pos = pos_start;
+
+    string prefix = format_str("%s%u ", "cell", idx);
+
+    report_add(prefix + "identifier", get_value(data, pos, 5));
+    pos += 5;
+
+    report_add(prefix + "reselection types supported", get_value(data, pos, 2));
+    pos += 2;
+
+    report_add(prefix + "neighbour cell synchronized", get_value(data, pos, 1));
+    pos += 1;
+
+    report_add(prefix + "service level", get_value(data, pos, 2));
+    pos += 2;
+
+    report_add(prefix + "main carrier number", get_value(data, pos, 12));
+    pos += 12;
+
+    uint8_t o_flag = get_value(data, pos, 1);                                   // option flag
+    pos += 1;
+    if (o_flag)                                                                 // there is type2 fields
+    {
+        uint8_t p_flag = get_value(data, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add(prefix + "main carrier number extension", get_value(data, pos, 10));
+            pos += 10;
+        }
+
+        p_flag = get_value(data, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add(prefix + "MCC", get_value(data, pos, 10));
+            pos += 10;
+        }
+
+        p_flag = get_value(data, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add(prefix + "MNC", get_value(data, pos, 14));
+            pos += 14;
+        }
+
+        p_flag = get_value(data, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add(prefix + "LA", get_value(data, pos, 14));
+            pos += 14;
+        }
+
+        p_flag = get_value(data, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add(prefix + "max. MS tx power", get_value(data, pos, 3));
+            pos += 3;
+        }
+
+        p_flag = get_value(data, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add(prefix + "min. rx access level", get_value(data, pos, 4));
+            pos += 4;
+        }
+
+        p_flag = get_value(data, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add(prefix + "subscriber class", get_value(data, pos, 16));
+            pos += 16;
+        }
+
+        p_flag = get_value(data, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add(prefix + "BS service details", get_value(data, pos, 12));
+            pos += 12;
+        }
+
+        p_flag = get_value(data, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add(prefix + "timeshare or security", get_value(data, pos, 5));
+            pos += 5;
+        }
+        
+        p_flag = get_value(data, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add(prefix + "TDMA frame offset", get_value(data, pos, 6));
+            pos += 6;
+        }
+    }
+
+    return pos;
 }
 
 /**

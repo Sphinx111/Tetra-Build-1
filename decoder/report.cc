@@ -29,7 +29,7 @@
  * @brief Prepare Json report
  *
  * Initialize Json object, add tetra common informations.
- * Must be terminated by send to free data
+ * Must be ended by send
  *
  */
 

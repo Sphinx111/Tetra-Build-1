@@ -90,18 +90,21 @@ vector<uint8_t> vector_extract(vector<uint8_t> source, uint32_t pos, int32_t len
 {
     vector<uint8_t> ret;
 
-    int32_t len = (int32_t)source.size() - (int32_t)pos;                        // actual remaining bytes in vector after pos
-
-    if (len > 0)
+    if (length > 0)                                                             // check if invalid length requested
     {
-        if (len > length)                                                       // we have more bytes than requested
+        int32_t len = (int32_t)source.size() - (int32_t)pos;                    // actual remaining bytes in vector after pos
+
+        if (len > 0)                                                            // check if actual length is valid
         {
-            len = length;                                                       // so return only the requested ones
+            if (len > length)                                                   // we have more bytes than requested
+            {
+                len = length;                                                   // so return only the requested ones
+            }
+
+            std::copy(source.begin() + pos, source.begin() + pos + (uint32_t)len, back_inserter(ret));
         }
-
-        std::copy(source.begin() + pos, source.begin() + pos + (uint32_t)len, back_inserter(ret));
     }
-
+    
     return ret;
 }
 

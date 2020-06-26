@@ -138,6 +138,7 @@ public:
     void service_mle_subsystem(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
     void mle_process_d_nwrk_broadcast(vector<uint8_t> pdu);
     void mle_process_d_nwrk_broadcast_extension(vector<uint8_t> pdu);
+    uint32_t mle_parse_neighbour_cell_information(vector<uint8_t> data, uint32_t pos_start, uint8_t idx);
 
     // CMCE
     void service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);

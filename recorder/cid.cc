@@ -243,7 +243,6 @@ static void cid_send_traffic_to_cid_by_usage_marker(uint8_t usage_marker, const 
  *
  */
 
-//void cid_parse_pdu(const char * data, FILE * fd_log)
 void cid_parse_pdu(string data, FILE * fd_log)
 {
     json_parser_t * jparser = new json_parser_t(data);
@@ -256,10 +255,6 @@ void cid_parse_pdu(string data, FILE * fd_log)
     uint32_t ssi;
 
     bool b_valid = true;                                                        // check if the pdu is valid
-
-    // cerr << jparser->to_string() <<endl;
-    // delete jparser;
-    // return;
 
     b_valid = b_valid && jparser->read("service",      &service);
     b_valid = b_valid && jparser->read("pdu",          &pdu);
@@ -280,7 +275,6 @@ void cid_parse_pdu(string data, FILE * fd_log)
     }
     else if (!service.compare("UPLANE"))                                        // traffic speech frame
     {
-        
         uint64_t zlib_uncomp_size;
         uint64_t zlib_comp_size;
         string frame;

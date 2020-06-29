@@ -217,17 +217,18 @@ int main(int argc, char * argv[])
     scr_init();
     cid_init();
 
-    const int RX_BUFLEN = 8192;
+    const int RX_BUFLEN = 65535;
     char rx_buf[RX_BUFLEN];
 
     if (program_mode & READ_FROM_JSON_TEXT_FILE)                                // read from Json text file file_in
     {
         while (!sigint_flag)
         {
+            memset(rx_buf, 0, sizeof(rx_buf));
             while (fgets(rx_buf, sizeof(rx_buf), file_in))
             {
-                cid_parse_pdu(rx_buf, file_out);
-                //printf("%s", buf);
+                string data(rx_buf);
+                cid_parse_pdu(data, file_out);
             }
         }
 
@@ -245,7 +246,6 @@ int main(int argc, char * argv[])
             if (len > 32)                                                        // skip small packets
             {
                 string data(rx_buf);
-                //cid_parse_pdu(rx_buf, file_out);
                 cid_parse_pdu(data, file_out);
             }
         }

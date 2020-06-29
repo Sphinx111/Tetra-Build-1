@@ -134,9 +134,11 @@ int main(int argc, char * argv[])
     char opt_filename_out[FILENAME_LEN] = "log.txt";                            // output Json text filename
 
     int program_mode = STANDARD_MODE;
-
+    int line_length      = 256;                                                 // default line length
+    int max_bottom_lines = 20;                                                  // default bottom lines count
+    
     int option;
-    while ((option = getopt(argc, argv, ":hr:i:o:")) != -1)
+    while ((option = getopt(argc, argv, "hr:i:o:l:n:")) != -1)
     {
         switch (option)
         {
@@ -153,12 +155,22 @@ int main(int argc, char * argv[])
             strncpy(opt_filename_out, optarg, FILENAME_LEN - 1);
             break;
 
+        case 'l':
+            line_length = atoi(optarg);
+            break;
+
+        case 'n':
+            max_bottom_lines = atoi(optarg);
+            break;
+
         case 'h':
             printf("\nUsage: ./recorder [OPTIONS]\n\n"
                    "Options:\n"
                    "  -r <UDP socket> receiving Json data from decoder [default port is 42100]\n"
                    "  -i <file> replay data from Json text file instead of UDP\n"
                    "  -o <file> to record Json data in different text file [default file name is 'log.txt'] (can be replayed with -i option)\n"
+                   "  -l <ncurses line length> maximum characters printed on a report line\n"
+                   "  -n <maximum lines in ssi window> ssi window will wrap when max. lines are printed\n"
                    "  -h print this help\n\n");
             exit(EXIT_FAILURE);
             break;
@@ -169,7 +181,7 @@ int main(int argc, char * argv[])
             break;
         }
     }
-
+  
     mkdir("out", S_IRWXU | S_IRGRP | S_IXGRP);                                  // create out/ directory
 
     FILE * file_in = NULL;                                                      // for Json text read
@@ -214,7 +226,7 @@ int main(int argc, char * argv[])
     }
 
     // initialize display and CID list
-    scr_init();
+    scr_init(line_length, max_bottom_lines);
     cid_init();
 
     const int RX_BUFLEN = 65535;

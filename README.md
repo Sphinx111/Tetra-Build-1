@@ -120,6 +120,8 @@ Options:
   -r <UDP socket> receiving Json data from decoder [default port is 42100]
   -i <file> replay data from Json text file instead of UDP
   -o <file> to record Json data in different text file [default file name is 'log.txt'] (can be replayed with -i option)
+  -l <ncurses line length> maximum characters printed on a report line
+  -n <maximum lines in ssi window> ssi window will wrap when max. lines are printed
   -h print this help
 ```
 

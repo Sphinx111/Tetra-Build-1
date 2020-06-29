@@ -20,6 +20,7 @@
 #include <cstdarg>
 #include <string>
 #include "window.h"
+#include "utils.h"
 #include "cid.h"
 #include "call_identifier.h"
 
@@ -32,16 +33,22 @@ static WINDOW * wn_infos;
 static WINDOW * wn_sds;                                                         // window for SDS messages
 static WINDOW * wn_bottom;
 
+static int window_line_length;
+static int window_max_bottom_lines;
+
 /*
  * screen functions
  *
  */
 
-void scr_init()
+void scr_init(int line_length, int max_bottom_lines)
 {
     // ncurses screen
     initscr();
 
+    window_line_length      = line_length;                                      // maximum characters printed on a line
+    window_max_bottom_lines = max_bottom_lines;                                 // maximum lines printed in bottom window before wrapping
+    
     wn_top    = subwin(stdscr, 3,             COLS, 0,             0);          // define windows dimensions
     wn_infos  = subwin(stdscr, LINES / 4 - 3, COLS, 3,             0);
     wn_sds    = subwin(stdscr, LINES / 4,     COLS, LINES / 4,     0);
@@ -66,41 +73,56 @@ void scr_update(string info)
     wclear(wn_bottom);
     box(wn_bottom, ACS_VLINE, ACS_HLINE);
 
-    const size_t TXT_LENGTH = 200;                                              // limit line length in infos window
     string txt = info;
-    if (txt.size() > TXT_LENGTH)
+    if ((int)txt.size() > window_line_length)
     {
-        txt = txt.substr(0, TXT_LENGTH);
+        txt = txt.substr(0, window_line_length);
     }    
     wprintw(wn_infos, "%s\n", txt.c_str());
 
     int cnt = 0;
+    int cur_line = 0;
     while (true)
     {
         call_identifier_t * cid = get_cid(cnt);
         cnt++;
-
+        
         if (cid == NULL) break;
 
+        cur_line++;
+        if (cur_line > window_max_bottom_lines)                                 // wrap to top of bottom window when maximum lines printed
+        {
+            cur_line = 1;
+        }
+
+        string data = "";
+        
         if (cid->m_data_received > 0.)
         {
-            mvwprintw(wn_bottom, cnt + 2, 2, "CID [Usage] = %06u [%02u] (%.0f kB) file %s, SSI =",
-                      cid->m_cid,
-                      cid->m_usage_marker,
-                      cid->m_data_received,
-                      cid->m_file_name[cid->m_usage_marker].c_str());
+            data = format_str("CID [Usage] = %06u [%02u] (%.0f kB) file %s, SSI =",
+                              cid->m_cid,
+                              cid->m_usage_marker,
+                              cid->m_data_received,
+                              cid->m_file_name[cid->m_usage_marker].c_str());
         }
         else
         {
-            mvwprintw(wn_bottom, cnt + 2, 2, "CID [Usage] = %06u [%02u], SSI =",
-                      cid->m_cid,
-                      cid->m_usage_marker);
+            data = format_str("CID [Usage] = %06u [%02u], SSI =",
+                              cid->m_cid,
+                              cid->m_usage_marker);
         }
 
         for (size_t idx = 0; idx < cid->m_ssi.size(); idx++)       // print cid ssi
         {
-            wprintw(wn_bottom, " %08u", cid->m_ssi[idx].ssi);
+            data = data + format_str(" %08u", cid->m_ssi[idx].ssi);
         }
+        
+        while ((int)data.size() < window_line_length)                           // pad text right
+        {
+            data = data + " ";
+        }
+        
+        mvwprintw(wn_bottom, cur_line + 2, 2, "%s", data.c_str());
     }
 
     wrefresh(wn_top);
@@ -128,14 +150,6 @@ void scr_print_sds(string msg)
 }
 
 
-void scr_print_bottom(int row, int col, string msg)
-{
-    // print informations to bottom window
-    mvwprintw(wn_infos, row, col, "%s", msg.c_str());
-    wrefresh(wn_bottom);
-}
-
-
 void scr_print_infos(string msg)
 {
     // print informations to middle window
@@ -149,7 +163,7 @@ void scr_print_infos(string msg)
  * Functions with no ncurses, print to screen only
  */
 
-void scr_init()
+void scr_init(int line_length, int max_bottom_line)
 {
 
 }
@@ -199,12 +213,6 @@ void scr_clean()
 
 
 void scr_print_sds(string msg)
-{
-    printf("%s\n", msg.c_str());
-}
-
-
-void scr_print_bottom(int row, int col, string msg)
 {
     printf("%s\n", msg.c_str());
 }

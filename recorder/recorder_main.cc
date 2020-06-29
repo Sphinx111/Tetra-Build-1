@@ -20,6 +20,7 @@
 #include <vector>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -168,6 +169,8 @@ int main(int argc, char * argv[])
             break;
         }
     }
+
+    mkdir("out", S_IRWXU | S_IRGRP | S_IXGRP);                                  // create out/ directory
 
     FILE * file_in = NULL;                                                      // for Json text read
     int fd_input = 0;                                                           // for UDP read

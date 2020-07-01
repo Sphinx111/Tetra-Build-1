@@ -48,7 +48,7 @@ void scr_init(int line_length, int max_bottom_lines)
 
     window_line_length      = line_length;                                      // maximum characters printed on a line
     window_max_bottom_lines = max_bottom_lines;                                 // maximum lines printed in bottom window before wrapping
-    
+
     wn_top    = subwin(stdscr, 3,             COLS, 0,             0);          // define windows dimensions
     wn_infos  = subwin(stdscr, LINES / 4 - 3, COLS, 3,             0);
     wn_sds    = subwin(stdscr, LINES / 4,     COLS, LINES / 4,     0);
@@ -77,7 +77,7 @@ void scr_update(string info)
     if ((int)txt.size() > window_line_length)
     {
         txt = txt.substr(0, window_line_length);
-    }    
+    }
     wprintw(wn_infos, "%s\n", txt.c_str());
 
     int cnt = 0;
@@ -86,7 +86,7 @@ void scr_update(string info)
     {
         call_identifier_t * cid = get_cid(cnt);
         cnt++;
-        
+
         if (cid == NULL) break;
 
         cur_line++;
@@ -96,7 +96,7 @@ void scr_update(string info)
         }
 
         string data = "";
-        
+
         if (cid->m_data_received > 0.)
         {
             data = format_str("CID [Usage] = %06u [%02u] (%.0f kB) file %s, SSI =",
@@ -112,16 +112,23 @@ void scr_update(string info)
                               cid->m_usage_marker);
         }
 
-        for (size_t idx = 0; idx < cid->m_ssi.size(); idx++)       // print cid ssi
+        for (size_t idx = 0; idx < cid->m_ssi.size(); idx++)                    // print cid ssi
         {
             data = data + format_str(" %08u", cid->m_ssi[idx].ssi);
         }
-        
-        while ((int)data.size() < window_line_length)                           // pad text right
+
+
+        if ((int)data.size() > window_line_length - 3)                          // limit line length including square box
         {
-            data = data + " ";
+            data = data.substr(0, window_line_length - 3);
         }
-        
+        else
+        {
+            while ((int)data.size() < window_line_length - 3)                   // pad text right including square box
+            {
+                data = data + " ";
+            }
+        }
         mvwprintw(wn_bottom, cur_line + 2, 2, "%s", data.c_str());
     }
 

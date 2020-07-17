@@ -23,7 +23,6 @@
 #include <zlib.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-//#include <rapidjson/error/en.h>
 
 /**
  * @brief Prepare Json report
@@ -51,51 +50,42 @@ void tetra_dl::report_start(string service, string pdu)
 
     report_add("ssi",          mac_address.ssi);
     report_add("usage marker", mac_address.usage_marker);
+    
+    report_add("address_type", mac_address.address_type);
 
-    // report_add("address_type", mac_address.address_type);
-    // switch (mac_address.address_type)
-    // {
-    // case 0b001:                                                                 // SSI
-    //     mac_address.ssi = get_value(pdu, pos, 24);
-    //     pos += 24;
-    //     break;
+    switch (mac_address.address_type)
+    {
+    case 0b001:                                                                 // SSI
+        report_add("actual ssi", mac_address.ssi);
+        break;
 
-    // case 0b011:                                                                 // USSI
-    //     mac_address.ussi = get_value(pdu, pos, 24);
-    //     pos += 24;
-    //     break;
+    case 0b011:                                                                 // USSI
+        report_add("ussi", mac_address.ussi);
+        break;
 
-    // case 0b100:                                                                 // SMI
-    //     mac_address.smi = get_value(pdu, pos, 24);
-    //     pos += 24;
-    //     break;
+    case 0b100:                                                                 // SMI
+        report_add("smi", mac_address.smi);
+        break;
 
-    // case 0b010:                                                                 // event label
-    //     mac_address.event_label = get_value(pdu, pos, 10);
-    //     pos += 10;
-    //     break;
+    case 0b010:                                                                 // event label
+        report_add("event label", mac_address.event_label);
+        break;
 
-    // case 0b101:                                                                 // SSI + event label (event label assignment)
-    //     mac_address.ssi = get_value(pdu, pos, 24);
-    //     pos += 24;
-    //     mac_address.event_label = get_value(pdu, pos, 10);
-    //     pos += 10;
-    //     break;
+    case 0b101:                                                                 // SSI + event label (event label assignment)
+        report_add("actual ssi", mac_address.ssi);
+        report_add("event label", mac_address.event_label);
+        break;
 
-    // case 0b110:                                                                 // SSI + usage marker (usage marker assignment)
-    //     mac_address.ssi = get_value(pdu, pos, 24);
-    //     pos += 24;
-    //     mac_address.usage_marker = get_value(pdu, pos, 6);
-    //     pos += 6;
-    //     break;
+    case 0b110:                                                                 // SSI + usage marker (usage marker assignment)
+        report_add("actual ssi", mac_address.ssi);
+        report_add("actual usage marker", mac_address.usage_marker);
+        break;
 
-    // case 0b111:                                                                 // SMI + event label (event label assignment)
-    //     mac_address.smi = get_value(pdu, pos, 24);
-    //     pos += 24;
-    //     mac_address.event_label = get_value(pdu, pos, 10);
-    //     pos += 10;
-    //     break;
-    // }
+    case 0b111:                                                                 // SMI + event label (event label assignment)
+        report_add("smi", mac_address.smi);
+        report_add("event label", mac_address.event_label);
+        break;
+    }
 }
 
 /**
@@ -199,6 +189,33 @@ void tetra_dl::report_add(string field, vector<uint8_t> vec)
 }
 
 /**
+ * @brief Add an array of data to Json
+ *
+ */
+
+void tetra_dl::report_add_array(string name, vector<tuple<string, uint64_t>> & infos)
+{
+    rapidjson::Value arr(rapidjson::kArrayType);                                                    
+
+    for (size_t cnt = 0; cnt < infos.size(); cnt++)
+    {
+        rapidjson::Value jobj;
+        jobj.SetObject();
+        
+        string field = std::get<0>(infos[cnt]);
+        uint64_t val = std::get<1>(infos[cnt]);
+        
+        jobj.AddMember(rapidjson::Value(field.c_str(), jdoc.GetAllocator()).Move(),                                                                                                                                                                                                  
+                       rapidjson::Value(val).Move(),                                                                                                                                                                                                                            
+                       jdoc.GetAllocator());                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                                                                
+        arr.PushBack(jobj, jdoc.GetAllocator());                                                                                                                                                                                                                                
+    }                                                                                                                                                                                                                                                                           
+                                                                                                                                                                                                                                                                                
+    jdoc.AddMember(rapidjson::Value(name.c_str(), jdoc.GetAllocator()), arr, jdoc.GetAllocator()); 
+}
+
+/**
  * @brief Add data by compressing it with zlib then encoding in base-64,
  *   including all required stuff to be expanded as to know:
  *    - compressed zlib size (field "zsize")
@@ -251,3 +268,4 @@ void tetra_dl::report_send()
         printf("%s\n", output.c_str());
     }
 }
+

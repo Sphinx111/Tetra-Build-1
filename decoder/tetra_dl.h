@@ -22,6 +22,8 @@
 #include <string.h>
 #include <vector>
 #include <sstream>
+#include <vector>
+#include <tuple>
 
 #include <unistd.h>
 #include <netinet/udp.h>
@@ -138,15 +140,17 @@ public:
     void service_mle_subsystem(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
     void mle_process_d_nwrk_broadcast(vector<uint8_t> pdu);
     void mle_process_d_nwrk_broadcast_extension(vector<uint8_t> pdu);
-    uint32_t mle_parse_neighbour_cell_information(vector<uint8_t> data, uint32_t pos_start, uint8_t idx);
+    uint32_t mle_parse_neighbour_cell_information(vector<uint8_t> data, uint32_t pos_start, vector<tuple<string, uint64_t>> & infos);
 
     // CMCE
     void service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
     void cmce_parse_d_alert(vector<uint8_t> pdu);
+    void cmce_parse_d_call_proceeding(vector<uint8_t> pdu);
     void cmce_parse_d_call_restore(vector<uint8_t> pdu);
     void cmce_parse_d_connect(vector<uint8_t> pdu);
     void cmce_parse_d_connect_ack(vector<uint8_t> pdu);
     void cmce_parse_d_disconnect(vector<uint8_t> pdu);
+    void cmce_parse_d_info(vector<uint8_t> pdu);
     void cmce_parse_d_release(vector<uint8_t> pdu);
     void cmce_parse_d_setup(vector<uint8_t> pdu);
     void cmce_parse_d_tx_ceased(vector<uint8_t> pdu);
@@ -170,6 +174,9 @@ public:
     void cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu);
     void cmce_sds_lip_parse_extended_message(vector<uint8_t> pdu);
 
+    // SNDCP
+    void service_sndcp(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
+    
     // U-plane
     void service_u_plane(vector<uint8_t> data, mac_logical_channel_t mac_logical_channel); // U-plane traffic
 
@@ -185,9 +192,10 @@ public:
     void report_add(string field, uint64_t val);
     void report_add(string field, double val);
     void report_add(string field, vector<uint8_t> vec);
+    void report_add_array(string name, vector<tuple<string, uint64_t>> & infos);
     void report_add_compressed(string field, const unsigned char * binary_data, uint16_t data_len);
     void report_send();
-
+    
 private:
     // 9.4.4.3.2 Normal training sequence
     const vector<uint8_t> normal_training_sequence1       = {1,1,0,1,0,0,0,0,1,1,1,0,1,0,0,1,1,1,0,1,0,0}; // n1..n22

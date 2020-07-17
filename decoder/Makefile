@@ -2,9 +2,9 @@ CC = g++
 CFLAGS = -O2 -std=c++11 -Wall -Wextra
 LDFLAGS = -lz
 
-SRC = 	decoder_main.cc coding.cc report.cc utils.cc viterbi.cc  base64.cc \
-	tetra_dl.cc mac.cc llc.cc mle.cc cmce.cc cmce_sds.cc cmce_sds_lip.cc uplane.cc \
-	mac_defrag.cc
+SRC = 	decoder_main.cc coding.cc report.cc utils.cc viterbi.cc base64.cc \
+	tetra_dl.cc mac.cc llc.cc mle.cc cmce.cc cmce_sds.cc cmce_sds_lip.cc sndcp.cc \
+	uplane.cc mac_defrag.cc
 
 OBJ = $(SRC:.cc=.o)
 EXE = decoder

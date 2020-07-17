@@ -81,7 +81,8 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
             break;
 
         case 0b100:
-            txt = "SDNCP";                                                      // transparent -> remove discriminator and send directly to SDNCP
+            txt = "SNDCP";                                                      // transparent -> remove discriminator and send directly to SNDCP
+            service_sndcp(vector_extract(pdu, pos, utils_substract(pdu.size(), pos)), mac_logical_channel);
             break;
 
         case 0b101:                                                             // remove discriminator bits and send to MLE sub-system (for clarity only)
@@ -216,10 +217,15 @@ void tetra_dl::mle_process_d_nwrk_broadcast(vector<uint8_t> pdu)
             pos += 3;
             report_add("number of neighbour cells", neighbour_cells_count);
 
-            // for (uint8_t count = 0; count < neighbour_cells_count; count++)
-            // {
-            //     pos = mle_parse_neighbour_cell_information(pdu, pos, count);
-            // }
+            for (uint8_t cnt = 0; cnt < neighbour_cells_count; cnt++)
+            {
+                vector<tuple<string, uint64_t>> infos;
+
+                infos.clear();
+                pos = mle_parse_neighbour_cell_information(pdu, pos, infos);
+
+                report_add_array(format_str("cell %u", cnt), infos);
+            }
         }
     }
 
@@ -232,25 +238,23 @@ void tetra_dl::mle_process_d_nwrk_broadcast(vector<uint8_t> pdu)
  *
  */
 
-uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, uint32_t pos_start, uint8_t idx)
+uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, uint32_t pos_start, vector<tuple<string, uint64_t>> & infos)
 {
     uint32_t pos = pos_start;
 
-    string prefix = format_str("%s%u ", "cell", idx);
-
-    report_add(prefix + "identifier", get_value(data, pos, 5));
+    infos.push_back(std::make_tuple("identifier", get_value(data, pos, 5)));
     pos += 5;
 
-    report_add(prefix + "reselection types supported", get_value(data, pos, 2));
+    infos.push_back(std::make_tuple("reselection types supported", get_value(data, pos, 2)));
     pos += 2;
 
-    report_add(prefix + "neighbour cell synchronized", get_value(data, pos, 1));
+    infos.push_back(std::make_tuple("neighbour cell synchronized", get_value(data, pos, 1)));
     pos += 1;
 
-    report_add(prefix + "service level", get_value(data, pos, 2));
+    infos.push_back(std::make_tuple("service level", get_value(data, pos, 2)));
     pos += 2;
 
-    report_add(prefix + "main carrier number", get_value(data, pos, 12));
+    infos.push_back(std::make_tuple("main carrier number", get_value(data, pos, 12)));
     pos += 12;
 
     uint8_t o_flag = get_value(data, pos, 1);                                   // option flag
@@ -261,7 +265,7 @@ uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, ui
         pos += 1;
         if (p_flag)
         {
-            report_add(prefix + "main carrier number extension", get_value(data, pos, 10));
+            infos.push_back(std::make_tuple("main carrier number extension", get_value(data, pos, 10)));
             pos += 10;
         }
 
@@ -269,7 +273,7 @@ uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, ui
         pos += 1;
         if (p_flag)
         {
-            report_add(prefix + "MCC", get_value(data, pos, 10));
+            infos.push_back(std::make_tuple("MCC", get_value(data, pos, 10)));
             pos += 10;
         }
 
@@ -277,7 +281,7 @@ uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, ui
         pos += 1;
         if (p_flag)
         {
-            report_add(prefix + "MNC", get_value(data, pos, 14));
+            infos.push_back(std::make_tuple("MNC", get_value(data, pos, 14)));
             pos += 14;
         }
 
@@ -285,7 +289,7 @@ uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, ui
         pos += 1;
         if (p_flag)
         {
-            report_add(prefix + "LA", get_value(data, pos, 14));
+            infos.push_back(std::make_tuple("LA", get_value(data, pos, 14)));
             pos += 14;
         }
 
@@ -293,7 +297,7 @@ uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, ui
         pos += 1;
         if (p_flag)
         {
-            report_add(prefix + "max. MS tx power", get_value(data, pos, 3));
+            infos.push_back(std::make_tuple("max. MS tx power", get_value(data, pos, 3)));
             pos += 3;
         }
 
@@ -301,7 +305,7 @@ uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, ui
         pos += 1;
         if (p_flag)
         {
-            report_add(prefix + "min. rx access level", get_value(data, pos, 4));
+            infos.push_back(std::make_tuple("min. rx access level", get_value(data, pos, 4)));
             pos += 4;
         }
 
@@ -309,7 +313,7 @@ uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, ui
         pos += 1;
         if (p_flag)
         {
-            report_add(prefix + "subscriber class", get_value(data, pos, 16));
+            infos.push_back(std::make_tuple("subscriber class", get_value(data, pos, 16)));
             pos += 16;
         }
 
@@ -317,7 +321,7 @@ uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, ui
         pos += 1;
         if (p_flag)
         {
-            report_add(prefix + "BS service details", get_value(data, pos, 12));
+            infos.push_back(std::make_tuple("BS service details", get_value(data, pos, 12)));
             pos += 12;
         }
 
@@ -325,7 +329,7 @@ uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, ui
         pos += 1;
         if (p_flag)
         {
-            report_add(prefix + "timeshare or security", get_value(data, pos, 5));
+            infos.push_back(std::make_tuple("timeshare or security", get_value(data, pos, 5)));
             pos += 5;
         }
         
@@ -333,7 +337,7 @@ uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, ui
         pos += 1;
         if (p_flag)
         {
-            report_add(prefix + "TDMA frame offset", get_value(data, pos, 6));
+            infos.push_back(std::make_tuple("TDMA frame offset", get_value(data, pos, 6)));
             pos += 6;
         }
     }
@@ -354,7 +358,7 @@ void tetra_dl::mle_process_d_nwrk_broadcast_extension(vector<uint8_t> pdu)
         fflush(stdout);
     }
 
-    report_start("MLE", "D-NWRK-BROADCAST");
+    report_start("MLE", "D-NWRK-BROADCAST-EXTENSION");
 
     uint32_t pos = 3;                                                           // PDU type
 

@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -O2 -std=c++11 -Wall
+CFLAGS = -O2 -std=c++11 -Wall -Wextra
 LDFLAGS = -lncurses -lz
 
 SRC = recorder_main.cc window.cc base64.cc json_parser.cc cid.cc call_identifier.cc utils.cc

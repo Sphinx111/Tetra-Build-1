@@ -29,12 +29,12 @@ enum program_mode_t {
     SAVE_TO_BINARY_FILE   = 2,
 };
 
-/** @brief interrupt flag */
+/** @brief Interrupt flag */
 
 static volatile int sigint_flag = 0;
 
 /**
- * @brief handle SIGINT to clean up
+ * @brief Handle SIGINT to clean up
  *
  */
 
@@ -71,7 +71,7 @@ int main(int argc, char * argv[])
     bool fill_bit_flag = true;
 
     int option;
-    while ((option = getopt(argc, argv, ":hr:t:i:o:d:f")) != -1)
+    while ((option = getopt(argc, argv, "hr:t:i:o:d:f")) != -1)
     {
         switch (option)
         {

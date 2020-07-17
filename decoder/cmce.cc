@@ -46,12 +46,16 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
     {
     case 0b00000:
         txt = "D-ALERT";
+        cmce_parse_d_alert(pdu);
+
         cid = get_value(pdu, pos, 14);
         pos += 14;
         break;
 
     case 0b00001:
         txt = "D-CALL-PROCEEDING";
+        cmce_parse_d_call_proceeding(pdu);
+        
         cid = get_value(pdu, pos, 14);
         pos += 14;
         break;
@@ -82,6 +86,8 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
 
     case 0b00101:
         txt = "D-INFO";
+        cmce_parse_d_info(pdu);
+
         cid = get_value(pdu, pos, 14);
         pos += 14;
         break;
@@ -168,6 +174,10 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
         txt = "D-FACILITY";                                                     // SS protocol
         break;
 
+    case 0b11111:
+        txt = "CMCE FUNCTION NOT SUPPORTED";
+        break;
+        
     default:
         txt = "reserved";
         break;
@@ -215,6 +225,53 @@ void tetra_dl::cmce_parse_d_alert(vector<uint8_t> pdu)
 
     report_add("call identifier", get_value(pdu, pos, 14));
     pos += 14;
+    
+    report_add("call timeout, setup phase", get_value(pdu, pos, 3));
+    pos += 3;
+
+    pos += 1;                                                                   // reserved
+
+    report_add("simplex/duplex operation", get_value(pdu, pos, 1));
+    pos += 1;
+
+    report_add("call queued", get_value(pdu, pos, 1));
+    pos += 1;
+
+    // TODO type2 / 3 elements
+
+    report_send();
+}
+
+/**
+ * @brief CMCE D-CALL-PROCEEDING 14.7.1.2
+ *
+ */
+
+void tetra_dl::cmce_parse_d_call_proceeding(vector<uint8_t> pdu)
+{
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_call_proceeding", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
+    report_start("CMCE", "D-ALERT");
+
+    uint32_t pos = 5;                                                           // pdu type
+
+    report_add("call identifier", get_value(pdu, pos, 14));
+    pos += 14;
+    
+    report_add("call timeout, setup phase", get_value(pdu, pos, 3));
+    pos += 3;
+
+    report_add("hook method selection", get_value(pdu, pos, 1));
+    pos += 1;
+
+    report_add("simplex/duplex selection", get_value(pdu, pos, 1));
+    pos += 1;
+
+    // TODO type2 / 3 elements
 
     report_send();
 }
@@ -487,7 +544,126 @@ void tetra_dl::cmce_parse_d_disconnect(vector<uint8_t> pdu)
 }
 
 /**
- * @brief CMCE D-RELEASE CEASED 14.7.1.9
+ * @brief CMCE D-INFO 14.7.1.8
+ *
+ */
+
+void tetra_dl::cmce_parse_d_info(vector<uint8_t> pdu)
+{
+    if (g_debug_level >= 5)
+    {
+        fprintf(stdout, "DEBUG ::%-44s - pdu = %s\n", "cmce_parse_d_info", vector_to_string(pdu, pdu.size()).c_str());
+        fflush(stdout);
+    }
+
+    report_start("CMCE", "D-INFO");
+
+    uint32_t pos = 5;                                                           // pdu type
+
+    report_add("call identifier", get_value(pdu, pos, 14));
+    pos += 14;
+
+    report_add("reset call time-out timer (T310)", get_value(pdu, pos, 1));
+    pos += 1;
+
+    report_add("poll request", get_value(pdu, pos, 1));
+    pos += 1;
+
+    uint8_t o_flag = get_value(pdu, pos, 1);                                    // option flag
+    pos += 1;
+
+    if (o_flag)                                                                 // there is type2, type3 or type4 fields
+    {
+        uint8_t p_flag;                                                         // presence flag
+
+        p_flag = get_value(pdu, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add("new call identifier", get_value(pdu, pos, 14));
+            pos += 14;
+        }
+        
+        p_flag = get_value(pdu, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add("call time-out", get_value(pdu, pos, 4));
+            pos += 4;
+        }
+
+        p_flag = get_value(pdu, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add("call time-out setup phase (T301, T302)", get_value(pdu, pos, 3));
+            pos += 3;
+        }
+
+        p_flag = get_value(pdu, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add("call ownership", get_value(pdu, pos, 1));
+            pos += 1;
+        }
+
+        p_flag = get_value(pdu, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add("modify", get_value(pdu, pos, 9));
+            pos += 9;
+        }
+
+        p_flag = get_value(pdu, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add("call status", get_value(pdu, pos, 3));
+            pos += 3;
+        }
+
+        p_flag = get_value(pdu, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add("temporary address", get_value(pdu, pos, 24));
+            pos += 24;
+        }
+
+        p_flag = get_value(pdu, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add("notification indicator", get_value(pdu, pos, 6));
+            pos += 6;
+        }
+
+        p_flag = get_value(pdu, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add("poll response percentage", get_value(pdu, pos, 6));
+            pos += 6;
+        }
+
+        p_flag = get_value(pdu, pos, 1);
+        pos += 1;
+        if (p_flag)
+        {
+            report_add("poll response number", get_value(pdu, pos, 6));
+            pos += 6;
+        }
+
+        // TODO handle type3/4
+    }
+
+    report_send();
+}
+
+/**
+ * @brief CMCE D-RELEASE 14.7.1.9
  *
  */
 
@@ -529,7 +705,6 @@ void tetra_dl::cmce_parse_d_release(vector<uint8_t> pdu)
 
     report_send();
 }
-
 
 /**
  * @brief CMCE D-SETUP 14.7.1.12

@@ -99,6 +99,10 @@ $ make
 $ cp cdecoder ../recorder/wav/
 $ cp sdecoder ../recorder/wav/
 ```
+Internal speech codec is now available in `recorder` and `.raw` output files may
+be generated directly in `recorder/raw/` folder (experimental).
+Then use the script `raw2wav.sh` to generate `.wav` files.
+
 
 Physical layer
 ```sh
@@ -117,6 +121,7 @@ Open 3 shells in the 3 folders:
 Usage: recorder [OPTIONS]
 
 Options:
+  -a use raw output format with internal codec (experimental)
   -r <UDP socket> receiving Json data from decoder [default port is 42100]
   -i <file> replay data from Json text file instead of UDP
   -o <file> to record Json data in different text file [default file name is 'log.txt'] (can be replayed with -i option)

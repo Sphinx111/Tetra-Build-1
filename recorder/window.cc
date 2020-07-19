@@ -178,7 +178,7 @@ void scr_init(int line_length, int max_bottom_line)
 
 void scr_update(string info)
 {
-    printf("%s", info.c_str());
+    printf("%s\n", info.c_str());
 
     int cnt = 0;
     while (true)

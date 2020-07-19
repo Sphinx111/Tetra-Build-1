@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <audio_decoder.h>
 
 using namespace std;
 
@@ -40,9 +41,9 @@ public:
     uint8_t m_usage_marker;                                                     ///< Usage marker
     double m_data_received;                                                     ///< Data received in Kb
 
-    static const     int    MAX_USAGES         = 64;                            ///< maximum usages defined by norm
-    static constexpr double TIMEOUT_S          = 30.0;                          ///< maximum timeout between messages TODO handle Txxx timers
-    static constexpr double TIMEOUT_RELEASE_S  = 120.0;                         ///< maximum timeout before releasing the usage_marker (garbage collector)
+    static const     int    MAX_USAGES        = 64;                             ///< maximum usages defined by norm
+    static constexpr double TIMEOUT_S         = 30.0;                           ///< maximum timeout between messages TODO handle Txxx timers
+    static constexpr double TIMEOUT_RELEASE_S = 120.0;                          ///< maximum timeout before releasing the usage_marker (garbage collector)
 
     string m_file_name[MAX_USAGES];                                             ///< File names to use for usage marker/cid
     time_t m_last_traffic_time[MAX_USAGES];                                     ///< Last traffic seen to know when to start new record
@@ -51,7 +52,12 @@ public:
 
     void clean_up();                                                            ///< Garbage collector release the traffic usage marker when timeout exceeds TIMEOUT_RELEASE_S
     void push_traffic(const char * data, uint32_t len);
+    void push_traffic_raw(const char * data, uint32_t len);
     void update_usage_marker(uint8_t usage_marker);
+
+private:
+    uint8_t g_current_audio_usage_marker = 0;
+    audio_decoder * audio = NULL;
 };
 
 

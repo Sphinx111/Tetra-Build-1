@@ -35,7 +35,7 @@ struct ssi_t {
 
 class call_identifier_t;                                                        // forward declaration
 
-void cid_init();
+void cid_init(int raw_format_flag);
 call_identifier_t * get_cid(int index);
 void cid_clean();
 void cid_parse_pdu(string data, FILE * fd_log);

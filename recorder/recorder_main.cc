@@ -35,6 +35,7 @@
  * HISTORY:
  *   2016-09-11  LT  0.0  First release
  *   2020-05-08  LT  0.1  Updated for Json input
+ *   2020-07-19  LT  0.2  Added internal TETRA codec and raw file output format
  *
  * NOTES:
  *   - output log file is always generated, default name is 'log.txt'
@@ -133,15 +134,20 @@ int main(int argc, char * argv[])
     char opt_filename_in[FILENAME_LEN]  = "";                                   // input Json text filename
     char opt_filename_out[FILENAME_LEN] = "log.txt";                            // output Json text filename
 
-    int program_mode = STANDARD_MODE;
+    int program_mode     = STANDARD_MODE;
     int line_length      = 256;                                                 // default line length
     int max_bottom_lines = 20;                                                  // default bottom lines count
-    
+    int raw_format_flag  = 0;
+
     int option;
-    while ((option = getopt(argc, argv, "hr:i:o:l:n:")) != -1)
+    while ((option = getopt(argc, argv, "ar:i:o:l:n:h")) != -1)
     {
         switch (option)
         {
+        case 'a':
+            raw_format_flag = 1;
+            break;
+
         case 'r':
             udp_port_rx = atoi(optarg);
             break;
@@ -166,6 +172,7 @@ int main(int argc, char * argv[])
         case 'h':
             printf("\nUsage: ./recorder [OPTIONS]\n\n"
                    "Options:\n"
+                   "  -a use raw output format with internal codec (experimental)\n"
                    "  -r <UDP socket> receiving Json data from decoder [default port is 42100]\n"
                    "  -i <file> replay data from Json text file instead of UDP\n"
                    "  -o <file> to record Json data in different text file [default file name is 'log.txt'] (can be replayed with -i option)\n"
@@ -181,8 +188,9 @@ int main(int argc, char * argv[])
             break;
         }
     }
-  
+
     mkdir("out", S_IRWXU | S_IRGRP | S_IXGRP);                                  // create out/ directory
+    mkdir("raw", S_IRWXU | S_IRGRP | S_IXGRP);                                  // create raw/ directory
 
     FILE * file_in = NULL;                                                      // for Json text read
     int fd_input = 0;                                                           // for UDP read
@@ -227,7 +235,7 @@ int main(int argc, char * argv[])
 
     // initialize display and CID list
     scr_init(line_length, max_bottom_lines);
-    cid_init();
+    cid_init(raw_format_flag);
 
     const int RX_BUFLEN = 65535;
     char rx_buf[RX_BUFLEN];

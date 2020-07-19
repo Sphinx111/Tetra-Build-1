@@ -12,15 +12,17 @@
  *
  */
 
-static vector<call_identifier_t> cid_list;
+static vector<call_identifier_t *> cid_list;
+static int g_raw_format_flag = 0;
 
 /**
  * @brief Initialize CID list
  *
  */
 
-void cid_init()
+void cid_init(int raw_format_flag)
 {
+    g_raw_format_flag = raw_format_flag;
     cid_list.clear();
 }
 
@@ -38,7 +40,7 @@ void cid_clean()
 
     for (size_t idx = 0; idx < cid_list.size(); idx++)
     {
-        cid_list[idx].clean_up();
+        cid_list[idx]->clean_up();
     }
 }
 
@@ -55,7 +57,7 @@ call_identifier_t * get_cid(int index)
     {
         if (index < (int)cid_list.size())
         {
-            res = &cid_list[index];
+            res = cid_list[index];
         }
     }
 
@@ -72,7 +74,7 @@ static bool cid_exists(uint32_t cid)
 
     for (size_t cnt = 0; cnt < cid_list.size(); cnt++)
     {
-        if (cid_list[cnt].m_cid == cid)
+        if (cid_list[cnt]->m_cid == cid)
         {
             b_exists = true;
             break;
@@ -95,7 +97,7 @@ static size_t cid_index(uint32_t cid)
 
     for (size_t cnt = 0; cnt < cid_list.size(); cnt++)
     {
-        if (cid_list[cnt].m_cid == cid)
+        if (cid_list[cnt]->m_cid == cid)
         {
             index = cnt;
             break;
@@ -116,7 +118,7 @@ static bool cid_index_by_usage_marker(uint8_t usage_marker, size_t * index)
 
     for (size_t cnt = 0; cnt < cid_list.size(); cnt++)
     {
-        if (cid_list[cnt].m_usage_marker == usage_marker)
+        if (cid_list[cnt]->m_usage_marker == usage_marker)
         {
             *index = cnt;
             ret = true;
@@ -136,7 +138,7 @@ static void cid_add(uint32_t cid)
 {
     if (!cid_exists(cid))
     {
-        cid_list.push_back(call_identifier_t(cid));
+        cid_list.push_back(new call_identifier_t(cid));
     }
 }
 
@@ -160,11 +162,11 @@ static void cid_add_ssi_to_cid(uint32_t cid, uint32_t ssi)
     // check if ssi already exists in cid list
     bool b_exists = false;
 
-    for (size_t cnt = 0; cnt < cid_list[index].m_ssi.size(); cnt++)
+    for (size_t cnt = 0; cnt < cid_list[index]->m_ssi.size(); cnt++)
     {
-        if (cid_list[index].m_ssi[cnt].ssi == ssi)
+        if (cid_list[index]->m_ssi[cnt].ssi == ssi)
         {
-            time(&cid_list[index].m_ssi[cnt].last_seen);                        // SSI exists, update its last seen time
+            time(&cid_list[index]->m_ssi[cnt].last_seen);                        // SSI exists, update its last seen time
             b_exists = true;
             break;
         }
@@ -175,7 +177,7 @@ static void cid_add_ssi_to_cid(uint32_t cid, uint32_t ssi)
         ssi_t new_ssi;
         new_ssi.ssi = ssi;
         time(&new_ssi.last_seen);
-        cid_list[index].m_ssi.push_back(new_ssi);
+        cid_list[index]->m_ssi.push_back(new_ssi);
     }
 }
 
@@ -194,7 +196,7 @@ static void cid_update_usage_marker(uint32_t cid, uint8_t usage_marker)
     }
 
     size_t index = cid_index(cid);
-    cid_list[index].update_usage_marker(usage_marker);
+    cid_list[index]->update_usage_marker(usage_marker);
 }
 
 /**
@@ -206,9 +208,9 @@ static void cid_release(uint32_t cid)
 {
     if (!cid_exists(cid)) return;
 
-    for (vector<call_identifier_t>::iterator it = cid_list.begin(); it != cid_list.end();)
+    for (vector<call_identifier_t *>::iterator it = cid_list.begin(); it != cid_list.end();)
     {
-        if ((*it).m_cid == cid)
+        if ((*it)->m_cid == cid)
         {
             it = cid_list.erase(it);                                            // erase current id and get pointer to next one
         }
@@ -232,7 +234,14 @@ static void cid_send_traffic_to_cid_by_usage_marker(uint8_t usage_marker, const 
 
     if (cid_index_by_usage_marker(usage_marker, &index))
     {
-        cid_list[index].push_traffic(data, len);                                // push traffic to this cid
+        if (g_raw_format_flag)
+        {
+            cid_list[index]->push_traffic_raw(data, len);                       // push traffic to this cid and generate .raw files with internal TETRA codec
+        }
+        else
+        {
+            cid_list[index]->push_traffic(data, len);                           // push traffic to this cid and generate .out binary files
+        }
     }
 }
 

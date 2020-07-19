@@ -40,6 +40,9 @@ call_identifier_t::call_identifier_t(uint32_t cid)
         m_file_name[cnt]         = "";
         m_last_traffic_time[cnt] = now;
     }
+
+    audio = new audio_decoder();
+    audio->init();
 }
 
 /**
@@ -50,6 +53,8 @@ call_identifier_t::call_identifier_t(uint32_t cid)
 call_identifier_t::~call_identifier_t()
 {
     m_ssi.clear();
+
+    if (audio) delete audio;
 }
 
 /**
@@ -115,6 +120,61 @@ void call_identifier_t::push_traffic(const char * data, uint32_t len)
     fclose(file);
 
     m_data_received += len / 1000.;
+}
+
+/**
+ * @brief Push traffic in raw format to this CID taking care of TIMEOUT_S
+ *        If timeout exceeded, a new file is created.
+ *        This function store also data received in Kb
+ */
+
+void call_identifier_t::push_traffic_raw(const char * data, uint32_t len)
+{
+    time_t now;
+    time(&now);
+
+    if (difftime(now, m_last_traffic_time[m_usage_marker]) > TIMEOUT_S)         // check if timeout exceed predefined value
+    {
+        m_file_name[m_usage_marker] = "";                                       // force to start a new record since timeout
+    }
+
+    m_last_traffic_time[m_usage_marker] = now;
+
+    if (m_file_name[m_usage_marker] == "")
+    {
+        struct tm * timeinfo;
+        timeinfo = localtime(&now);
+
+        char filename[512] = "";
+        char tmp[16]       = "";
+
+        strftime(tmp, 16, "%Y%m%d_%H%M%S", timeinfo);                                             // get time
+        snprintf(filename, sizeof(filename), "raw/%s_%06u_%02u.raw", tmp, m_cid, m_usage_marker); // create file filename
+
+        m_file_name[m_usage_marker] = filename;
+        m_data_received = 0.;
+
+        audio->init();
+    }
+
+    // string filename_debug = m_file_name[m_usage_marker] + ".cod";
+    // FILE * file = fopen(filename_debug.c_str(), "ab");
+    // audio->process_frame_debug(file, (int16_t *)data, raw_output, 0);
+    // fflush(file);
+    // fclose(file);
+
+    int16_t raw_output[480];
+
+    // TODO for now, there is no stealing handling (always 0)
+    if (audio->process_frame((int16_t *)data, raw_output, 0))                   // check if raw output is valid
+    {
+        FILE * file = fopen(m_file_name[m_usage_marker].c_str(), "ab");
+        fwrite(raw_output, 2, 480, file);                                       // 2 speech frames of 240 elements * sizeof(int16_t)
+        fflush(file);
+        fclose(file);
+
+        m_data_received += len / 1000.;
+    }
 }
 
 /**

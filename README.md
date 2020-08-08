@@ -91,7 +91,7 @@ $ make clean
 $ make
 ```
 
-Build speech codec (source code from ETSI example)
+Build speech codec (source code from ETSI example) [OPTIONAL see below]
 ```sh
 $ cd codec
 $ make clean
@@ -99,9 +99,9 @@ $ make
 $ cp cdecoder ../recorder/wav/
 $ cp sdecoder ../recorder/wav/
 ```
-Internal speech codec is now available in `recorder` and `.raw` output files may
-be generated directly in `recorder/raw/` folder (experimental).
-Then use the script `raw2wav.sh` to generate `.wav` files.
+NEW: Internal speech codec is now available in `recorder` and `.raw` output files may
+be generated directly in `recorder/raw/` folder when using `-a` flag (experimental).
+Then use the script `raw2wav.sh` in folder `recorder/raw/` to generate `.wav` files.
 
 
 Physical layer

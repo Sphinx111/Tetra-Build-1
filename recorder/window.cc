@@ -139,7 +139,7 @@ void scr_update(string info)
 }
 
 
-void scr_clean()
+void scr_clear()
 {
     // clean data
     delwin(wn_top);
@@ -213,7 +213,7 @@ void scr_update(string info)
 }
 
 
-void scr_clean()
+void scr_clear()
 {
 
 }

@@ -56,8 +56,7 @@ public:
     void update_usage_marker(uint8_t usage_marker);
 
 private:
-    uint8_t g_current_audio_usage_marker = 0;
-    audio_decoder * audio = NULL;
+    audio_decoder * audio = NULL;                                               ///< Tetra voice decoder
 };
 
 

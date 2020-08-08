@@ -51,18 +51,6 @@
  *
  */
 
-#if 0
-static void push_traffic(const char * data, uint32_t len, uint8_t usage_marker)
-{
-    char buf[2048];
-    sprintf(buf, "out/record_%u.out", usage_marker);
-    FILE * file = fopen(buf, "ab");
-    fwrite(data, 1, len, file);
-    fflush(file);
-    fclose(file);
-}
-#endif
-
 /**
  * @brief Receive from UDP socket with time-out
  *
@@ -275,8 +263,8 @@ int main(int argc, char * argv[])
 
     fclose(file_out);
 
-    scr_clean();
-    cid_clean();
+    scr_clear();
+    cid_clear();
 
     printf("Clean exit\n");
 

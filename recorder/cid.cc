@@ -24,24 +24,63 @@ void cid_init(int raw_format_flag)
 {
     g_raw_format_flag = raw_format_flag;
     cid_list.clear();
+
+    // if (g_raw_format_flag)
+    // {
+    //     // initilize driver
+    //     ao_initialize();
+    //     int default_driver = ao_default_driver_id();
+
+    //     // set speech format
+    //     ao_sample_format format;
+    //     memset(&format, 0, sizeof(format));
+    //     format.bits        = 16;
+    //     format.channels    = 1;
+    //     format.rate        = 8000;
+    //     format.byte_format = AO_FMT_LITTLE;
+
+    //     // open for live sound output
+    //     audio_device = ao_open_live(default_driver, &format, NULL);
+    //     if (audio_device == NULL)
+    //     {
+    //         fprintf(stderr, "Error opening device.\n");
+    //         // TODO handle error here
+    //     }
+    // }
 }
 
 /**
- * @brief Clean up CID/SSI with their last seen time
- *
- * TODO to finish and test in class_itentifier_t
+ * @breief Play one frame
  *
  */
 
-void cid_clean()
-{
-    time_t now;
-    time(&now);
+// static void cid_play_raw(int8_t * rx_buf, uint8_t usage_marker)
+// {
+//     int buf_len = 2 * 480;
 
-    for (size_t idx = 0; idx < cid_list.size(); idx++)
+//     fprintf(stderr, "*** cid_play_raw gb_playing=%d usage marker=%u\n", gb_playing, usage_marker);
+//     ao_play(audio_device, (char *)rx_buf, buf_len);
+// }
+
+/**
+ * @brief Clear all stuff when program ends
+ *
+ */
+
+void cid_clear()
+{
+    for (vector<call_identifier_t *>::iterator iter = cid_list.begin(); iter != cid_list.end(); ++iter)
     {
-        cid_list[idx]->clean_up();
+        delete *iter;                                                           // delete the call_identifier_t class
     }
+
+    // if (g_raw_format_flag)
+    // {
+    //     ao_close(audio_device);
+    //     ao_shutdown();
+    // }
+
+    cid_list.clear();
 }
 
 /**
@@ -63,6 +102,31 @@ call_identifier_t * get_cid(int index)
 
     return res;
 }
+
+/**
+ * @brief Clean up CID/SSI with their last seen time (to be performed periodically)
+ *
+ * TODO check and improve test in class_itentifier_t
+ *
+ */
+
+static void cid_clean_up()
+{
+    time_t now;
+    time(&now);
+
+    for (size_t idx = 0; idx < cid_list.size(); idx++)
+    {
+        cid_list[idx]->clean_up();
+    }
+
+    // check cid last activity
+    // if (difftime(now, m_last_traffic_time[m_usage_marker]) > CID_TIMEOUT_RELEASE_S) // check if timeout exceed predefined value
+    // {
+
+    // }
+}
+
 /**
  * @brief Returns true if CID exists is in list
  *
@@ -246,14 +310,20 @@ static void cid_send_traffic_to_cid_by_usage_marker(uint8_t usage_marker, const 
 }
 
 /**
- * @brief Main function which process Json traffic and associate SSI, CID, etc...
+ * @brief Main function which process Json traffic and associate SSI, CID
+ *        This function is also responsible on playing raw audio when available
+ *        since it is called repeatitively
  *
- * WARNING: D-INFO PDU mustn't be used to allocate a call id (see p. 136)
+ *  Notes:
+ *    - WARNING: D-INFO PDU mustn't be used to allocate a call id (see p. 136)
  *
  */
 
 void cid_parse_pdu(string data, FILE * fd_log)
 {
+    cid_clean_up();
+
+    // parse data
     json_parser_t * jparser = new json_parser_t(data);
 
     // extract data common to all pdu

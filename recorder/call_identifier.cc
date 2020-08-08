@@ -18,6 +18,7 @@
  */
 #include "cid.h"
 #include "call_identifier.h"
+#include <string.h>                                                             // for memcpy
 
 /**
  * @brief Constructor
@@ -126,6 +127,9 @@ void call_identifier_t::push_traffic(const char * data, uint32_t len)
  * @brief Push traffic in raw format to this CID taking care of TIMEOUT_S
  *        If timeout exceeded, a new file is created.
  *        This function store also data received in Kb
+ *
+ *        TODO add switch feedback from main class to be activated from cid,
+ *        so audio raw output can be sent also to speakers
  */
 
 void call_identifier_t::push_traffic_raw(const char * data, uint32_t len)
@@ -133,6 +137,8 @@ void call_identifier_t::push_traffic_raw(const char * data, uint32_t len)
     time_t now;
     time(&now);
 
+    // NOTE: the follwing part shouldn't be necessary anymore since cid_clean_up()
+    // is ran to handle the timeouts every PDU received
     if (difftime(now, m_last_traffic_time[m_usage_marker]) > TIMEOUT_S)         // check if timeout exceed predefined value
     {
         m_file_name[m_usage_marker] = "";                                       // force to start a new record since timeout
@@ -154,9 +160,10 @@ void call_identifier_t::push_traffic_raw(const char * data, uint32_t len)
         m_file_name[m_usage_marker] = filename;
         m_data_received = 0.;
 
-        audio->init();
+        audio->init();                                                          // init Tetra audio plugins
     }
 
+    // DEBUG audio
     // string filename_debug = m_file_name[m_usage_marker] + ".cod";
     // FILE * file = fopen(filename_debug.c_str(), "ab");
     // audio->process_frame_debug(file, (int16_t *)data, raw_output, 0);
@@ -165,7 +172,7 @@ void call_identifier_t::push_traffic_raw(const char * data, uint32_t len)
 
     int16_t raw_output[480];
 
-    // TODO for now, there is no stealing handling (always 0)
+    // TODO for now, there is no stealing frame handling (always 0)
     if (audio->process_frame((int16_t *)data, raw_output, 0))                   // check if raw output is valid
     {
         FILE * file = fopen(m_file_name[m_usage_marker].c_str(), "ab");

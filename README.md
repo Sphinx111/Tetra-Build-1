@@ -181,9 +181,11 @@ Viterbi codec
 Base64 decoder
 * [Joe DF base64.c](https://github.com/joedf/base64.c)
 
+FEC correction [NEW]
+* Lollo Gollo (see issue #21)
+
 # To be done
 
 * LLC reassembly of segmented TL-SDU
 * SDS tries to decode unknown protocols with 8 bits alphabets
-* FEC correction
 * UDP packet size is limited to 2048 bytes, may be small for all Json text informations

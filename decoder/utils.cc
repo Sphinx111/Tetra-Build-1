@@ -199,7 +199,7 @@ int pattern_at_position_score(vector<uint8_t> data, vector<uint8_t> pattern, uin
  *
  */
 
- char get_tetra_digit(const uint8_t val)
+char get_tetra_digit(const uint8_t val)
 {
     const char digits[14] = "0123456789*#+";
     char res;

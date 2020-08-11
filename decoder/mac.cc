@@ -183,7 +183,7 @@ void tetra_dl::service_lower_mac(vector<uint8_t> data, int burst_type)
         bkn2 = vector_extract  (data, 282, 216);
         bkn2 = dec_descramble  (bkn2, 216, g_cell_infos.scrambling_code);       // descramble
         bkn2 = dec_deinterleave(bkn2, 216, 101);                                // deinterleave
-        bkn2 = dec_depuncture23(bkn2, 216);                                     // depuncture with 2/3 rate 144 bits -> 4*144 bits before Viterbi decoding
+        bkn2 = dec_depuncture23(bkn2, 216);                                     // depuncture with 2/3 rate 144 bits -> 4 * 144 bits before Viterbi decoding
         bkn2 = dec_viterbi_decode16_14(bkn2);                                   // Viterbi decode
         if (check_crc16ccitt(bkn2, 140))                                        // check CRC
         {
@@ -234,7 +234,7 @@ void tetra_dl::service_lower_mac(vector<uint8_t> data, int burst_type)
         bkn1 = vector_extract  (data, 14, 216);
         bkn1 = dec_descramble  (bkn1, 216, g_cell_infos.scrambling_code);       // descramble
         bkn1 = dec_deinterleave(bkn1, 216, 101);                                // deinterleave
-        bkn1 = dec_depuncture23(bkn1, 216);                                     // depuncture with 2/3 rate 144 bits -> 4*144 bits before Viterbi decoding
+        bkn1 = dec_depuncture23(bkn1, 216);                                     // depuncture with 2/3 rate 144 bits -> 4 * 144 bits before Viterbi decoding
         bkn1 = dec_viterbi_decode16_14(bkn1);                                   // Viterbi decode
         if (check_crc16ccitt(bkn1, 140))                                        // check CRC
         {
@@ -246,7 +246,7 @@ void tetra_dl::service_lower_mac(vector<uint8_t> data, int burst_type)
         bkn2 = vector_extract  (data, 282, 216);
         bkn2 = dec_descramble  (bkn2, 216, g_cell_infos.scrambling_code);       // descramble
         bkn2 = dec_deinterleave(bkn2, 216, 101);                                // deinterleave
-        bkn2 = dec_depuncture23(bkn2, 216);                                     // depuncture with 2/3 rate 144 bits -> 4*144 bits before Viterbi decoding
+        bkn2 = dec_depuncture23(bkn2, 216);                                     // depuncture with 2/3 rate 144 bits -> 4 * 144 bits before Viterbi decoding
         bkn2 = dec_viterbi_decode16_14(bkn2);                                   // Viterbi decode
         if (check_crc16ccitt(bkn2, 140))                                        // check CRC
         {

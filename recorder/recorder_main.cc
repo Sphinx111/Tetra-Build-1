@@ -36,6 +36,7 @@
  *   2016-09-11  LT  0.0  First release
  *   2020-05-08  LT  0.1  Updated for Json input
  *   2020-07-19  LT  0.2  Added internal TETRA codec and raw file output format
+ *   2020-12-14  Lt  0.3  Fixed zlib type mismatch for MacOS
  *
  * NOTES:
  *   - output log file is always generated, default name is 'log.txt'

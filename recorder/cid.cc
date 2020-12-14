@@ -372,7 +372,9 @@ void cid_parse_pdu(string data, FILE * fd_log)
 
             // zlib uncompress
             char buf_zlib_out[BUFSIZE] = {0};
-            int ret = uncompress((Bytef *)buf_zlib_out, &zlib_uncomp_size, (Bytef *)buf_b64out, zlib_comp_size);
+            uLong  comp_size   = (uLong)zlib_comp_size;
+            uLongf uncomp_size = (uLongf)zlib_uncomp_size;
+            int ret = uncompress((Bytef *)buf_zlib_out, &uncomp_size, (Bytef *)buf_b64out, comp_size);
 
             if (!ret)
             {

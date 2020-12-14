@@ -229,18 +229,17 @@ void tetra_dl::report_add_compressed(string field, const unsigned char * binary_
 
     // zlib compress
     char buf_zlib[BUFSIZE] = {0};                                               // zlib output buffer
-    uint64_t z_uncomp_size = (uLong) data_len;                                  // uncompressed length
-    uint64_t z_comp_size   = compressBound(z_uncomp_size);                      // compressed length
-    z_comp_size = compressBound(z_uncomp_size);                                 // compressed length
+    uLong  z_uncomp_size = (uLong)data_len;                                     // uncompressed length
+    uLongf z_comp_size   = compressBound(z_uncomp_size);                        // compressed length
 
     compress((Bytef *)buf_zlib, &z_comp_size, (Bytef *)binary_data, z_uncomp_size); // compress frame to buf_zlib
 
     // Base64 encode
     char buf_b64[BUFSIZE] = {0};
-    b64_encode((const unsigned char *)buf_zlib, z_comp_size, (unsigned char *)buf_b64);
+    b64_encode((const unsigned char *)buf_zlib, (uint64_t)z_comp_size, (unsigned char *)buf_b64);
 
-    report_add("uzsize", z_uncomp_size);                                        // uncompressed size (needed for zlib uncompress)
-    report_add("zsize",  z_comp_size);                                          // compressed size
+    report_add("uzsize", (uint64_t)z_uncomp_size);                              // uncompressed size (needed for zlib uncompress)
+    report_add("zsize",  (uint64_t)z_comp_size);                                // compressed size
     report_add(field,    buf_b64);                                              // actual data
 }
 

@@ -99,7 +99,8 @@ $ make
 $ cp cdecoder ../recorder/wav/
 $ cp sdecoder ../recorder/wav/
 ```
-NEW: Internal speech codec is now available in `recorder` and `.raw` output files may
+
+Internal speech codec is now available in `recorder` and `.raw` output files may
 be generated directly in `recorder/raw/` folder when using `-a` flag (experimental).
 Then use the script `raw2wav.sh` in folder `recorder/raw/` to generate `.wav` files.
 
@@ -128,6 +129,14 @@ Options:
   -l <ncurses line length> maximum characters printed on a report line
   -n <maximum lines in ssi window> ssi window will wrap when max. lines are printed
   -h print this help
+```
+
+When using the `-a` option (generating the raw files in `recorder/raw` folder), you can listen
+voice in almost realtime thanks to the scripts provided by @orestescaminha:
+
+```sh
+$ cd recoder/raw
+$ ./raw2play.sh
 ```
 
 * In decoder/ run `./decoder`

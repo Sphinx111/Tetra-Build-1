@@ -213,7 +213,7 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
     {
         report_add("type4", "invalid pdu");
         report_add("type4 declared len", len);
-        report_add("type4 actual len", pdu.size());
+        report_add("type4 actual len", (uint64_t)pdu.size());
         return;                                                                 // invalid PDU
     }
 

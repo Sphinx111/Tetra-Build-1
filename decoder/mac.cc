@@ -1016,8 +1016,8 @@ vector<uint8_t> tetra_dl::mac_pdu_process_sysinfo(vector<uint8_t> pdu)
     }
     else
     {
-        report_add("invalid pdu size", pdu.size());
-        report_add("pdu minimum size", MIN_SIZE);
+        report_add("invalid pdu size", (uint64_t)pdu.size());
+        report_add("pdu minimum size", (uint64_t)MIN_SIZE);
     }
 
     return sdu;
@@ -1068,8 +1068,8 @@ vector<uint8_t> tetra_dl::mac_pdu_process_d_block(vector<uint8_t> mac_pdu)
     }
     else
     {
-        report_add("invalid pdu size", pdu.size());
-        report_add("pdu minimum size", MIN_SIZE);
+        report_add("invalid pdu size", (uint64_t)pdu.size());
+        report_add("pdu minimum size", (uint64_t)MIN_SIZE);
     }
 
     return sdu;
@@ -1135,8 +1135,8 @@ vector<uint8_t> tetra_dl::mac_pdu_process_sync(vector<uint8_t> pdu)
     }
     else
     {
-        report_add("invalid pdu size", pdu.size());
-        report_add("pdu minimum size", MIN_SIZE);
+        report_add("invalid pdu size", (uint64_t)pdu.size());
+        report_add("pdu minimum size", (uint64_t)MIN_SIZE);
     }
 
     return sdu;

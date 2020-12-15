@@ -75,8 +75,8 @@ void tetra_dl::service_u_plane(vector<uint8_t> pdu, mac_logical_channel_t mac_lo
         }
         else
         {
-            report_add("invalid pdu size", pdu.size());
-            report_add("pdu minimum size", MIN_SIZE);
+            report_add("invalid pdu size", (uint64_t)pdu.size());
+            report_add("pdu minimum size", (uint64_t)MIN_SIZE);
         }
 
         report_send();

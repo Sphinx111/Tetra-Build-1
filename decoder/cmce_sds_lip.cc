@@ -258,8 +258,8 @@ void tetra_dl::cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu)
     }
     else
     {
-        report_add("invalid pdu size", pdu.size());
-        report_add("pdu minimum size", MIN_SIZE);
+        report_add("invalid pdu size", (uint64_t)pdu.size());
+        report_add("pdu minimum size", (uint64_t)MIN_SIZE);
     }
 
 }

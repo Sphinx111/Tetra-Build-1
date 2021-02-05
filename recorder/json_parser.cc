@@ -1,7 +1,7 @@
 #include "json_parser.h"
 
 
-json_parser_t::json_parser_t(string data)
+json_parser_t::json_parser_t(std::string data)
 {
     // constructor
     b_valid = true;
@@ -33,7 +33,7 @@ bool json_parser_t::is_valid()
 }
 
 
-bool json_parser_t::read(const string field, string * result)
+bool json_parser_t::read(const std::string field, std::string * result)
 {
     // read field with error check
     bool ret = false;
@@ -46,7 +46,7 @@ bool json_parser_t::read(const string field, string * result)
         {
             if (jdoc[field.c_str()].IsString())                                 // check member field type
             {
-                string txt(jdoc[field.c_str()].GetString());
+                std::string txt(jdoc[field.c_str()].GetString());
                 *result = txt;
                 ret = true;
             }
@@ -57,7 +57,7 @@ bool json_parser_t::read(const string field, string * result)
 }
 
 
-bool json_parser_t::read(const string field, uint8_t * result)
+bool json_parser_t::read(const std::string field, uint8_t * result)
 {
     // read field with error check
     uint64_t val;
@@ -70,7 +70,7 @@ bool json_parser_t::read(const string field, uint8_t * result)
 }
 
 
-bool json_parser_t::read(const string field, uint16_t * result)
+bool json_parser_t::read(const std::string field, uint16_t * result)
 {
     // read field with error check
     uint64_t val;
@@ -83,7 +83,7 @@ bool json_parser_t::read(const string field, uint16_t * result)
 }
 
 
-bool json_parser_t::read(const string field, uint32_t * result)
+bool json_parser_t::read(const std::string field, uint32_t * result)
 {
     // read field with error check
     uint64_t val;
@@ -96,7 +96,7 @@ bool json_parser_t::read(const string field, uint32_t * result)
 }
 
 
-bool json_parser_t::read(const string field, uint64_t * result)
+bool json_parser_t::read(const std::string field, uint64_t * result)
 {
     // read field with error check
     bool ret = false;
@@ -129,7 +129,7 @@ void json_parser_t::write_report(FILE * fd)
         jdoc.Accept(writer);
 
         const char * buf = buffer.GetString();
-        string txt = buf;
+        std::string txt = buf;
 
         fprintf(fd, "%s\n", txt.c_str());
         fflush(fd);
@@ -137,9 +137,9 @@ void json_parser_t::write_report(FILE * fd)
 }
 
 
-string json_parser_t::to_string()
+std::string json_parser_t::to_string()
 {
-    string txt = "";
+    std::string txt = "";
 
     if (b_valid)
     {

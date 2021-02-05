@@ -57,7 +57,7 @@
  *
  */
 
-int timed_recv(int fd_sock_rx, char * msg, size_t max_size, int max_wait_ms)
+int timed_recv(int fd_sock_rx, char * msg, std::size_t max_size, int max_wait_ms)
 {
     struct sockaddr_in saddr_in;
     socklen_t socket_len = sizeof(saddr_in);
@@ -236,7 +236,7 @@ int main(int argc, char * argv[])
             memset(rx_buf, 0, sizeof(rx_buf));
             while (fgets(rx_buf, sizeof(rx_buf), file_in))
             {
-                string data(rx_buf);
+                std::string data(rx_buf);
                 cid_parse_pdu(data, file_out);
             }
         }
@@ -254,7 +254,7 @@ int main(int argc, char * argv[])
 
             if (len > 32)                                                        // skip small packets
             {
-                string data(rx_buf);
+                std::string data(rx_buf);
                 cid_parse_pdu(data, file_out);
             }
         }

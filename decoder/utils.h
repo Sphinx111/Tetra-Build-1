@@ -23,32 +23,30 @@
 #include <iostream>
 #include <vector>
 
-using namespace std;
+uint64_t get_value(std::vector<uint8_t> v, uint64_t start_pos_in_vector, uint8_t field_len);
+uint64_t get_value_64(std::vector<uint8_t> v, uint64_t start_pos_in_vector, uint8_t field_len);
+uint32_t get_value_32(std::vector<uint8_t> v, uint64_t start_pos_in_vector, uint8_t field_len);
+uint16_t get_value_16(std::vector<uint8_t> v, uint64_t start_pos_in_vector, uint8_t field_len);
+uint8_t  get_value_8(std::vector<uint8_t> v, uint64_t start_pos_in_vector, uint8_t field_len);
 
-uint64_t get_value(vector<uint8_t> v, uint64_t start_pos_in_vector, uint8_t field_len);
-uint64_t get_value_64(vector<uint8_t> v, uint64_t start_pos_in_vector, uint8_t field_len);
-uint32_t get_value_32(vector<uint8_t> v, uint64_t start_pos_in_vector, uint8_t field_len);
-uint16_t get_value_16(vector<uint8_t> v, uint64_t start_pos_in_vector, uint8_t field_len);
-uint8_t  get_value_8(vector<uint8_t> v, uint64_t start_pos_in_vector, uint8_t field_len);
-
-vector<uint8_t> vector_extract(vector<uint8_t> source, uint32_t pos, int32_t length); // extract sub-vector
-vector<uint8_t> vector_append(vector<uint8_t> vec1, vector<uint8_t> vec2);            // concatenate vectors
-void print_vector(vector<uint8_t> data, int len);
-string vector_to_string(vector<uint8_t> data, int len);
+std::vector<uint8_t> vector_extract(std::vector<uint8_t> source, uint32_t pos, int32_t length); // extract sub-vector
+std::vector<uint8_t> vector_append(std::vector<uint8_t> vec1, std::vector<uint8_t> vec2);       // concatenate vectors
+void print_vector(std::vector<uint8_t> data, int len);
+std::string vector_to_string(std::vector<uint8_t> data, int len);
 
 // miscellaneous functions
 // TODO to sort
-int pattern_at_position_score(vector<uint8_t> data, vector<uint8_t> pattern, uint32_t position);
+int pattern_at_position_score(std::vector<uint8_t> data, std::vector<uint8_t> pattern, uint32_t position);
 
 char get_tetra_digit(const uint8_t val);
 
-string text_gsm_7_bit_decode(vector<uint8_t> data, const int16_t len);
-string text_generic_8_bit_decode(vector<uint8_t> data, const int16_t len);
-string location_nmea_decode(vector<uint8_t> data, const int16_t len);
+std::string text_gsm_7_bit_decode(std::vector<uint8_t> data, const int16_t len);
+std::string text_generic_8_bit_decode(std::vector<uint8_t> data, const int16_t len);
+std::string location_nmea_decode(std::vector<uint8_t> data, const int16_t len);
 
 double utils_decode_integer_twos_complement(uint32_t data, uint8_t n_bits, double mult);
 int32_t utils_substract(int32_t val1, int32_t val2);
 
-string format_str(const char *fmt, ...);
+std::string format_str(const char *fmt, ...);
 
 #endif /* UTILS_H */

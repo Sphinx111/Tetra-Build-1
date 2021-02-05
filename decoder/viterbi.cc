@@ -35,7 +35,7 @@ namespace {
     {
         assert(x.size() == y.size());
         int distance = 0;
-        for (size_t i = 0; i < x.size(); i++) {
+        for (std::size_t i = 0; i < x.size(); i++) {
             distance += x[i] != y[i];
         }
         return distance;
@@ -49,7 +49,7 @@ std::ostream& operator << (std::ostream& os, const ViterbiCodec& codec)
     const std::vector<int>& polynomials = codec.polynomials();
     assert(!polynomials.empty());
     os << polynomials.front();
-    for (size_t i = 1; i < polynomials.size(); i++)
+    for (std::size_t i = 1; i < polynomials.size(); i++)
     {
         os << ", " << polynomials[i];
     }
@@ -73,7 +73,7 @@ ViterbiCodec::ViterbiCodec(int constraint, const std::vector<int>& polynomials)
     : constraint_c(constraint), polynomials_c(polynomials)
 {
     assert(!polynomials_c.empty());
-    for (size_t i = 0; i < polynomials_c.size(); i++)
+    for (std::size_t i = 0; i < polynomials_c.size(); i++)
     {
         assert(polynomials_c[i] > 0);
         assert(polynomials_c[i] < (1 << constraint_c));
@@ -102,7 +102,7 @@ std::string ViterbiCodec::Encode(const std::string& bits) const
     int state = 0;
 
     // Encode the message bits.
-    for (size_t i = 0; i < bits.size(); i++)
+    for (std::size_t i = 0; i < bits.size(); i++)
     {
         char c = bits[i];
         assert(c == '0' || c == '1');
@@ -124,7 +124,7 @@ std::string ViterbiCodec::Encode(const std::string& bits) const
 void ViterbiCodec::InitializeOutputs()
 {
     outputs_c.resize(1 << constraint_c);
-    for (size_t i = 0; i < outputs_c.size(); i++)
+    for (std::size_t i = 0; i < outputs_c.size(); i++)
     {
         for (int j = 0; j < num_parity_bits(); j++)
         {
@@ -190,7 +190,7 @@ void ViterbiCodec::UpdatePathMetrics(const std::string& bits,
 {
     std::vector<int> new_path_metrics(path_metrics->size());
     std::vector<int> new_trellis_column(1 << (constraint_c - 1));
-    for (size_t i = 0; i < path_metrics->size(); i++)
+    for (std::size_t i = 0; i < path_metrics->size(); i++)
     {
         std::pair<int, int> p = PathMetric(bits, *path_metrics, i);
         new_path_metrics[i] = p.first;
@@ -208,7 +208,7 @@ std::string ViterbiCodec::Decode(const std::string& bits) const
     std::vector<int> path_metrics(1 << (constraint_c - 1),
                                   std::numeric_limits<int>::max());
     path_metrics.front() = 0;
-    for (size_t i = 0; i < bits.size(); i += num_parity_bits())
+    for (std::size_t i = 0; i < bits.size(); i += num_parity_bits())
     {
         std::string current_bits(bits, i, num_parity_bits());
         // If some bits are missing, fill with trailing zeros.

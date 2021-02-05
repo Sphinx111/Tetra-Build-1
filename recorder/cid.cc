@@ -12,7 +12,7 @@
  *
  */
 
-static vector<call_identifier_t *> cid_list;
+static std::vector<call_identifier_t *> cid_list;
 static int g_raw_format_flag = 0;
 
 /**
@@ -69,7 +69,7 @@ void cid_init(int raw_format_flag)
 
 void cid_clear()
 {
-    for (vector<call_identifier_t *>::iterator iter = cid_list.begin(); iter != cid_list.end(); ++iter)
+    for (std::vector<call_identifier_t *>::iterator iter = cid_list.begin(); iter != cid_list.end(); ++iter)
     {
         delete *iter;                                                           // delete the call_identifier_t class
     }
@@ -115,7 +115,7 @@ static void cid_clean_up()
     time_t now;
     time(&now);
 
-    for (size_t idx = 0; idx < cid_list.size(); idx++)
+    for (std::size_t idx = 0; idx < cid_list.size(); idx++)
     {
         cid_list[idx]->clean_up();
     }
@@ -136,7 +136,7 @@ static bool cid_exists(uint32_t cid)
 {
     bool b_exists = false;
 
-    for (size_t cnt = 0; cnt < cid_list.size(); cnt++)
+    for (std::size_t cnt = 0; cnt < cid_list.size(); cnt++)
     {
         if (cid_list[cnt]->m_cid == cid)
         {
@@ -155,11 +155,11 @@ static bool cid_exists(uint32_t cid)
  *
  */
 
-static size_t cid_index(uint32_t cid)
+static std::size_t cid_index(uint32_t cid)
 {
-    size_t index = -1;
+    std::size_t index = -1;
 
-    for (size_t cnt = 0; cnt < cid_list.size(); cnt++)
+    for (std::size_t cnt = 0; cnt < cid_list.size(); cnt++)
     {
         if (cid_list[cnt]->m_cid == cid)
         {
@@ -176,11 +176,11 @@ static size_t cid_index(uint32_t cid)
  *
  */
 
-static bool cid_index_by_usage_marker(uint8_t usage_marker, size_t * index)
+static bool cid_index_by_usage_marker(uint8_t usage_marker, std::size_t * index)
 {
     bool ret = false;
 
-    for (size_t cnt = 0; cnt < cid_list.size(); cnt++)
+    for (std::size_t cnt = 0; cnt < cid_list.size(); cnt++)
     {
         if (cid_list[cnt]->m_usage_marker == usage_marker)
         {
@@ -221,16 +221,16 @@ static void cid_add_ssi_to_cid(uint32_t cid, uint32_t ssi)
         cid_add(cid);
     }
 
-    size_t index = cid_index(cid);
+    std::size_t index = cid_index(cid);
 
     // check if ssi already exists in cid list
     bool b_exists = false;
 
-    for (size_t cnt = 0; cnt < cid_list[index]->m_ssi.size(); cnt++)
+    for (std::size_t cnt = 0; cnt < cid_list[index]->m_ssi.size(); cnt++)
     {
         if (cid_list[index]->m_ssi[cnt].ssi == ssi)
         {
-            time(&cid_list[index]->m_ssi[cnt].last_seen);                        // SSI exists, update its last seen time
+            time(&cid_list[index]->m_ssi[cnt].last_seen);                       // SSI exists, update its last seen time
             b_exists = true;
             break;
         }
@@ -259,7 +259,7 @@ static void cid_update_usage_marker(uint32_t cid, uint8_t usage_marker)
         cid_add(cid);
     }
 
-    size_t index = cid_index(cid);
+    std::size_t index = cid_index(cid);
     cid_list[index]->update_usage_marker(usage_marker);
 }
 
@@ -272,7 +272,7 @@ static void cid_release(uint32_t cid)
 {
     if (!cid_exists(cid)) return;
 
-    for (vector<call_identifier_t *>::iterator it = cid_list.begin(); it != cid_list.end();)
+    for (std::vector<call_identifier_t *>::iterator it = cid_list.begin(); it != cid_list.end();)
     {
         if ((*it)->m_cid == cid)
         {
@@ -294,7 +294,7 @@ static void cid_send_traffic_to_cid_by_usage_marker(uint8_t usage_marker, const 
 {
     if (usage_marker > 63) return;                                              // only values from 0-63 are relevant for TETRA
 
-    size_t index;
+    std::size_t index;
 
     if (cid_index_by_usage_marker(usage_marker, &index))
     {
@@ -319,7 +319,7 @@ static void cid_send_traffic_to_cid_by_usage_marker(uint8_t usage_marker, const 
  *
  */
 
-void cid_parse_pdu(string data, FILE * fd_log)
+void cid_parse_pdu(std::string data, FILE * fd_log)
 {
     cid_clean_up();
 
@@ -327,8 +327,8 @@ void cid_parse_pdu(string data, FILE * fd_log)
     json_parser_t * jparser = new json_parser_t(data);
 
     // extract data common to all pdu
-    string   service;
-    string   pdu;
+    std::string   service;
+    std::string   pdu;
     uint8_t  usage_marker;
     uint8_t  downlink_usage_marker;
     uint32_t ssi;
@@ -356,7 +356,7 @@ void cid_parse_pdu(string data, FILE * fd_log)
     {
         uint64_t zlib_uncomp_size;
         uint64_t zlib_comp_size;
-        string frame;
+        std::string frame;
         b_valid = jparser->read("downlink usage marker", &downlink_usage_marker); // may differ from usage marker
         b_valid = b_valid && jparser->read("uzsize", &zlib_uncomp_size);          // uncompressed frame length 2 * 690 + 1 bytes
         b_valid = b_valid && jparser->read("zsize",  &zlib_comp_size);            // compressed frame length (before B64 since B64 add overhead)
@@ -418,7 +418,7 @@ void cid_parse_pdu(string data, FILE * fd_log)
         else if ((!pdu.compare("D-SDS-DATA")) ||
                  (!pdu.compare("D-STATUS")))                                    // SDS messages
         {
-            string sds_msg;
+            std::string sds_msg;
             b_valid = jparser->read("infos", &sds_msg);
 
             if (b_valid)                                                        // text message can be printed

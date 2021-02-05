@@ -23,8 +23,6 @@
 #include <string>
 #include "tetra_common.h"
 
-using namespace std;
-
 /**
  * @brief MAC defragmenter
  *
@@ -38,15 +36,15 @@ public:
     mac_address_t mac_address;                                                  // MAC address
     tetra_time_t  start_time;                                                   // start time of defragemnter (will be used to stop on missing/invalid end frag packet receive)
 
-    vector<uint8_t> mac_ressource;
-    vector<uint8_t> tm_sdu;                                                     // reconstructed TM-SDU to be transfered to LLC
+    std::vector<uint8_t> mac_ressource;
+    std::vector<uint8_t> tm_sdu;                                                // reconstructed TM-SDU to be transfered to LLC
 
     int g_debug_level;
     bool b_stopped;
     uint8_t fragments_count;
     void start(const mac_address_t address, const tetra_time_t time_slot);
-    void append(const vector<uint8_t> sdu, const mac_address_t address);
-    vector<uint8_t> get_sdu();
+    void append(const std::vector<uint8_t> sdu, const mac_address_t address);
+    std::vector<uint8_t> get_sdu();
     void stop();
 };
 

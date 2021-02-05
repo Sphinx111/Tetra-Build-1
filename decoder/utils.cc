@@ -23,7 +23,7 @@
  *
  */
 
-uint64_t get_value(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t field_len)
+uint64_t get_value(std::vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t field_len)
 {
     uint64_t val = 0;
 
@@ -40,7 +40,7 @@ uint64_t get_value(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t fi
  *
  */
 
-uint64_t get_value_64(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t field_len)
+uint64_t get_value_64(std::vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t field_len)
 {
     return get_value(vec, start_pos_in_vector, field_len);
 }
@@ -50,7 +50,7 @@ uint64_t get_value_64(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t
  *
  */
 
-uint32_t get_value_32(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t field_len)
+uint32_t get_value_32(std::vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t field_len)
 {
     uint32_t ret = get_value(vec, start_pos_in_vector, field_len);
 
@@ -62,7 +62,7 @@ uint32_t get_value_32(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t
  *
  */
 
-uint16_t get_value_16(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t field_len)
+uint16_t get_value_16(std::vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t field_len)
 {
     uint16_t ret = get_value(vec, start_pos_in_vector, field_len);
 
@@ -74,7 +74,7 @@ uint16_t get_value_16(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t
  *
  */
 
-uint8_t get_value_8(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t field_len)
+uint8_t get_value_8(std::vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t field_len)
 {
     uint8_t ret = get_value(vec, start_pos_in_vector, field_len);
 
@@ -86,9 +86,9 @@ uint8_t get_value_8(vector<uint8_t> vec, uint64_t start_pos_in_vector, uint8_t f
  *
  */
 
-vector<uint8_t> vector_extract(vector<uint8_t> source, uint32_t pos, int32_t length)
+std::vector<uint8_t> vector_extract(std::vector<uint8_t> source, uint32_t pos, int32_t length)
 {
-    vector<uint8_t> ret;
+    std::vector<uint8_t> ret;
 
     if (length > 0)                                                             // check if invalid length requested
     {
@@ -113,9 +113,9 @@ vector<uint8_t> vector_extract(vector<uint8_t> source, uint32_t pos, int32_t len
  *
  */
 
-vector<uint8_t> vector_append(vector<uint8_t> vec1, vector<uint8_t> vec2)
+std::vector<uint8_t> vector_append(std::vector<uint8_t> vec1, std::vector<uint8_t> vec2)
 {
-    vector<uint8_t> ret(vec1);
+    std::vector<uint8_t> ret(vec1);
 
     ret.insert(ret.end(), vec2.begin(), vec2.end());
 
@@ -127,23 +127,23 @@ vector<uint8_t> vector_append(vector<uint8_t> vec1, vector<uint8_t> vec2)
  *
  */
 
-void print_vector(vector<uint8_t> data, int len)
+void print_vector(std::vector<uint8_t> data, int len)
 {
-    size_t count = data.size();
+    std::size_t count = data.size();
 
     if (len < (int)count)
     {
-        count = (size_t)len;
+        count = (std::size_t)len;
     }
 
-    for (size_t idx = 0; idx < count; idx++)
+    for (std::size_t idx = 0; idx < count; idx++)
     {
-        cout << (char)(data[idx] + '0');
+        std::cout << (char)(data[idx] + '0');
     }
 
     if (count > 0)
     {
-        cout << endl;
+        std::cout << std::endl;
     }
 }
 
@@ -152,18 +152,18 @@ void print_vector(vector<uint8_t> data, int len)
  *
  */
 
-string vector_to_string(vector<uint8_t> data, int len)
+std::string vector_to_string(std::vector<uint8_t> data, int len)
 {
-    string res = "";
+    std::string res = "";
 
-    size_t count = data.size();
+    std::size_t count = data.size();
 
     if (len < (int)count)
     {
-        count = (size_t)len;
+        count = (std::size_t)len;
     }
 
-    for (size_t idx = 0; idx < count; idx++)
+    for (std::size_t idx = 0; idx < count; idx++)
     {
         res += (char)(data[idx] + '0');
     }
@@ -182,7 +182,7 @@ string vector_to_string(vector<uint8_t> data, int len)
  *
  */
 
-int pattern_at_position_score(vector<uint8_t> data, vector<uint8_t> pattern, uint32_t position)
+int pattern_at_position_score(std::vector<uint8_t> data, std::vector<uint8_t> pattern, uint32_t position)
 {
     int errors = 0;
 
@@ -221,13 +221,13 @@ char get_tetra_digit(const uint8_t val)
  *
  */
 
-string text_gsm_7_bit_decode(vector<uint8_t> data, const int16_t len)
+std::string text_gsm_7_bit_decode(std::vector<uint8_t> data, const int16_t len)
 {
     // NOTE: _ is a special char when we want to escape the character value
     //                   0        10         20        30         40        50        60        70        80        90        100       110      120
     //                   0123456789012345678901234567890123 4567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567
-    const string gsm7 = "@_______________________________ !\"#{%&'()*+,-./0123456789:;<=>?_ABCDEFGHIJKLMNOPQRSTUVWXYZ______abcdefghijklmnopqrstuvwxyz_____";
-    string res = "";
+    const std::string gsm7 = "@_______________________________ !\"#{%&'()*+,-./0123456789:;<=>?_ABCDEFGHIJKLMNOPQRSTUVWXYZ______abcdefghijklmnopqrstuvwxyz_____";
+    std::string res = "";
 
     for (int16_t idx = 0; idx < len / 7; idx++)
     {
@@ -255,9 +255,9 @@ string text_gsm_7_bit_decode(vector<uint8_t> data, const int16_t len)
  *
  */
 
-string text_generic_8_bit_decode(vector<uint8_t> data, const int16_t len)
+std::string text_generic_8_bit_decode(std::vector<uint8_t> data, const int16_t len)
 {
-    string res = "";
+    std::string res = "";
 
     for (int16_t idx = 0; idx < len / 8; idx++)
     {
@@ -282,9 +282,9 @@ string text_generic_8_bit_decode(vector<uint8_t> data, const int16_t len)
  *
  */
 
-string location_nmea_decode(vector<uint8_t> data, const int16_t len)
+std::string location_nmea_decode(std::vector<uint8_t> data, const int16_t len)
 {
-    string res = "";
+    std::string res = "";
 
     for (int16_t idx = 0; idx < len / 8; idx++)
     {
@@ -344,10 +344,10 @@ int32_t utils_substract(int32_t val1, int32_t val2)
  */
 
 
-string format_str(const char *fmt, ...)
+std::string format_str(const char *fmt, ...)
 {
     // variadic format function to string
-    const size_t BUF_LEN = 8192;
+    const std::size_t BUF_LEN = 8192;
     char buf[BUF_LEN];
 
     va_list args;
@@ -357,5 +357,5 @@ string format_str(const char *fmt, ...)
 
     va_end(args);
 
-    return string(buf);
+    return std::string(buf);
 }

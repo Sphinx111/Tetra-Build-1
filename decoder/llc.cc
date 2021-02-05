@@ -26,7 +26,7 @@
  *
  */
 
-void tetra_dl::service_llc(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
+void tetra_dl::service_llc(std::vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
 {
     if (g_debug_level >= 5)
     {
@@ -40,12 +40,12 @@ void tetra_dl::service_llc(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
         return;
     }
 
-    string txt = "";
+    std::string txt = "";
     uint8_t advanced_link;
     uint8_t dfinal = -1;
     uint8_t ack_length = 0;
 
-    vector<uint8_t> tl_sdu;
+    std::vector<uint8_t> tl_sdu;
 
     uint32_t pos = 0;                                                           // current position in pdu stream
     uint8_t pdu_type = get_value(pdu, pos, 4);                                  // 21.2.1 table 21.1

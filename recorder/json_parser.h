@@ -25,8 +25,6 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/error/en.h>
 
-using namespace::std;
-
 /**
  * @brief Json object parser with error handling
  *
@@ -34,18 +32,18 @@ using namespace::std;
 
 class json_parser_t {
 public:
-    json_parser_t(string data);
+    json_parser_t(std::string data);
     ~json_parser_t();
 
     bool is_valid();
-    bool read(const string field, string   * result);
-    bool read(const string field, uint8_t  * result);
-    bool read(const string field, uint16_t * result);
-    bool read(const string field, uint32_t * result);
-    bool read(const string field, uint64_t * result);
+    bool read(const std::string field, std::string   * result);
+    bool read(const std::string field, uint8_t  * result);
+    bool read(const std::string field, uint16_t * result);
+    bool read(const std::string field, uint32_t * result);
+    bool read(const std::string field, uint64_t * result);
 
     void write_report(FILE * fd_file);
-    string to_string();
+    std::string to_string();
 private:
     rapidjson::Document jdoc;
     bool b_valid;

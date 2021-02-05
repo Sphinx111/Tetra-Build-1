@@ -24,7 +24,7 @@
  *
  */
 
-void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
+void tetra_dl::service_mle(std::vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
 {
     if (g_debug_level >= 5)
     {
@@ -33,8 +33,8 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
     }
 
     //uint8_t pdu_type;
-    string txt   = "";
-    string infos = "";
+    std::string txt   = "";
+    std::string infos = "";
     bool print_infos_flag = false;
 
     if (mac_logical_channel == BSCH)                                            // TM-SDU was already sent directly by MAC 18.4.2. Report infos and stop here
@@ -113,7 +113,7 @@ void tetra_dl::service_mle(vector<uint8_t> pdu, mac_logical_channel_t mac_logica
  *
  */
 
-void tetra_dl::service_mle_subsystem(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
+void tetra_dl::service_mle_subsystem(std::vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
 {
     if (g_debug_level >= 5)
     {
@@ -121,7 +121,7 @@ void tetra_dl::service_mle_subsystem(vector<uint8_t> pdu, mac_logical_channel_t 
         fflush(stdout);
     }
 
-    string txt = "";
+    std::string txt = "";
 
     uint32_t pos = 0;
     uint8_t pdu_type = get_value(pdu, pos, 3);
@@ -177,7 +177,7 @@ void tetra_dl::service_mle_subsystem(vector<uint8_t> pdu, mac_logical_channel_t 
  *
  */
 
-void tetra_dl::mle_process_d_nwrk_broadcast(vector<uint8_t> pdu)
+void tetra_dl::mle_process_d_nwrk_broadcast(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -219,7 +219,7 @@ void tetra_dl::mle_process_d_nwrk_broadcast(vector<uint8_t> pdu)
 
             for (uint8_t cnt = 0; cnt < neighbour_cells_count; cnt++)
             {
-                vector<tuple<string, uint64_t>> infos;
+                std::vector<std::tuple<std::string, uint64_t>> infos;
 
                 infos.clear();
                 pos = mle_parse_neighbour_cell_information(pdu, pos, infos);
@@ -238,7 +238,7 @@ void tetra_dl::mle_process_d_nwrk_broadcast(vector<uint8_t> pdu)
  *
  */
 
-uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, uint32_t pos_start, vector<tuple<string, uint64_t>> & infos)
+uint32_t tetra_dl::mle_parse_neighbour_cell_information(std::vector<uint8_t> data, uint32_t pos_start, std::vector<std::tuple<std::string, uint64_t>> & infos)
 {
     uint32_t pos = pos_start;
 
@@ -350,7 +350,7 @@ uint32_t tetra_dl::mle_parse_neighbour_cell_information(vector<uint8_t> data, ui
  *
  */
 
-void tetra_dl::mle_process_d_nwrk_broadcast_extension(vector<uint8_t> pdu)
+void tetra_dl::mle_process_d_nwrk_broadcast_extension(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {

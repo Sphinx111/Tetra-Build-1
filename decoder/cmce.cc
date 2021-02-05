@@ -24,7 +24,7 @@
  *
  */
 
-void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
+void tetra_dl::service_cmce(std::vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
 {
     if (g_debug_level >= 5)
     {
@@ -33,7 +33,7 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
     }
 
     uint8_t pdu_type;
-    string txt = "";
+    std::string txt = "";
     uint32_t cid = 0;
 
     bool b_complete_print_flag = true;
@@ -211,7 +211,7 @@ void tetra_dl::service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logic
  *
  */
 
-void tetra_dl::cmce_parse_d_alert(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_alert(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -247,7 +247,7 @@ void tetra_dl::cmce_parse_d_alert(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_parse_d_call_proceeding(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_call_proceeding(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -281,7 +281,7 @@ void tetra_dl::cmce_parse_d_call_proceeding(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_parse_d_call_restore(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_call_restore(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -362,7 +362,7 @@ void tetra_dl::cmce_parse_d_call_restore(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_parse_d_connect(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_connect(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -454,7 +454,7 @@ void tetra_dl::cmce_parse_d_connect(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_parse_d_connect_ack(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_connect_ack(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -504,7 +504,7 @@ void tetra_dl::cmce_parse_d_connect_ack(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_parse_d_disconnect(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_disconnect(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -548,7 +548,7 @@ void tetra_dl::cmce_parse_d_disconnect(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_parse_d_info(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_info(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -667,7 +667,7 @@ void tetra_dl::cmce_parse_d_info(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_parse_d_release(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_release(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -711,7 +711,7 @@ void tetra_dl::cmce_parse_d_release(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_parse_d_setup(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_setup(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -812,7 +812,7 @@ void tetra_dl::cmce_parse_d_setup(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_parse_d_tx_ceased(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_tx_ceased(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -856,7 +856,7 @@ void tetra_dl::cmce_parse_d_tx_ceased(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_parse_d_tx_continue(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_tx_continue(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -903,7 +903,7 @@ void tetra_dl::cmce_parse_d_tx_continue(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_parse_d_tx_granted(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_tx_granted(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -983,7 +983,7 @@ void tetra_dl::cmce_parse_d_tx_granted(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_parse_d_tx_interrupt(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_tx_interrupt(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -1063,7 +1063,7 @@ void tetra_dl::cmce_parse_d_tx_interrupt(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_parse_d_tx_wait(vector<uint8_t> pdu)
+void tetra_dl::cmce_parse_d_tx_wait(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {

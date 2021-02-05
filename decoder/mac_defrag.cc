@@ -55,7 +55,7 @@ void mac_defrag_t::start(const mac_address_t address, const tetra_time_t time_sl
     b_stopped = false;
 }
 
-void mac_defrag_t::append(const vector<uint8_t> sdu, const mac_address_t address)
+void mac_defrag_t::append(const std::vector<uint8_t> sdu, const mac_address_t address)
 {
     // we can't append if in stopped mode
     if (b_stopped)
@@ -93,10 +93,10 @@ void mac_defrag_t::append(const vector<uint8_t> sdu, const mac_address_t address
     }
 }
 
-vector<uint8_t> mac_defrag_t::get_sdu()
+std::vector<uint8_t> mac_defrag_t::get_sdu()
 {
     // check SDU validity and return it
-    vector<uint8_t> ret;
+    std::vector<uint8_t> ret;
 
    if (b_stopped)
    {

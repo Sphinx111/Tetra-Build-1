@@ -32,7 +32,7 @@
  *
  */
 
-void tetra_dl::cmce_sds_parse_d_sds_data(vector<uint8_t> pdu)
+void tetra_dl::cmce_sds_parse_d_sds_data(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -82,7 +82,7 @@ void tetra_dl::cmce_sds_parse_d_sds_data(vector<uint8_t> pdu)
     pos += 2;
     report_add("sds type identifier", sdti);
 
-    vector<uint8_t> sdu;
+    std::vector<uint8_t> sdu;
 
     if (sdti == 0)                                                              // user-defined data 1
     {
@@ -131,7 +131,7 @@ void tetra_dl::cmce_sds_parse_d_sds_data(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_sds_parse_d_status(vector<uint8_t> pdu)
+void tetra_dl::cmce_sds_parse_d_status(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -172,7 +172,7 @@ void tetra_dl::cmce_sds_parse_d_status(vector<uint8_t> pdu)
         uint8_t digits_count = get_value(pdu, pos, 8);
         pos += 8;
 
-        string ext_number = "";
+        std::string ext_number = "";
         for (int idx = 0; idx < digits_count; idx++)
         {
             ext_number += get_tetra_digit((uint8_t)get_value(pdu, pos, 4));
@@ -201,7 +201,7 @@ void tetra_dl::cmce_sds_parse_d_status(vector<uint8_t> pdu)
  *   TODO check maximum length for user-defined data 4 is 2047 bits including protocol identifier 14.8.52
  */
 
-void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len)
+void tetra_dl::cmce_sds_parse_type4_data(std::vector<uint8_t> pdu, const uint16_t len)
 {
     if (g_debug_level >= 5)
     {
@@ -218,7 +218,7 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
     }
 
     uint32_t pos = 0;
-    vector<uint8_t> sdu;
+    std::vector<uint8_t> sdu;
 
     uint8_t protocol_id = get_value(pdu, pos, 8);
     pos += 8;
@@ -355,7 +355,7 @@ void tetra_dl::cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len
  *
  */
 
-void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t len)
+void tetra_dl::cmce_sds_parse_sub_d_transfer(std::vector<uint8_t> pdu, const uint16_t len)
 {
     if (g_debug_level >= 5)
     {
@@ -380,7 +380,7 @@ void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t
     pos += 8;
 
     uint8_t digits_count = 0;
-    string  ext_number   = "";
+    std::string  ext_number   = "";
 
     if (service_forward_control)                                                // service forward control required
     {
@@ -438,7 +438,7 @@ void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t
         }
     }
 
-    vector<uint8_t> sdu = vector_extract(pdu, pos, utils_substract(len, pos));
+    std::vector<uint8_t> sdu = vector_extract(pdu, pos, utils_substract(len, pos));
 
     switch (protocol_id)                                                        // table 29.21
     {
@@ -501,7 +501,7 @@ void tetra_dl::cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t
  *
  */
 
-void tetra_dl::cmce_sds_parse_simple_text_messaging(vector<uint8_t> pdu, const uint16_t len)
+void tetra_dl::cmce_sds_parse_simple_text_messaging(std::vector<uint8_t> pdu, const uint16_t len)
 {
     if (g_debug_level >= 5)
     {
@@ -516,7 +516,7 @@ void tetra_dl::cmce_sds_parse_simple_text_messaging(vector<uint8_t> pdu, const u
     pos += 7;
     report_add("text coding scheme", text_coding_scheme);
 
-    string txt = "";
+    std::string txt = "";
     int32_t sdu_length = utils_substract(len, pos);
 
     if (text_coding_scheme == 0b0000000)                                        // GSM 7-bit alphabet - see 29.5.4.3
@@ -541,7 +541,7 @@ void tetra_dl::cmce_sds_parse_simple_text_messaging(vector<uint8_t> pdu, const u
  *
  */
 
-void tetra_dl::cmce_sds_parse_text_messaging_with_sds_tl(vector<uint8_t> pdu)
+void tetra_dl::cmce_sds_parse_text_messaging_with_sds_tl(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -567,7 +567,7 @@ void tetra_dl::cmce_sds_parse_text_messaging_with_sds_tl(vector<uint8_t> pdu)
         report_add("timestamp", timestamp);
     }
 
-    string txt = "";
+    std::string txt = "";
     int32_t sdu_length = utils_substract(len, pos);
 
     if (text_coding_scheme == 0b0000000)                                        // GSM 7-bit alphabet - see 29.5.4.3
@@ -592,7 +592,7 @@ void tetra_dl::cmce_sds_parse_text_messaging_with_sds_tl(vector<uint8_t> pdu)
  *
  */
 
-void tetra_dl::cmce_sds_parse_simple_location_system(vector<uint8_t> pdu, const uint16_t len)
+void tetra_dl::cmce_sds_parse_simple_location_system(std::vector<uint8_t> pdu, const uint16_t len)
 {
     if (g_debug_level >= 5)
     {
@@ -607,7 +607,7 @@ void tetra_dl::cmce_sds_parse_simple_location_system(vector<uint8_t> pdu, const 
     report_add("location coding system", location_system_coding);
 
     // remaining bits are len - 8 - 8 since len is size of pdu
-    string txt = "";
+    std::string txt = "";
     int32_t sdu_length = utils_substract(len, pos);
 
     switch (location_system_coding)
@@ -637,7 +637,7 @@ void tetra_dl::cmce_sds_parse_simple_location_system(vector<uint8_t> pdu, const 
  *
  */
 
-void tetra_dl::cmce_sds_parse_location_system_with_sds_tl(vector<uint8_t> pdu)
+void tetra_dl::cmce_sds_parse_location_system_with_sds_tl(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -652,7 +652,7 @@ void tetra_dl::cmce_sds_parse_location_system_with_sds_tl(vector<uint8_t> pdu)
     pos += 8;
     report_add("location coding system", location_system_coding);
 
-    string txt = "";
+    std::string txt = "";
     int32_t sdu_length = utils_substract(len, pos);
 
     switch (location_system_coding)

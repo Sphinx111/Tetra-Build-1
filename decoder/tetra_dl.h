@@ -37,8 +37,6 @@
 #include "viterbi.h"
 #include "mac_defrag.h"
 
-using namespace std;
-
 /**
  * @defgroup tetra_dl TETRA decoder
  *
@@ -81,8 +79,8 @@ public:
     bool g_remove_fill_bit_flag;                                                ///< If true, the fill bits will be removed
 
     // burst data
-    vector<uint8_t> g_frame_data;                                               ///< Burst data
-    uint32_t        g_frame_len;                                                ///< Burst length in bits
+    std::vector<uint8_t> g_frame_data;                                          ///< Burst data
+    uint32_t             g_frame_len;                                           ///< Burst length in bits
 
     // timing and burst synchronizer
     tetra_time_t       g_time;                                                  ///< Tetra timing
@@ -98,21 +96,21 @@ public:
     void reset_synchronizer();
     void increment_tn();
 
-    string mac_logical_channel_name(int val);
-    string burst_name(int val);
+    std::string mac_logical_channel_name(int val);
+    std::string burst_name(int val);
 
     void calculate_scrambling_code();
 
     // decoding functions per clause 8
     ViterbiCodec * viterbi_codec16_14;                                          ///< Viterbi codec
-    vector<uint8_t> dec_descramble(vector<uint8_t> data, int len, uint32_t ScramblingCode);
-    vector<uint8_t> dec_deinterleave(vector<uint8_t> data, uint32_t K, uint32_t a);
-    vector<uint8_t> dec_depuncture23(vector<uint8_t> data, uint32_t len);
-    vector<uint8_t> dec_viterbi_decode16_14(vector<uint8_t> data);
-    vector<uint8_t> dec_reed_muller_3014_decode(vector<uint8_t> data);
+    std::vector<uint8_t> dec_descramble(std::vector<uint8_t> data, int len, uint32_t ScramblingCode);
+    std::vector<uint8_t> dec_deinterleave(std::vector<uint8_t> data, uint32_t K, uint32_t a);
+    std::vector<uint8_t> dec_depuncture23(std::vector<uint8_t> data, uint32_t len);
+    std::vector<uint8_t> dec_viterbi_decode16_14(std::vector<uint8_t> data);
+    std::vector<uint8_t> dec_reed_muller_3014_decode(std::vector<uint8_t> data);
 
     // CRC16 check
-    int check_crc16ccitt(vector<uint8_t> data, int len);
+    int check_crc16ccitt(std::vector<uint8_t> data, int len);
 
     // MAC
     mac_defrag_t  * mac_defrag;                                                 ///< MAC defragmenter class
@@ -120,91 +118,91 @@ public:
     mac_address_t mac_address;                                                  ///< Current MAc address (from MAC-RESOURCE PDU)
     uint8_t       second_slot_stolen_flag;                                      ///< 1 if second slot is stolen
 
-    void service_lower_mac(vector<uint8_t> data, int burst_type);
-    void service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac_logical_channel);
+    void service_lower_mac(std::vector<uint8_t> data, int burst_type);
+    void service_upper_mac(std::vector<uint8_t> data, mac_logical_channel_t mac_logical_channel);
 
-    vector<uint8_t> mac_remove_fill_bits(const vector<uint8_t> pdu);
-    vector<uint8_t> mac_pdu_process_sync(vector<uint8_t> pdu);                  // process SYNC
-    void            mac_pdu_process_aach(vector<uint8_t> data);                 // process ACCESS-ASSIGN - no SDU
-    vector<uint8_t> mac_pdu_process_ressource(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel, bool * b_fragmented_packet); // process MAC-RESSOURCE
-    vector<uint8_t> mac_pdu_process_sysinfo(vector<uint8_t> pdu);               // process SYSINFO
-    void            mac_pdu_process_mac_frag(vector<uint8_t> pdu);              // process MAC-FRAG
-    vector<uint8_t> mac_pdu_process_mac_end(vector<uint8_t> pdu);               // process MAC-END
-    vector<uint8_t> mac_pdu_process_d_block(vector<uint8_t> pdu);               // process MAC-D-BLCK
+    std::vector<uint8_t> mac_remove_fill_bits(const std::vector<uint8_t> pdu);
+    std::vector<uint8_t> mac_pdu_process_sync(std::vector<uint8_t> pdu);                                                                             // process SYNC
+    void                 mac_pdu_process_aach(std::vector<uint8_t> data);                                                                            // process ACCESS-ASSIGN - no SDU
+    std::vector<uint8_t> mac_pdu_process_ressource(std::vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel, bool * b_fragmented_packet); // process MAC-RESSOURCE
+    std::vector<uint8_t> mac_pdu_process_sysinfo(std::vector<uint8_t> pdu);                                                                          // process SYSINFO
+    void                 mac_pdu_process_mac_frag(std::vector<uint8_t> pdu);                                                                         // process MAC-FRAG
+    std::vector<uint8_t> mac_pdu_process_mac_end(std::vector<uint8_t> pdu);                                                                          // process MAC-END
+    std::vector<uint8_t> mac_pdu_process_d_block(std::vector<uint8_t> pdu);                                                                          // process MAC-D-BLCK
 
     // LLC
-    void service_llc(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
+    void service_llc(std::vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
 
     // MLE
-    void service_mle( vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
-    void service_mle_subsystem(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
-    void mle_process_d_nwrk_broadcast(vector<uint8_t> pdu);
-    void mle_process_d_nwrk_broadcast_extension(vector<uint8_t> pdu);
-    uint32_t mle_parse_neighbour_cell_information(vector<uint8_t> data, uint32_t pos_start, vector<tuple<string, uint64_t>> & infos);
+    void service_mle( std::vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
+    void service_mle_subsystem(std::vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
+    void mle_process_d_nwrk_broadcast(std::vector<uint8_t> pdu);
+    void mle_process_d_nwrk_broadcast_extension(std::vector<uint8_t> pdu);
+    uint32_t mle_parse_neighbour_cell_information(std::vector<uint8_t> data, uint32_t pos_start, std::vector<std::tuple<std::string, uint64_t>> & infos);
 
     // CMCE
-    void service_cmce(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
-    void cmce_parse_d_alert(vector<uint8_t> pdu);
-    void cmce_parse_d_call_proceeding(vector<uint8_t> pdu);
-    void cmce_parse_d_call_restore(vector<uint8_t> pdu);
-    void cmce_parse_d_connect(vector<uint8_t> pdu);
-    void cmce_parse_d_connect_ack(vector<uint8_t> pdu);
-    void cmce_parse_d_disconnect(vector<uint8_t> pdu);
-    void cmce_parse_d_info(vector<uint8_t> pdu);
-    void cmce_parse_d_release(vector<uint8_t> pdu);
-    void cmce_parse_d_setup(vector<uint8_t> pdu);
-    void cmce_parse_d_tx_ceased(vector<uint8_t> pdu);
-    void cmce_parse_d_tx_continue(vector<uint8_t> pdu);
-    void cmce_parse_d_tx_granted(vector<uint8_t> pdu);
-    void cmce_parse_d_tx_interrupt(vector<uint8_t> pdu);
-    void cmce_parse_d_tx_wait(vector<uint8_t> pdu);
+    void service_cmce(std::vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
+    void cmce_parse_d_alert(std::vector<uint8_t> pdu);
+    void cmce_parse_d_call_proceeding(std::vector<uint8_t> pdu);
+    void cmce_parse_d_call_restore(std::vector<uint8_t> pdu);
+    void cmce_parse_d_connect(std::vector<uint8_t> pdu);
+    void cmce_parse_d_connect_ack(std::vector<uint8_t> pdu);
+    void cmce_parse_d_disconnect(std::vector<uint8_t> pdu);
+    void cmce_parse_d_info(std::vector<uint8_t> pdu);
+    void cmce_parse_d_release(std::vector<uint8_t> pdu);
+    void cmce_parse_d_setup(std::vector<uint8_t> pdu);
+    void cmce_parse_d_tx_ceased(std::vector<uint8_t> pdu);
+    void cmce_parse_d_tx_continue(std::vector<uint8_t> pdu);
+    void cmce_parse_d_tx_granted(std::vector<uint8_t> pdu);
+    void cmce_parse_d_tx_interrupt(std::vector<uint8_t> pdu);
+    void cmce_parse_d_tx_wait(std::vector<uint8_t> pdu);
 
     // CMCE SDS sub-entity
-    void cmce_sds_parse_d_sds_data(vector<uint8_t> pdu);
-    void cmce_sds_parse_d_status(vector<uint8_t> pdu);
-    void cmce_sds_parse_type4_data(vector<uint8_t> pdu, const uint16_t len);
-    void cmce_sds_parse_sub_d_transfer(vector<uint8_t> pdu, const uint16_t len);
-    void cmce_sds_parse_simple_text_messaging(vector<uint8_t> pdu, const uint16_t len);
-    void cmce_sds_parse_simple_location_system(vector<uint8_t> pdu, const uint16_t len);
-    void cmce_sds_parse_text_messaging_with_sds_tl(vector<uint8_t> pdu);
-    void cmce_sds_parse_location_system_with_sds_tl(vector<uint8_t> pdu);
+    void cmce_sds_parse_d_sds_data(std::vector<uint8_t> pdu);
+    void cmce_sds_parse_d_status(std::vector<uint8_t> pdu);
+    void cmce_sds_parse_type4_data(std::vector<uint8_t> pdu, const uint16_t len);
+    void cmce_sds_parse_sub_d_transfer(std::vector<uint8_t> pdu, const uint16_t len);
+    void cmce_sds_parse_simple_text_messaging(std::vector<uint8_t> pdu, const uint16_t len);
+    void cmce_sds_parse_simple_location_system(std::vector<uint8_t> pdu, const uint16_t len);
+    void cmce_sds_parse_text_messaging_with_sds_tl(std::vector<uint8_t> pdu);
+    void cmce_sds_parse_location_system_with_sds_tl(std::vector<uint8_t> pdu);
 
     // CMCE SDS LIP service
-    void cmce_sds_service_location_information_protocol(vector<uint8_t> pdu);
-    void cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu);
-    void cmce_sds_lip_parse_extended_message(vector<uint8_t> pdu);
+    void cmce_sds_service_location_information_protocol(std::vector<uint8_t> pdu);
+    void cmce_sds_lip_parse_short_location_report(std::vector<uint8_t> pdu);
+    void cmce_sds_lip_parse_extended_message(std::vector<uint8_t> pdu);
 
     // SNDCP
-    void service_sndcp(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
+    void service_sndcp(std::vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel);
     
     // U-plane
-    void service_u_plane(vector<uint8_t> data, mac_logical_channel_t mac_logical_channel); // U-plane traffic
+    void service_u_plane(std::vector<uint8_t> data, mac_logical_channel_t mac_logical_channel); // U-plane traffic
 
     // for reporting informations in Json format
     rapidjson::Document jdoc;                                                   ///< rapidjson document
     int socketfd = 0;                                                           ///< UDP socket to write to
 
-    void report_start(const string service, const string pdu);
-    void report_add(string field, string val);
-    void report_add(string field, uint8_t val);
-    void report_add(string field, uint16_t val);
-    void report_add(string field, uint32_t val);
-    void report_add(string field, uint64_t val);
-    void report_add(string field, double val);
-    void report_add(string field, vector<uint8_t> vec);
-    void report_add_array(string name, vector<tuple<string, uint64_t>> & infos);
-    void report_add_compressed(string field, const unsigned char * binary_data, uint16_t data_len);
+    void report_start(const std::string service, const std::string pdu);
+    void report_add(std::string field, std::string val);
+    void report_add(std::string field, uint8_t val);
+    void report_add(std::string field, uint16_t val);
+    void report_add(std::string field, uint32_t val);
+    void report_add(std::string field, uint64_t val);
+    void report_add(std::string field, double val);
+    void report_add(std::string field, std::vector<uint8_t> vec);
+    void report_add_array(std::string name, std::vector<std::tuple<std::string, uint64_t>> & infos);
+    void report_add_compressed(std::string field, const unsigned char * binary_data, uint16_t data_len);
     void report_send();
     
 private:
     // 9.4.4.3.2 Normal training sequence
-    const vector<uint8_t> normal_training_sequence1       = {1,1,0,1,0,0,0,0,1,1,1,0,1,0,0,1,1,1,0,1,0,0}; // n1..n22
-    const vector<uint8_t> normal_training_sequence2       = {0,1,1,1,1,0,1,0,0,1,0,0,0,0,1,1,0,1,1,1,1,0}; // p1..p22
-    const vector<uint8_t> normal_training_sequence3_begin = {0,0,0,1,1,0,1,0,1,1,0,1};                     // q11..q22
-    const vector<uint8_t> normal_training_sequence3_end   = {1,0,1,1,0,1,1,1,0,0};                         // q1..q10
+    const std::vector<uint8_t> normal_training_sequence1       = {1,1,0,1,0,0,0,0,1,1,1,0,1,0,0,1,1,1,0,1,0,0}; // n1..n22
+    const std::vector<uint8_t> normal_training_sequence2       = {0,1,1,1,1,0,1,0,0,1,0,0,0,0,1,1,0,1,1,1,1,0}; // p1..p22
+    const std::vector<uint8_t> normal_training_sequence3_begin = {0,0,0,1,1,0,1,0,1,1,0,1};                     // q11..q22
+    const std::vector<uint8_t> normal_training_sequence3_end   = {1,0,1,1,0,1,1,1,0,0};                         // q1..q10
 
     // 9.4.4.3.4 Synchronisation training sequence
-    const vector<uint8_t> synchronization_training_sequence = {1,1,0,0,0,0,0,1,1,0,0,1,1,1,0,0,1,1,1,0,1,0,0,1,1,1,0,0,0,0,0,1,1,0,0,1,1,1}; // y1..y38
+    const std::vector<uint8_t> synchronization_training_sequence = {1,1,0,0,0,0,0,1,1,0,0,1,1,1,0,0,1,1,1,0,1,0,0,1,1,1,0,0,0,0,0,1,1,0,0,1,1,1}; // y1..y38
 };
 
 /** @} */

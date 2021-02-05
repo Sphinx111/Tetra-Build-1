@@ -69,7 +69,7 @@ tetra_dl::tetra_dl(int debug_level, bool remove_fill_bit_flag)
      *
      */
 
-    vector<int> polynomials;
+    std::vector<int> polynomials;
     int constraint = 6;
 
     polynomials.push_back(0b10011);
@@ -165,7 +165,7 @@ int tetra_dl::rx_symbol(uint8_t sym)
 
 void tetra_dl::print_data()
 {
-    string txt = "";
+    std::string txt = "";
     for (int i = 0; i < 12; i++) txt += g_frame_data[i] == 0 ? "0" : "1";
 
     txt += " ";

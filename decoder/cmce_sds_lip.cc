@@ -8,7 +8,7 @@
  *
  */
 
-void tetra_dl::cmce_sds_service_location_information_protocol(vector<uint8_t> pdu)
+void tetra_dl::cmce_sds_service_location_information_protocol(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -44,7 +44,7 @@ void tetra_dl::cmce_sds_service_location_information_protocol(vector<uint8_t> pd
  *
  */
 
-void tetra_dl::cmce_sds_lip_parse_extended_message(vector<uint8_t> pdu)
+void tetra_dl::cmce_sds_lip_parse_extended_message(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -171,9 +171,9 @@ static double utils_decode_lip_horizontal_velocity(uint8_t val)
  *
  */
 
-static string utils_decode_lip_direction_of_travel(uint8_t val)
+static std::string utils_decode_lip_direction_of_travel(uint8_t val)
 {
-    const string directions[] = {
+    const std::string directions[] = {
         "0 N",   "22.5 NNE",  "45 NE",  "67.5 ENE",
         "90 E",  "112.5 ESE", "135 SE", "157.5 SSE",
         "180 S", "202.5 SSW", "225 SW", "247.5 WSW",
@@ -188,9 +188,9 @@ static string utils_decode_lip_direction_of_travel(uint8_t val)
  *
  */
 
-static string utils_decode_lip_position_error(uint8_t val)
+static std::string utils_decode_lip_position_error(uint8_t val)
 {
-    const string pos_error[] = {
+    const std::string pos_error[] = {
         "< 2 m", "< 20 m", "< 200 m", "< 2 km", "< 20 km", "<= 200 km", "> 200 km", "unknown"
     };
 
@@ -202,7 +202,7 @@ static string utils_decode_lip_position_error(uint8_t val)
  *
  */
 
-void tetra_dl::cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu)
+void tetra_dl::cmce_sds_lip_parse_short_location_report(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -210,7 +210,7 @@ void tetra_dl::cmce_sds_lip_parse_short_location_report(vector<uint8_t> pdu)
         fflush(stdout);
     }
 
-    static const size_t MIN_SIZE = 68;
+    static const std::size_t MIN_SIZE = 68;
 
     if (pdu.size() >= MIN_SIZE)
     {

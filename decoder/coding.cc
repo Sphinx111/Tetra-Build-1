@@ -24,11 +24,11 @@
  *
  */
 
-vector<uint8_t> tetra_dl::dec_descramble(vector<uint8_t> data, int len, uint32_t scrambling_code) // OK
+std::vector<uint8_t> tetra_dl::dec_descramble(std::vector<uint8_t> data, int len, uint32_t scrambling_code) // OK
 {
     const uint8_t poly[14] = {32, 26, 23, 22, 16, 12, 11, 10, 8, 7, 5, 4, 2, 1}; // Feedback polynomial - see 8.2.5.2 (8.39)
 
-    vector<uint8_t> res;
+    std::vector<uint8_t> res;
 
     uint32_t lfsr = scrambling_code;                                            // linear feedback shift register initialization (=0 + 3 for BSCH, calculated from Color code ch 19 otherwise)
     for (int i = 0; i < len; i++)
@@ -52,9 +52,9 @@ vector<uint8_t> tetra_dl::dec_descramble(vector<uint8_t> data, int len, uint32_t
  *
  */
 
-vector<uint8_t> tetra_dl::dec_deinterleave(vector<uint8_t> data, uint32_t K, uint32_t a)
+std::vector<uint8_t> tetra_dl::dec_deinterleave(std::vector<uint8_t> data, uint32_t K, uint32_t a)
 {
-    vector<uint8_t> res(K, 0);                                                  // output vector is size K
+    std::vector<uint8_t> res(K, 0);                                             // output vector is size K
 
     for (unsigned int idx = 1; idx <= K; idx++)
     {
@@ -70,10 +70,10 @@ vector<uint8_t> tetra_dl::dec_deinterleave(vector<uint8_t> data, uint32_t K, uin
  *
  */
 
-vector<uint8_t> tetra_dl::dec_depuncture23(vector<uint8_t> data, uint32_t len)
+std::vector<uint8_t> tetra_dl::dec_depuncture23(std::vector<uint8_t> data, uint32_t len)
 {
     const uint8_t P[] = {0, 1, 2, 5};                                           // 8.2.3.1.3 - P[1..t]
-    vector<uint8_t> res(4 * len * 2 / 3, 2);                                    // 8.2.3.1.2 with flag 2 for erase bit in Viterbi routine
+    std::vector<uint8_t> res(4 * len * 2 / 3, 2);                               // 8.2.3.1.2 with flag 2 for erase bit in Viterbi routine
 
     uint8_t t = 3;                                                              // 8.2.3.1.3
     uint8_t period = 8;                                                         // 8.2.3.1.2
@@ -93,17 +93,17 @@ vector<uint8_t> tetra_dl::dec_depuncture23(vector<uint8_t> data, uint32_t len)
  *
  */
 
-vector<uint8_t> tetra_dl::dec_viterbi_decode16_14(vector<uint8_t> data)
+std::vector<uint8_t> tetra_dl::dec_viterbi_decode16_14(std::vector<uint8_t> data)
 {
-    string s_in = "";
+    std::string s_in = "";
     for (unsigned int i = 0; i < data.size(); i++)
     {
         s_in += (char)(data[i] + '0');
     }
 
-    string s_out = viterbi_codec16_14->Decode(s_in);
+    std::string s_out = viterbi_codec16_14->Decode(s_in);
 
-    vector<uint8_t> res;
+    std::vector<uint8_t> res;
 
     for (unsigned i = 0; i < s_out.size(); i++)
     {
@@ -120,10 +120,10 @@ vector<uint8_t> tetra_dl::dec_viterbi_decode16_14(vector<uint8_t> data)
  *
  */
 
-vector<uint8_t> tetra_dl::dec_reed_muller_3014_decode(vector<uint8_t> data)
+std::vector<uint8_t> tetra_dl::dec_reed_muller_3014_decode(std::vector<uint8_t> data)
 {
     uint8_t q[5];
-    vector<uint8_t> res(14);
+    std::vector<uint8_t> res(14);
 
     q[0] = data[0]; 
     q[1] = (data[13 + 3] + data[13 + 5] + data[13 + 6] + data[13 + 7] + data[13 + 11]) % 2; 
@@ -243,7 +243,7 @@ vector<uint8_t> tetra_dl::dec_reed_muller_3014_decode(vector<uint8_t> data)
  *
  */
 
-int tetra_dl::check_crc16ccitt(vector<uint8_t> data, int len)
+int tetra_dl::check_crc16ccitt(std::vector<uint8_t> data, int len)
 {
     uint16_t crc = 0xFFFF;                                                      // CRC16-CCITT initial value
 

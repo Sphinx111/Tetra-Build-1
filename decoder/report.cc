@@ -32,7 +32,7 @@
  *
  */
 
-void tetra_dl::report_start(string service, string pdu)
+void tetra_dl::report_start(std::string service, std::string pdu)
 {
     //report_start(service.c_str(), pdu.c_str());
 
@@ -93,7 +93,7 @@ void tetra_dl::report_start(string service, string pdu)
  *
  */
 
-void tetra_dl::report_add(string field, string val)
+void tetra_dl::report_add(std::string field, std::string val)
 {
     rapidjson::Value key(field.c_str(), jdoc.GetAllocator());
     rapidjson::Value dat(val.c_str(),   jdoc.GetAllocator());;
@@ -106,7 +106,7 @@ void tetra_dl::report_add(string field, string val)
  *
  */
 
-void tetra_dl::report_add(string field, uint8_t val)
+void tetra_dl::report_add(std::string field, uint8_t val)
 {
     report_add(field, (uint64_t)val);
 }
@@ -115,17 +115,7 @@ void tetra_dl::report_add(string field, uint8_t val)
  * @brief Add integer data to report
  *
  */
-void tetra_dl::report_add(string field, uint16_t val)
-{
-    report_add(field, (uint64_t)val);
-}
-
-/**
- * @brief Add integer data to report
- *
- */
-
-void tetra_dl::report_add(string field, uint32_t val)
+void tetra_dl::report_add(std::string field, uint16_t val)
 {
     report_add(field, (uint64_t)val);
 }
@@ -135,7 +125,17 @@ void tetra_dl::report_add(string field, uint32_t val)
  *
  */
 
-void tetra_dl::report_add(string field, uint64_t val)
+void tetra_dl::report_add(std::string field, uint32_t val)
+{
+    report_add(field, (uint64_t)val);
+}
+
+/**
+ * @brief Add integer data to report
+ *
+ */
+
+void tetra_dl::report_add(std::string field, uint64_t val)
 {
     rapidjson::Value key(field.c_str(), jdoc.GetAllocator());
     rapidjson::Value dat(val);
@@ -148,7 +148,7 @@ void tetra_dl::report_add(string field, uint64_t val)
  *
  */
 
-void tetra_dl::report_add(string field, double val)
+void tetra_dl::report_add(std::string field, double val)
 {
     rapidjson::Value key(field.c_str(), jdoc.GetAllocator());
     rapidjson::Value dat(val);
@@ -162,13 +162,13 @@ void tetra_dl::report_add(string field, double val)
  *
  */
 
-void tetra_dl::report_add(string field, vector<uint8_t> vec)
+void tetra_dl::report_add(std::string field, std::vector<uint8_t> vec)
 {
-    string txt = "";
+    std::string txt = "";
     char buf[32] = "";
 
     uint32_t pos = 0;
-    for (size_t cnt = 0; cnt < vec.size() / 8; cnt++)
+    for (std::size_t cnt = 0; cnt < vec.size() / 8; cnt++)
     {
         uint8_t val = get_value(vec, pos, 8);
         pos += 8;
@@ -193,16 +193,16 @@ void tetra_dl::report_add(string field, vector<uint8_t> vec)
  *
  */
 
-void tetra_dl::report_add_array(string name, vector<tuple<string, uint64_t>> & infos)
+void tetra_dl::report_add_array(std::string name, std::vector<std::tuple<std::string, uint64_t>> & infos)
 {
     rapidjson::Value arr(rapidjson::kArrayType);                                                    
 
-    for (size_t cnt = 0; cnt < infos.size(); cnt++)
+    for (std::size_t cnt = 0; cnt < infos.size(); cnt++)
     {
         rapidjson::Value jobj;
         jobj.SetObject();
         
-        string field = std::get<0>(infos[cnt]);
+        std::string field = std::get<0>(infos[cnt]);
         uint64_t val = std::get<1>(infos[cnt]);
         
         jobj.AddMember(rapidjson::Value(field.c_str(), jdoc.GetAllocator()).Move(),                                                                                                                                                                                                  
@@ -223,7 +223,7 @@ void tetra_dl::report_add_array(string name, vector<tuple<string, uint64_t>> & i
  *
  */
 
-void tetra_dl::report_add_compressed(string field, const unsigned char * binary_data, uint16_t data_len)
+void tetra_dl::report_add_compressed(std::string field, const unsigned char * binary_data, uint16_t data_len)
 {
     const int BUFSIZE = 2048;
 
@@ -256,7 +256,7 @@ void tetra_dl::report_send()
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     jdoc.Accept(writer);
 
-    string output(buffer.GetString());
+    std::string output(buffer.GetString());
 
     char eol = '\n';
     write(socketfd, output.c_str(), output.length() * sizeof(char));            // string doesn't contain newline

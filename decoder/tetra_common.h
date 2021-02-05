@@ -20,8 +20,6 @@
 #define TETRA_COMMON_H
 #include <cstdint>
 
-using namespace std;
-
 /**
  * @defgroup tetra_common TETRA common declarations
  *

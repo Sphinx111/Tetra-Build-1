@@ -24,7 +24,7 @@
  *
  */
 
-void tetra_dl::service_u_plane(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
+void tetra_dl::service_u_plane(std::vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
 {
     if (g_debug_level >= 5)
     {
@@ -36,7 +36,7 @@ void tetra_dl::service_u_plane(vector<uint8_t> pdu, mac_logical_channel_t mac_lo
     {
         report_start("UPLANE", "TCH_S");
 
-        static const size_t MIN_SIZE = 432;
+        static const std::size_t MIN_SIZE = 432;
 
         if (pdu.size() >= MIN_SIZE)
         {

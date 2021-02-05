@@ -21,8 +21,6 @@
 #include <cstdarg>
 #include <string>
 
-using namespace std;
-
-string format_str(const char *fmt, ...);
+std::string format_str(const char *fmt, ...);
 
 #endif /* UTILS_H */

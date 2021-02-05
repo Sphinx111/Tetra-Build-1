@@ -21,13 +21,11 @@
 #include <cstdarg>
 #include <string>
 
-using namespace std;
-
 void scr_init(int line_length, int max_bottom_lines);
-void scr_update(string info);
+void scr_update(std::string info);
 void scr_clear();
-void scr_print_infos(string msg);
-void scr_print_sds(string msg);
+void scr_print_infos(std::string msg);
+void scr_print_sds(std::string msg);
 
 #define WITH_NCURSES
 

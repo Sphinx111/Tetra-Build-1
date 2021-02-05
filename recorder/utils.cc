@@ -19,10 +19,10 @@
 #include "utils.h"
 
 
-string format_str(const char *fmt, ...)
+std::string format_str(const char *fmt, ...)
 {
     // variadic format function to string
-    const size_t BUF_LEN = 8192;
+    const std::size_t BUF_LEN = 8192;
     char buf[BUF_LEN];
 
     va_list args;
@@ -32,5 +32,5 @@ string format_str(const char *fmt, ...)
 
     va_end(args);
 
-    return string(buf);
+    return std::string(buf);
 }

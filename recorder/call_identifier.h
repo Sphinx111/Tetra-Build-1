@@ -23,8 +23,6 @@
 #include <vector>
 #include <audio_decoder.h>
 
-using namespace std;
-
 /**
  * @brief Call identifier class
  *
@@ -45,10 +43,10 @@ public:
     static constexpr double TIMEOUT_S         = 30.0;                           ///< maximum timeout between messages TODO handle Txxx timers
     static constexpr double TIMEOUT_RELEASE_S = 120.0;                          ///< maximum timeout before releasing the usage_marker (garbage collector)
 
-    string m_file_name[MAX_USAGES];                                             ///< File names to use for usage marker/cid
+    std::string m_file_name[MAX_USAGES];                                        ///< File names to use for usage marker/cid
     time_t m_last_traffic_time[MAX_USAGES];                                     ///< Last traffic seen to know when to start new record
 
-    vector<ssi_t> m_ssi;                                                        ///< List of SSI associated with this cid
+    std::vector<ssi_t> m_ssi;                                                   ///< List of SSI associated with this cid
 
     void clean_up();                                                            ///< Garbage collector release the traffic usage marker when timeout exceeds TIMEOUT_RELEASE_S
     void push_traffic(const char * data, uint32_t len);

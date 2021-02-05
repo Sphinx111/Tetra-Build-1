@@ -67,13 +67,13 @@ void scr_init(int line_length, int max_bottom_lines)
 }
 
 
-void scr_update(string info)
+void scr_update(std::string info)
 {
     // update middle and bottom window
     wclear(wn_bottom);
     box(wn_bottom, ACS_VLINE, ACS_HLINE);
 
-    string txt = info;
+    std::string txt = info;
     if ((int)txt.size() > window_line_length)
     {
         txt = txt.substr(0, window_line_length);
@@ -95,7 +95,7 @@ void scr_update(string info)
             cur_line = 1;
         }
 
-        string data = "";
+        std::string data = "";
 
         if (cid->m_data_received > 0.)
         {
@@ -112,7 +112,7 @@ void scr_update(string info)
                               cid->m_usage_marker);
         }
 
-        for (size_t idx = 0; idx < cid->m_ssi.size(); idx++)                    // print cid ssi
+        for (std::size_t idx = 0; idx < cid->m_ssi.size(); idx++)               // print cid ssi
         {
             data = data + format_str(" %08u", cid->m_ssi[idx].ssi);
         }
@@ -150,14 +150,14 @@ void scr_clear()
 }
 
 
-void scr_print_sds(string msg)
+void scr_print_sds(std::string msg)
 {
     wprintw(wn_sds, "%s\n", msg.c_str());
     wrefresh(wn_sds);
 }
 
 
-void scr_print_infos(string msg)
+void scr_print_infos(std::string msg)
 {
     // print informations to middle window
     wprintw(wn_infos, "%s\n", msg.c_str());
@@ -176,7 +176,7 @@ void scr_init(int line_length, int max_bottom_line)
 }
 
 
-void scr_update(string info)
+void scr_update(std::string info)
 {
     printf("%s\n", info.c_str());
 
@@ -203,7 +203,7 @@ void scr_update(string info)
                       cid->m_usage_marker);
         }
 
-        for (size_t idx = 0; idx < cid->m_ssi.size(); idx++)       // print cid ssi
+        for (std::size_t idx = 0; idx < cid->m_ssi.size(); idx++)               // print cid ssi
         {
             printf(" %08u", cid->m_ssi[idx].ssi);
         }
@@ -219,13 +219,13 @@ void scr_clear()
 }
 
 
-void scr_print_sds(string msg)
+void scr_print_sds(std::string msg)
 {
     printf("%s\n", msg.c_str());
 }
 
 
-void scr_print_infos(string msg)
+void scr_print_infos(std::string msg)
 {
     printf("%s\n", msg.c_str());
 }

@@ -26,9 +26,9 @@ static int cur_burst_type;
  *
  */
 
-string tetra_dl::mac_logical_channel_name(int val)
+std::string tetra_dl::mac_logical_channel_name(int val)
 {
-    string ret = "";
+    std::string ret = "";
 
     switch (val)
     {
@@ -81,9 +81,9 @@ string tetra_dl::mac_logical_channel_name(int val)
  *
  */
 
-string tetra_dl::burst_name(int val)                                                 ///< Return burst name
+std::string tetra_dl::burst_name(int val)
 {
-    string ret = "";
+    std::string ret = "";
 
     switch (val)
     {
@@ -128,7 +128,7 @@ string tetra_dl::burst_name(int val)                                            
  *
  */
 
-void tetra_dl::service_lower_mac(vector<uint8_t> data, int burst_type)
+void tetra_dl::service_lower_mac(std::vector<uint8_t> data, int burst_type)
 {
     if (g_debug_level >= 5)
     {
@@ -156,9 +156,9 @@ void tetra_dl::service_lower_mac(vector<uint8_t> data, int burst_type)
     //printf("BURST %d\n", burst_type);
     second_slot_stolen_flag = 0;                                                // stolen flag lifetime is NDB_SF burst life only
 
-    vector<uint8_t> bkn1;                                                       // busrt block BKN1
-    vector<uint8_t> bkn2;                                                       // burst block BKN2
-    vector<uint8_t> bbk;                                                        // burst block BBK
+    std::vector<uint8_t> bkn1;                                                  // busrt block BKN1
+    std::vector<uint8_t> bkn2;                                                  // burst block BKN2
+    std::vector<uint8_t> bbk;                                                   // burst block BBK
 
     if (burst_type == SB)                                                       // synchronisation burst
     {
@@ -327,7 +327,7 @@ void tetra_dl::service_lower_mac(vector<uint8_t> data, int burst_type)
  *   unkown = 9 *
  */
 
-void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac_logical_channel)
+void tetra_dl::service_upper_mac(std::vector<uint8_t> data, mac_logical_channel_t mac_logical_channel)
 {
     if (g_debug_level >= 5)
     {
@@ -335,11 +335,11 @@ void tetra_dl::service_upper_mac(vector<uint8_t> data, mac_logical_channel_t mac
         fflush(stdout);
     }
 
-    string txt = "?";
+    std::string txt = "?";
     uint8_t pdu_type;
     uint8_t sub_type;
     uint8_t broadcast_type;
-    vector<uint8_t> tm_sdu;
+    std::vector<uint8_t> tm_sdu;
     bool b_send_tm_sdu_to_llc = true;
     bool b_fragmented_packet  = false;
 
@@ -508,7 +508,7 @@ static uint32_t decode_length(uint32_t val)
  *
  */
 
-void tetra_dl::mac_pdu_process_aach(vector<uint8_t> pdu)
+void tetra_dl::mac_pdu_process_aach(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -581,9 +581,9 @@ void tetra_dl::mac_pdu_process_aach(vector<uint8_t> pdu)
  *
  */
 
-vector<uint8_t> tetra_dl::mac_remove_fill_bits(const vector<uint8_t> pdu)
+std::vector<uint8_t> tetra_dl::mac_remove_fill_bits(const std::vector<uint8_t> pdu)
 {
-    vector<uint8_t> ret = pdu;
+    std::vector<uint8_t> ret = pdu;
 
     if (g_remove_fill_bit_flag)
     {
@@ -627,7 +627,7 @@ vector<uint8_t> tetra_dl::mac_remove_fill_bits(const vector<uint8_t> pdu)
  *
  */
 
-vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> mac_pdu, mac_logical_channel_t mac_logical_channel, bool * b_fragmented_packet)
+std::vector<uint8_t> tetra_dl::mac_pdu_process_ressource(std::vector<uint8_t> mac_pdu, mac_logical_channel_t mac_logical_channel, bool * b_fragmented_packet)
 {
     if (g_debug_level >= 5)
     {
@@ -635,7 +635,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> mac_pdu, mac
         fflush(stdout);
     }
 
-    vector<uint8_t> pdu = mac_pdu;
+    std::vector<uint8_t> pdu = mac_pdu;
 
     *b_fragmented_packet = false;
 
@@ -671,7 +671,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> mac_pdu, mac
 
     if (mac_address.address_type == 0b000)                                      // NULL pdu, stop processing here
     {
-        vector<uint8_t> null_pdu;
+        std::vector<uint8_t> null_pdu;
         return null_pdu;
     }
     else
@@ -805,7 +805,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> mac_pdu, mac
         }
     }
 
-    vector<uint8_t> sdu;
+    std::vector<uint8_t> sdu;
 
     // in case of NULL pdu, the length shall be 16 bits
     int32_t sdu_length = (int32_t)decode_length(length) * 8 - (int32_t)pos;
@@ -840,7 +840,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_ressource(vector<uint8_t> mac_pdu, mac
  *
  */
 
-void tetra_dl::mac_pdu_process_mac_frag(vector<uint8_t> mac_pdu)
+void tetra_dl::mac_pdu_process_mac_frag(std::vector<uint8_t> mac_pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -848,7 +848,7 @@ void tetra_dl::mac_pdu_process_mac_frag(vector<uint8_t> mac_pdu)
         fflush(stdout);
     }
 
-    vector<uint8_t> pdu = mac_pdu;
+    std::vector<uint8_t> pdu = mac_pdu;
 
     uint32_t pos = 3;                                                           // MAC PDU type and subtype (MAC-FRAG)
 
@@ -860,7 +860,7 @@ void tetra_dl::mac_pdu_process_mac_frag(vector<uint8_t> mac_pdu)
         pdu = mac_remove_fill_bits(pdu);
     }
 
-    vector<uint8_t> sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos));
+    std::vector<uint8_t> sdu = vector_extract(pdu, pos, utils_substract(pdu.size(), pos));
 
     mac_defrag->append(sdu, mac_address);
 }
@@ -875,7 +875,7 @@ void tetra_dl::mac_pdu_process_mac_frag(vector<uint8_t> mac_pdu)
  *
  */
 
-vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(vector<uint8_t> mac_pdu)
+std::vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(std::vector<uint8_t> mac_pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -883,7 +883,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(vector<uint8_t> mac_pdu)
         fflush(stdout);
     }
 
-    vector<uint8_t> pdu = mac_pdu;
+    std::vector<uint8_t> pdu = mac_pdu;
 
     uint32_t pos = 3;                                                           // MAC PDU type and subtype (MAC-END)
 
@@ -902,7 +902,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(vector<uint8_t> mac_pdu)
 
     if ((val < 0b000010) || (val > 0b100010))                                   // reserved
     {
-        vector<uint8_t> null_pdu;
+        std::vector<uint8_t> null_pdu;
         return null_pdu;
     }
 
@@ -943,7 +943,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(vector<uint8_t> mac_pdu)
         }
     }
 
-    vector<uint8_t> sdu;
+    std::vector<uint8_t> sdu;
 
     mac_defrag->append(vector_extract(pdu, pos, utils_substract(pdu.size(), pos)), mac_address);
     sdu = mac_defrag->get_sdu();
@@ -957,7 +957,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(vector<uint8_t> mac_pdu)
  *
  */
 
-vector<uint8_t> tetra_dl::mac_pdu_process_sysinfo(vector<uint8_t> pdu)
+std::vector<uint8_t> tetra_dl::mac_pdu_process_sysinfo(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -965,9 +965,9 @@ vector<uint8_t> tetra_dl::mac_pdu_process_sysinfo(vector<uint8_t> pdu)
         fflush(stdout);
     }
 
-    vector<uint8_t> sdu;
+    std::vector<uint8_t> sdu;
 
-    static const size_t MIN_SIZE = 82;
+    static const std::size_t MIN_SIZE = 82;
 
     if (pdu.size() >= MIN_SIZE)
     {
@@ -1028,7 +1028,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_sysinfo(vector<uint8_t> pdu)
  *
  */
 
-vector<uint8_t> tetra_dl::mac_pdu_process_d_block(vector<uint8_t> mac_pdu)
+std::vector<uint8_t> tetra_dl::mac_pdu_process_d_block(std::vector<uint8_t> mac_pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -1036,10 +1036,10 @@ vector<uint8_t> tetra_dl::mac_pdu_process_d_block(vector<uint8_t> mac_pdu)
         fflush(stdout);
     }
 
-    vector<uint8_t> pdu = mac_pdu;
-    vector<uint8_t> sdu;
+    std::vector<uint8_t> pdu = mac_pdu;
+    std::vector<uint8_t> sdu;
 
-    static const size_t MIN_SIZE = 18;
+    static const std::size_t MIN_SIZE = 18;
 
     if (pdu.size() >= MIN_SIZE)
     {
@@ -1080,7 +1080,7 @@ vector<uint8_t> tetra_dl::mac_pdu_process_d_block(vector<uint8_t> mac_pdu)
  *
  */
 
-vector<uint8_t> tetra_dl::mac_pdu_process_sync(vector<uint8_t> pdu)
+std::vector<uint8_t> tetra_dl::mac_pdu_process_sync(std::vector<uint8_t> pdu)
 {
     if (g_debug_level >= 5)
     {
@@ -1088,9 +1088,9 @@ vector<uint8_t> tetra_dl::mac_pdu_process_sync(vector<uint8_t> pdu)
         fflush(stdout);
     }
 
-    vector<uint8_t> sdu;
+    std::vector<uint8_t> sdu;
 
-    static const size_t MIN_SIZE = 60;
+    static const std::size_t MIN_SIZE = 60;
 
     if (pdu.size() >= MIN_SIZE)
     {

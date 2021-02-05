@@ -24,7 +24,7 @@
  *
  */
 
-void tetra_dl::service_sndcp(vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
+void tetra_dl::service_sndcp(std::vector<uint8_t> pdu, mac_logical_channel_t mac_logical_channel)
 {
     if (g_debug_level >= 5)
     {

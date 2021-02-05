@@ -21,8 +21,6 @@
 #include <cstdint>
 #include <string>
 
-using namespace::std;
-
 /**
  * @brief Short Subscriber Identity structure with last seen time for clean up
  *
@@ -38,6 +36,6 @@ class call_identifier_t;                                                        
 void cid_init(int raw_format_flag);
 call_identifier_t * get_cid(int index);
 void cid_clear();
-void cid_parse_pdu(string data, FILE * fd_log);
+void cid_parse_pdu(std::string data, FILE * fd_log);
 
 #endif /* CID_H */

@@ -113,6 +113,7 @@ public:
     int check_crc16ccitt(std::vector<uint8_t> data, int len);
 
     // MAC
+    uint8_t       usage_marker_encryption_mode[64];                             ///< usage marker encryption mode for u-plane (MAC TRAFFIC)
     mac_defrag_t  * mac_defrag;                                                 ///< MAC defragmenter class
     mac_state_t   mac_state;                                                    ///< Current MAC state (from ACCESS-ASSIGN PDU)
     mac_address_t mac_address;                                                  ///< Current MAc address (from MAC-RESOURCE PDU)

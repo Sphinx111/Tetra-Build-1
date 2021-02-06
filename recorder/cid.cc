@@ -331,14 +331,16 @@ void cid_parse_pdu(std::string data, FILE * fd_log)
     std::string   pdu;
     uint8_t  usage_marker;
     uint8_t  downlink_usage_marker;
+    uint8_t  encryption_mode;
     uint32_t ssi;
 
     bool b_valid = true;                                                        // check if the pdu is valid
 
-    b_valid = b_valid && jparser->read("service",      &service);
-    b_valid = b_valid && jparser->read("pdu",          &pdu);
-    b_valid = b_valid && jparser->read("usage marker", &usage_marker);
-    b_valid = b_valid && jparser->read("ssi",          &ssi);
+    b_valid = b_valid && jparser->read("service",         &service);
+    b_valid = b_valid && jparser->read("pdu",             &pdu);
+    b_valid = b_valid && jparser->read("usage marker",    &usage_marker);
+    b_valid = b_valid && jparser->read("encryption mode", &encryption_mode);
+    b_valid = b_valid && jparser->read("ssi",             &ssi);
 
     if (!b_valid)                                                               // invalid Json text, stop processing here
     {
@@ -358,11 +360,12 @@ void cid_parse_pdu(std::string data, FILE * fd_log)
         uint64_t zlib_comp_size;
         std::string frame;
         b_valid = jparser->read("downlink usage marker", &downlink_usage_marker); // may differ from usage marker
+        b_valid = b_valid && jparser->read("encryption mode", &encryption_mode);
         b_valid = b_valid && jparser->read("uzsize", &zlib_uncomp_size);          // uncompressed frame length 2 * 690 + 1 bytes
         b_valid = b_valid && jparser->read("zsize",  &zlib_comp_size);            // compressed frame length (before B64 since B64 add overhead)
         b_valid = b_valid && jparser->read("frame",  &frame);                     // zlib + B64 frame
 
-        if (b_valid)                                                            // we can process current speech frame
+        if (b_valid && (encryption_mode == 0))                                  // we can process current speech frame
         {
             const int BUFSIZE = 4096;
 

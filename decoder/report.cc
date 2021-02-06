@@ -48,8 +48,9 @@ void tetra_dl::report_start(std::string service, std::string pdu)
     // TODO improve SSI/USSI/EVENT label handling
     // only SSI is used for now, it is not always relevant
 
-    report_add("ssi",          mac_address.ssi);
-    report_add("usage marker", mac_address.usage_marker);
+    report_add("ssi",             mac_address.ssi);
+    report_add("usage marker",    mac_address.usage_marker);
+    report_add("encryption mode", mac_address.encryption_mode);
     
     report_add("address_type", mac_address.address_type);
 

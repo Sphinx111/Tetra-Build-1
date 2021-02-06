@@ -97,6 +97,7 @@ struct tetra_cell_infos_t {
 struct mac_address_t {
     uint8_t  address_type;
     uint8_t  event_label;
+    uint8_t  encryption_mode;
     uint8_t  usage_marker;
     uint8_t  stolen_flag;
     uint32_t smi;

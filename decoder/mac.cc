@@ -358,13 +358,13 @@ void tetra_dl::service_upper_mac(std::vector<uint8_t> data, mac_logical_channel_
         break;
 
     case TCH_S:                                                                 // (TMD) MAC-TRAFFIC PDU full slot
-        printf("TCH_S       : TN/FN/MN = %2d/%2d/%2d    dl_usage_marker=%d\n", g_time.tn, g_time.fn, g_time.mn, mac_state.downlink_usage_marker);
+        printf("TCH_S       : TN/FN/MN = %2d/%2d/%2d    dl_usage_marker=%d, encr=%u\n", g_time.tn, g_time.fn, g_time.mn, mac_state.downlink_usage_marker, usage_marker_encryption_mode[mac_state.downlink_usage_marker]);
         txt = "  tch_s";
         service_u_plane(data, TCH_S);
         break;
 
     case TCH:                                                                   // TCH half-slot TODO not taken into account for now
-        printf("TCH         : TN/FN/MN = %2d/%2d/%2d    dl_usage_marker=%d\n", g_time.tn, g_time.fn, g_time.mn, mac_state.downlink_usage_marker);
+        printf("TCH         : TN/FN/MN = %2d/%2d/%2d    dl_usage_marker=%d, encr=%u\n", g_time.tn, g_time.fn, g_time.mn, mac_state.downlink_usage_marker, usage_marker_encryption_mode[mac_state.downlink_usage_marker]);
         txt = "  tch";
         service_u_plane(data, TCH);
         break;
@@ -387,7 +387,6 @@ void tetra_dl::service_upper_mac(std::vector<uint8_t> data, mac_logical_channel_
                 // tm_sdu to be hold until MAC-END received
                 b_send_tm_sdu_to_llc = false;
             }
-
             break;
 
         case 0b01:                                                              // MAC-FRAG or MAC-END (TMA)
@@ -618,12 +617,20 @@ std::vector<uint8_t> tetra_dl::mac_remove_fill_bits(const std::vector<uint8_t> p
 }
 
 /**
- * @brief Process MAC-RESSOURCE and return TM-SDU (to LLC or MAC-FRAG) - see 21.4.3.1 table 329
+ * @brief Process MAC-RESSOURCE and return TM-SDU (to LLC or MAC-FRAG) - see 21.4.3.1 table 21.55
  *
  * Maximum length (table 21.56):
  *    SCH/F   239 bits
  *    SCH/HD  95 bits
  *    STCH    95 bits
+ *
+ * Note that when encryption is used:
+ *   - the channel allocation element (when present) shall be encrypted
+ *   - the address should also be encrypted (EN 300 392-7)
+ *   - when address is in two parts (ie. event label or usage marker assignements),
+ *     encryption applies independently on each part:
+ *       - the ssi should be encrypted
+ *       - event label and usage marker should not be encrypted (see EN 300 392-7 clause 4.2.6)
  *
  */
 
@@ -650,7 +657,8 @@ std::vector<uint8_t> tetra_dl::mac_pdu_process_ressource(std::vector<uint8_t> ma
     }
 
     pos += 1;                                                                   // position of grant
-    pos += 2;                                                                   // encryption mode
+    mac_address.encryption_mode = get_value(pdu, pos, 2);                       // encryption mode see EN 300 392-7
+    pos += 2;
     pos += 1;                                                                   // random access flag
 
     uint32_t length = get_value(pdu, pos, 6);                                   // length indication
@@ -669,6 +677,9 @@ std::vector<uint8_t> tetra_dl::mac_pdu_process_ressource(std::vector<uint8_t> ma
     mac_address.address_type = get_value(pdu, pos, 3);
     pos += 3;
 
+    // Note that address type may be encrypted, anyway event label and usage marker
+    // should not (see EN 300 392-7 clause 4.2.6)
+    
     if (mac_address.address_type == 0b000)                                      // NULL pdu, stop processing here
     {
         std::vector<uint8_t> null_pdu;
@@ -710,6 +721,8 @@ std::vector<uint8_t> tetra_dl::mac_pdu_process_ressource(std::vector<uint8_t> ma
             pos += 24;
             mac_address.usage_marker = get_value(pdu, pos, 6);
             pos += 6;
+
+            usage_marker_encryption_mode[mac_address.usage_marker] = mac_address.encryption_mode; // handle usage marker and encryption mode            
             break;
 
         case 0b111:                                                             // SMI + event label (event label assignment)
@@ -744,7 +757,7 @@ std::vector<uint8_t> tetra_dl::mac_pdu_process_ressource(std::vector<uint8_t> ma
         {
             uint8_t val;
 
-            // 21.5.2 channel allocation elements table 341
+            // 21.5.2 channel allocation elements table 21.82 (may be encrypted)
             pos += 2;                                                           // channel allocation type
             pos += 4;                                                           // timeslot assigned
             uint8_t ul_dl = get_value(pdu, pos, 2);
@@ -946,7 +959,16 @@ std::vector<uint8_t> tetra_dl::mac_pdu_process_mac_end(std::vector<uint8_t> mac_
     std::vector<uint8_t> sdu;
 
     mac_defrag->append(vector_extract(pdu, pos, utils_substract(pdu.size(), pos)), mac_address);
-    sdu = mac_defrag->get_sdu();
+
+    uint8_t encryption_mode;
+    uint8_t usage_marker;
+    sdu = mac_defrag->get_sdu(&encryption_mode, &usage_marker);
+    if (sdu.size() > 0)
+    {
+        usage_marker_encryption_mode[usage_marker] = encryption_mode;
+        mac_address.encryption_mode                = encryption_mode;           // FIXME it may be required to overwrite the last mac_address encryption state with last fragment encryption state of MAC
+    }
+    
     mac_defrag->stop();
 
     return sdu;
@@ -1053,7 +1075,8 @@ std::vector<uint8_t> tetra_dl::mac_pdu_process_d_block(std::vector<uint8_t> mac_
             pdu = mac_remove_fill_bits(pdu);
         }
 
-        pos += 2;                                                               // encryption mode
+        mac_address.encryption_mode = get_value(pdu, pos, 2);                   // encryption mode
+        pos += 2;
         mac_address.event_label = get_value(pdu, pos, 10);                      // address
         pos += 10;
         pos += 1;                                                               // immediate napping permission flag

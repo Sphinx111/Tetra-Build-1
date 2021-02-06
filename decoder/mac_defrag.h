@@ -44,7 +44,7 @@ public:
     uint8_t fragments_count;
     void start(const mac_address_t address, const tetra_time_t time_slot);
     void append(const std::vector<uint8_t> sdu, const mac_address_t address);
-    std::vector<uint8_t> get_sdu();
+    std::vector<uint8_t> get_sdu(uint8_t * encryption_mode, uint8_t * usage_marker);
     void stop();
 };
 

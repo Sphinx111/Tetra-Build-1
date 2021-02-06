@@ -3,6 +3,11 @@
 
 static const int DEBUG_VAL = 1;                                                 // start debug informations at level 1
 
+/**
+ * @brief Defragmenter constructor
+ *
+ */
+
 mac_defrag_t::mac_defrag_t(int debug_level)
 {
     g_debug_level = debug_level;
@@ -12,19 +17,26 @@ mac_defrag_t::mac_defrag_t(int debug_level)
     b_stopped       = true;
 }
 
+/**
+ * @brief Defragmenter destructor
+ *
+ */
+
 mac_defrag_t::~mac_defrag_t()
 {
     tm_sdu.clear();
 }
 
+/**
+ * @brief Start defragmenter, flush previous data if already in use
+ *        and report informations
+ *
+ * NOTE: total fragmented length is unknown
+ *
+ */
+
 void mac_defrag_t::start(const mac_address_t address, const tetra_time_t time_slot)
 {
-    // start the defragment, flush previous data if already in use
-    // and report informations
-    //
-    // NOTE: total fragmented length is unknown
-    //
-
     if (tm_sdu.size() > 0u)
     {
         if (g_debug_level >= DEBUG_VAL)
@@ -37,7 +49,7 @@ void mac_defrag_t::start(const mac_address_t address, const tetra_time_t time_sl
         }
     }
 
-    mac_address     = address;
+    mac_address     = address;                                                  // at this point, the defragmenter MAC address contains encryption mode
     start_time      = time_slot;
     fragments_count = 0;
 
@@ -55,10 +67,14 @@ void mac_defrag_t::start(const mac_address_t address, const tetra_time_t time_sl
     b_stopped = false;
 }
 
+/**
+ * @brief Append data to defragmenter
+ *
+ */
+
 void mac_defrag_t::append(const std::vector<uint8_t> sdu, const mac_address_t address)
 {
-    // we can't append if in stopped mode
-    if (b_stopped)
+    if (b_stopped)                                                              // we can't append if in stopped mode
     {
         if (g_debug_level >= DEBUG_VAL)
         {
@@ -81,44 +97,59 @@ void mac_defrag_t::append(const std::vector<uint8_t> sdu, const mac_address_t ad
 
         if (g_debug_level >= DEBUG_VAL)
         {
-            printf("  * DEFRAG APPEND   : SSI = %u - TN/FN/MN = %02u/%02u/%02u - fragment %d - length = sdu %u / tm_sdu %u\n",
+            printf("  * DEFRAG APPEND   : SSI = %u - TN/FN/MN = %02u/%02u/%02u - fragment %d - length = sdu %u / tm_sdu %u - encr = %u\n",
                    mac_address.ssi,
                    start_time.tn,
                    start_time.fn,
                    start_time.mn,
                    fragments_count,
                    (uint32_t)sdu.size(),
-                   (uint32_t)tm_sdu.size());
+                   (uint32_t)tm_sdu.size(),
+                   mac_address.encryption_mode
+                );
         }
     }
 }
 
-std::vector<uint8_t> mac_defrag_t::get_sdu()
+/**
+ * @brief Check SDU validity and return it
+ *
+ */
+
+std::vector<uint8_t> mac_defrag_t::get_sdu(uint8_t * encryption_mode, uint8_t * usage_marker)
 {
-    // check SDU validity and return it
     std::vector<uint8_t> ret;
 
-   if (b_stopped)
-   {
-       if (g_debug_level >= DEBUG_VAL)
-       {
-           printf("  * DEFRAG END      : FAILED SSI = %u - TN/FN/MN = %02u/%02u/%02u - fragment %d - length = %u\n",
-                  mac_address.ssi,
-                  start_time.tn,
-                  start_time.fn,
-                  start_time.mn,
-                  fragments_count,
-                  (uint32_t)tm_sdu.size());
-       }
-   }
-   else
-   {
-       // FIXME add check
-       ret = tm_sdu;
-   }
+    if (b_stopped)
+    {
+        if (g_debug_level >= DEBUG_VAL)
+        {
+            printf("  * DEFRAG END      : FAILED SSI = %u - TN/FN/MN = %02u/%02u/%02u - fragment %d - length = %u - encr = %u\n",
+                   mac_address.ssi,
+                   start_time.tn,
+                   start_time.fn,
+                   start_time.mn,
+                   fragments_count,
+                   (uint32_t)tm_sdu.size(),
+                   mac_address.encryption_mode
+                );
+        }
+    }
+    else
+    {
+        // FIXME add check
+        *encryption_mode = mac_address.encryption_mode;
+        *usage_marker    = mac_address.usage_marker;
+        ret = tm_sdu;
+    }
 
     return ret;
 }
+
+/**
+ * @brief Stop defragmenter
+ *
+ */
 
 void mac_defrag_t::stop()
 {

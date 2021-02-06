@@ -79,6 +79,11 @@ tetra_dl::tetra_dl(int debug_level, bool remove_fill_bit_flag)
     viterbi_codec16_14 = new ViterbiCodec(constraint, polynomials);
 
     mac_defrag = new mac_defrag_t(g_debug_level);
+
+    for (uint8_t idx = 0; idx < 64; idx++)
+    {
+        usage_marker_encryption_mode[idx] = 0;
+    }
 }
 
 /**

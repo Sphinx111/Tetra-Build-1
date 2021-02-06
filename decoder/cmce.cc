@@ -185,7 +185,7 @@ void tetra_dl::service_cmce(std::vector<uint8_t> pdu, mac_logical_channel_t mac_
 
     if (b_complete_print_flag)
     {
-        printf("service_cmce: TN/FN/MN = %2d/%2d/%2d  %-20s  len=%3lu  cid=%u  ssi=%8u  usage_marker=%2u\n",
+        printf("service_cmce: TN/FN/MN = %2d/%2d/%2d  %-20s  len=%3lu  cid=%u  ssi=%8u  usage_marker=%2u, encr=%u\n",
                g_time.tn,
                g_time.fn,
                g_time.mn,
@@ -193,7 +193,9 @@ void tetra_dl::service_cmce(std::vector<uint8_t> pdu, mac_logical_channel_t mac_
                pdu.size(),
                cid,
                mac_address.ssi,
-               mac_address.usage_marker);
+               mac_address.usage_marker,
+               mac_address.encryption_mode
+            );
     }
     else
     {

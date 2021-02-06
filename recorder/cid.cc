@@ -418,8 +418,9 @@ void cid_parse_pdu(std::string data, FILE * fd_log)
                 scr_update(data);
             }
         }
-        else if ((!pdu.compare("D-SDS-DATA")) ||
-                 (!pdu.compare("D-STATUS")))                                    // SDS messages
+        else if (
+            ((!pdu.compare("D-SDS-DATA")) || (!pdu.compare("D-STATUS")))
+            && (encryption_mode == 0))                                          // SDS messages
         {
             std::string sds_msg;
             b_valid = jparser->read("infos", &sds_msg);
@@ -435,7 +436,7 @@ void cid_parse_pdu(std::string data, FILE * fd_log)
                 jparser->read("message reference", &msg_ref);
                 jparser->read("calling party ssi", &party_ssi);
                 jparser->read("protocol id", &protocol_id);
-                scr_print_sds(format_str("prot:%3u ssi:%6u calling:%6u ref:%3u  msg: '%s'", protocol_id, ssi, party_ssi, msg_ref, sds_msg.c_str()));
+                scr_print_sds(format_str("prot:%3u ssi:%6u calling:%6u ref:%3u encr:%2u msg: '%s'", protocol_id, ssi, party_ssi, msg_ref, encryption_mode, sds_msg.c_str()));
             }
             scr_update(data);                                                   // note that there is two lines printed for every message (for analyze, we provide full hexa + attempted decoded message with 8 bits charset)
         }

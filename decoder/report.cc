@@ -50,9 +50,73 @@ void tetra_dl::report_start(std::string service, std::string pdu)
 
     report_add("ssi",             mac_address.ssi);
     report_add("usage marker",    mac_address.usage_marker);
-    report_add("encryption mode", mac_address.encryption_mode);
-    
-    report_add("address_type", mac_address.address_type);
+    report_add("encryption mode", mac_address.encryption_mode);    
+    report_add("address_type",    mac_address.address_type);
+
+    switch (mac_address.address_type)
+    {
+    case 0b001:                                                                 // SSI
+        report_add("actual ssi", mac_address.ssi);
+        break;
+
+    case 0b011:                                                                 // USSI
+        report_add("ussi", mac_address.ussi);
+        break;
+
+    case 0b100:                                                                 // SMI
+        report_add("smi", mac_address.smi);
+        break;
+
+    case 0b010:                                                                 // event label
+        report_add("event label", mac_address.event_label);
+        break;
+
+    case 0b101:                                                                 // SSI + event label (event label assignment)
+        report_add("actual ssi", mac_address.ssi);
+        report_add("event label", mac_address.event_label);
+        break;
+
+    case 0b110:                                                                 // SSI + usage marker (usage marker assignment)
+        report_add("actual ssi", mac_address.ssi);
+        report_add("actual usage marker", mac_address.usage_marker);
+        break;
+
+    case 0b111:                                                                 // SMI + event label (event label assignment)
+        report_add("smi", mac_address.smi);
+        report_add("event label", mac_address.event_label);
+        break;
+    }
+}
+
+/**
+ * @brief Prepare Json report for U-PLANE message which differs from standard report:
+ *          - encryption mode handling mustn't be specified here since it is handled by MAC internal machine
+ *          - TODO check for other U-PLANE specific method (downlink usage marker may differ from current usage marker)
+ *
+ * Initialize Json object, add tetra common informations for U-PLANE.
+ * Must be ended by send.
+ *
+ */
+
+void tetra_dl::report_start_u_plane(std::string service, std::string pdu)
+{
+    //report_start(service.c_str(), pdu.c_str());
+
+    jdoc.SetObject();                                                           // create empty Json DOM
+
+    report_add("service", service);
+    report_add("pdu",     pdu);
+
+    report_add("tn", g_time.tn);
+    report_add("fn", g_time.fn);
+    report_add("mn", g_time.mn);
+
+    // TODO improve SSI/USSI/EVENT label handling
+    // only SSI is used for now, it is not always relevant
+
+    report_add("ssi",             mac_address.ssi);
+    report_add("usage marker",    mac_address.usage_marker);                    // TODO check if this is relevant for U-PLANE
+    report_add("address_type",    mac_address.address_type);
 
     switch (mac_address.address_type)
     {

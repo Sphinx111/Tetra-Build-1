@@ -38,7 +38,7 @@ void tetra_dl::service_u_plane(std::vector<uint8_t> pdu, mac_logical_channel_t m
 
     if (mac_logical_channel == TCH_S)                                           // speech frame
     {
-        report_start("UPLANE", "TCH_S");
+        report_start_u_plane("UPLANE", "TCH_S");
 
         static const std::size_t MIN_SIZE = 432;
 

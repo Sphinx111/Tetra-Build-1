@@ -184,6 +184,7 @@ public:
     int socketfd = 0;                                                           ///< UDP socket to write to
 
     void report_start(const std::string service, const std::string pdu);
+    void report_start_u_plane(const std::string service, const std::string pdu);
     void report_add(std::string field, std::string val);
     void report_add(std::string field, uint8_t val);
     void report_add(std::string field, uint16_t val);

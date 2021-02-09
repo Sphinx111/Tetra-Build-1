@@ -1,0 +1,3 @@
+[submodule "tetra-kit-player"]
+	path = tetra-kit-player
+	url = https://github.com/sonictruth/tetra-kit-player

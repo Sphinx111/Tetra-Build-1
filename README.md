@@ -60,7 +60,6 @@ Build
 
     Note: don't forget to run `make clean` and rebuild the decoder and recorder when the repositery is updated
 
-
 You will need:
 * gnuradio v3.7.14 and gnuradio-companion with rtl-sdr (works also with GnuRadio 3.7.11)
 * gcc
@@ -68,6 +67,7 @@ You will need:
 * zlib v1.2.11 (other versions may work)
 * sox for audio processing
 * ncurses (optional interface for the recorder. If you don't want it, set `#undef WITH_NCURSES` in file `recorder/window.h`)
+* node.js for `tetra-kit-player`
 
 Build decoder
 ```sh
@@ -174,6 +174,17 @@ Typical debug session is:
 5. go back to recorder folder and read the `log.txt` file
 
 Note that the `out.bits` file can be read by sq5bpf program `tetra-rx out.bits`.
+
+# `tetra-kit-player` from @dextor to listen voice in web browser
+
+- get [tetra-kit-player](https://github.com/sonictruth/tetra-kit-player) courtesy @dextor
+- copy it in the `parent folder` of tetra-kit (ie. the folder containing tetra-kit)
+- in `tetra-kit-player` folder, build the npm package `npm -i`
+- set the user data in `.env` file (login, password, link to recorder output folder, etc...)
+- in `tetra-kit` folder, as usual, start the `phy` the `decoder` and `recorder -a` to get raw audio output
+- in `tetra-kit-player` folder, start the npm server `npm start`
+- you now can listen/record audio in your web browser at address `http://localhost:8443`
+- enjoy !
 
 # Previous work
 

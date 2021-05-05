@@ -36,7 +36,9 @@
  *   2016-09-11  LT  0.0  First release
  *   2020-05-08  LT  0.1  Updated for Json input
  *   2020-07-19  LT  0.2  Added internal TETRA codec and raw file output format
- *   2020-12-14  Lt  0.3  Fixed zlib type mismatch for MacOS
+ *   2020-12-14  LT  0.3  Fixed zlib type mismatch for MacOS
+ *   2021-05-05  LT  0.4  Raw speech frame output is now the default, removed -a option, added -x option
+ *                        to get old behaviour (ie. don't process raw with internal speech codec).
  *
  * NOTES:
  *   - output log file is always generated, default name is 'log.txt'
@@ -126,15 +128,15 @@ int main(int argc, char * argv[])
     int program_mode     = STANDARD_MODE;
     int line_length      = 256;                                                 // default line length
     int max_bottom_lines = 20;                                                  // default bottom lines count
-    int raw_format_flag  = 0;
+    int raw_format_flag  = 1;
 
     int option;
-    while ((option = getopt(argc, argv, "ar:i:o:l:n:h")) != -1)
+    while ((option = getopt(argc, argv, "xr:i:o:l:n:h")) != -1)
     {
         switch (option)
         {
-        case 'a':
-            raw_format_flag = 1;
+        case 'x':
+            raw_format_flag = 0;
             break;
 
         case 'r':
@@ -161,7 +163,7 @@ int main(int argc, char * argv[])
         case 'h':
             printf("\nUsage: ./recorder [OPTIONS]\n\n"
                    "Options:\n"
-                   "  -a use raw output format with internal codec (experimental)\n"
+                   "  -x don't process raw speech output with internal codec\n"
                    "  -r <UDP socket> receiving Json data from decoder [default port is 42100]\n"
                    "  -i <file> replay data from Json text file instead of UDP\n"
                    "  -o <file> to record Json data in different text file [default file name is 'log.txt'] (can be replayed with -i option)\n"

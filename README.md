@@ -55,13 +55,20 @@ $ cd recorder/wav/
 $ ./out2wav.sh
 ```
 
+Listen voice messages
+---------------------
+`tetra-kit-player` has been developped by @dextor to play voice messages recorded by `tetra-kit` directly within your web browser.
+
+Get [tetra-kit-player](https://github.com/sonictruth/tetra-kit-player).
+
+
 Build
 =====
 
     Note: don't forget to run `make clean` and rebuild the decoder and recorder when the repositery is updated
 
-You will need:
-* gnuradio v3.7.14 and gnuradio-companion with rtl-sdr (works also with GnuRadio 3.7.11)
+Prerequisites:
+* gnuradio >= v3.7.14 and gnuradio-companion with rtl-sdr (works also with GnuRadio 3.7.11)
 * gcc
 * rapidjson v1.1.0 (packages available in Ubuntu, Debian/Devuan and Slackware from SlackBuild.org)
 * zlib v1.2.11 (other versions may work)
@@ -69,47 +76,27 @@ You will need:
 * ncurses (optional interface for the recorder. If you don't want it, set `#undef WITH_NCURSES` in file `recorder/window.h`)
 * node.js for `tetra-kit-player`
 
-Build decoder
+Build project
 ```sh
-$ cd decoder
-$ make clean
-$ make
+$ ./build.sh
+or
+$ sh build.sh
 ```
-
-Build recorder with ncurses
-```sh
-$ cd recorder
-$ make clean
-$ make
-```
-
-Build recorder
-
-```sh
-$ cd recorder
-$ make clean
-$ make
-```
-
-Build speech codec (source code from ETSI example) [OPTIONAL see below]
-```sh
-$ cd codec
-$ make clean
-$ make
-$ cp cdecoder ../recorder/wav/
-$ cp sdecoder ../recorder/wav/
-```
-
-Internal speech codec is now available in `recorder` and `.raw` output files may
-be generated directly in `recorder/raw/` folder when using `-a` flag (experimental).
-Then use the script `raw2wav.sh` in folder `recorder/raw/` to generate `.wav` files.
-
 
 Physical layer
 ```sh
 $ cd phy
 $ gnuradio-companion pi4dqpsk_rx.grc
 ```
+
+The internal speech codec is now used by default, `.raw` output files are generated
+directly in `recorder/raw/` folder (`-a` option not required anymore).
+
+The script `raw2wav.sh` is used to convert it to wav file.
+
+
+Anyway, if you still want to use the external ETSI speech codecs
+with the script `out2wav.sh`, you can use `recorder` with `-x` flag.
 
 Usage
 =====
@@ -122,7 +109,7 @@ Open 3 shells in the 3 folders:
 Usage: recorder [OPTIONS]
 
 Options:
-  -a use raw output format with internal codec (experimental)
+  -x don't process raw speech output with internal codec
   -r <UDP socket> receiving Json data from decoder [default port is 42100]
   -i <file> replay data from Json text file instead of UDP
   -o <file> to record Json data in different text file [default file name is 'log.txt'] (can be replayed with -i option)

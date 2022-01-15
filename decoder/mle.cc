@@ -185,14 +185,14 @@ void tetra_dl::mle_process_d_nwrk_broadcast(std::vector<uint8_t> pdu)
         fflush(stdout);
     }
 
-    report_start("MLE", "D-NWRK-BROADCAST");
+    // report_start("MLE", "D-NWRK-BROADCAST");
 
     uint32_t pos = 3;                                                           // PDU type
 
-    report_add("cell re-select parameter", get_value(pdu, pos, 16));
+    // report_add("cell re-select parameter", get_value(pdu, pos, 16));
     pos += 16;
 
-    report_add("cell service level", get_value(pdu, pos, 2));
+    //report_add("cell service level", get_value(pdu, pos, 2));
     pos += 2;
 
     uint8_t o_flag = get_value(pdu, pos, 1);                                    // option flag
@@ -205,7 +205,7 @@ void tetra_dl::mle_process_d_nwrk_broadcast(std::vector<uint8_t> pdu)
         pos += 1;
         if (p_flag)
         {
-            report_add("tetra network time", get_value(pdu, pos, 48));
+            //report_add("tetra network time", get_value(pdu, pos, 48));
             pos += 48;
         }
 
@@ -215,7 +215,7 @@ void tetra_dl::mle_process_d_nwrk_broadcast(std::vector<uint8_t> pdu)
         {
             uint8_t neighbour_cells_count = get_value(pdu, pos, 3);
             pos += 3;
-            report_add("number of neighbour cells", neighbour_cells_count);
+            //report_add("number of neighbour cells", neighbour_cells_count);
 
             for (uint8_t cnt = 0; cnt < neighbour_cells_count; cnt++)
             {
@@ -224,12 +224,12 @@ void tetra_dl::mle_process_d_nwrk_broadcast(std::vector<uint8_t> pdu)
                 infos.clear();
                 pos = mle_parse_neighbour_cell_information(pdu, pos, infos);
 
-                report_add_array(format_str("cell %u", cnt), infos);
+                //report_add_array(format_str("cell %u", cnt), infos);
             }
         }
     }
 
-    report_send();
+    //report_send();
 }
 
 /**
@@ -358,7 +358,7 @@ void tetra_dl::mle_process_d_nwrk_broadcast_extension(std::vector<uint8_t> pdu)
         fflush(stdout);
     }
 
-    report_start("MLE", "D-NWRK-BROADCAST-EXTENSION");
+    // report_start("MLE", "D-NWRK-BROADCAST-EXTENSION");
 
     uint32_t pos = 3;                                                           // PDU type
 
@@ -374,7 +374,7 @@ void tetra_dl::mle_process_d_nwrk_broadcast_extension(std::vector<uint8_t> pdu)
         {
             uint8_t cnt = get_value(pdu, pos, 4);
 
-            report_add("number of channel classes", cnt);
+            // report_add("number of channel classes", cnt);
             pos += 4;
 
             // 18.5.5b Channel class
@@ -383,5 +383,5 @@ void tetra_dl::mle_process_d_nwrk_broadcast_extension(std::vector<uint8_t> pdu)
 
     }
 
-    report_send();
+    // report_send();
 }

@@ -27,6 +27,6 @@ void scr_clear();
 void scr_print_infos(std::string msg);
 void scr_print_sds(std::string msg);
 
-#define WITH_NCURSES
+#undef WITH_NCURSES
 
 #endif /* WINDOW_H */

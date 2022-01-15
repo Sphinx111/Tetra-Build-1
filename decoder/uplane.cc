@@ -76,12 +76,12 @@ void tetra_dl::service_u_plane(std::vector<uint8_t> pdu, mac_logical_channel_t m
 
             report_add("downlink usage marker", mac_state.downlink_usage_marker);                               // current usage marker
             report_add("encryption mode",       usage_marker_encryption_mode[mac_state.downlink_usage_marker]); // current encryption mode
-            report_add_compressed("frame", (const unsigned char *)speech_frame, 2 * 690);                       // actual binary frame 1380 bytes
+            // report_add_compressed("frame", (const unsigned char *)speech_frame, 2 * 690);                       // actual binary frame 1380 bytes
         }
         else
         {
-            report_add("invalid pdu size", (uint64_t)pdu.size());
-            report_add("pdu minimum size", (uint64_t)MIN_SIZE);
+            //report_add("invalid pdu size", (uint64_t)pdu.size());
+            //report_add("pdu minimum size", (uint64_t)MIN_SIZE);
         }
 
         report_send();

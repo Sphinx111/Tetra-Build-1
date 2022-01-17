@@ -50,8 +50,12 @@ void tetra_dl::report_start(std::string service, std::string pdu)
 
     report_add("ssi",             mac_address.ssi);
     report_add("usage marker",    mac_address.usage_marker);
-    report_add("encryption mode", mac_address.encryption_mode);    
+    report_add("encryption mode", mac_address.encryption_mode);
     report_add("address_type",    mac_address.address_type);
+
+    // Record system time message received
+    double t = static_cast<double> (time(NULL));
+    report_add("sysTime",         t);
 
     switch (mac_address.address_type)
     {
@@ -118,6 +122,11 @@ void tetra_dl::report_start_u_plane(std::string service, std::string pdu)
     report_add("usage marker",    mac_address.usage_marker);                    // TODO check if this is relevant for U-PLANE
     report_add("address_type",    mac_address.address_type);
 
+
+    // Record system time message received
+    double t = static_cast<double> (time(NULL));
+    report_add("sysTime",         t);
+    
     switch (mac_address.address_type)
     {
     case 0b001:                                                                 // SSI
@@ -165,6 +174,16 @@ void tetra_dl::report_add(std::string field, std::string val)
 
     jdoc.AddMember(key, dat, jdoc.GetAllocator());
 }
+
+/** custom override method for inserting Time in the report
+void tetra_dl::report_add(std::string field, std::time_t val)
+{
+    rapidjson::Value key(field.c_str(), jdoc.GetAllocator());
+    rapidjson::Value dat(val.c_str(),   jdoc.GetAllocator());
+
+    jdoc.AddMember(key, dat, jdoc.GetAllocator());
+}
+*/
 
 /**
  * @brief Add integer data to report
@@ -260,24 +279,24 @@ void tetra_dl::report_add(std::string field, std::vector<uint8_t> vec)
 
 void tetra_dl::report_add_array(std::string name, std::vector<std::tuple<std::string, uint64_t>> & infos)
 {
-    rapidjson::Value arr(rapidjson::kArrayType);                                                    
+    rapidjson::Value arr(rapidjson::kArrayType);
 
     for (std::size_t cnt = 0; cnt < infos.size(); cnt++)
     {
         rapidjson::Value jobj;
         jobj.SetObject();
-        
+
         std::string field = std::get<0>(infos[cnt]);
         uint64_t val = std::get<1>(infos[cnt]);
-        
-        jobj.AddMember(rapidjson::Value(field.c_str(), jdoc.GetAllocator()).Move(),                                                                                                                                                                                                  
-                       rapidjson::Value(val).Move(),                                                                                                                                                                                                                            
-                       jdoc.GetAllocator());                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                                                                
-        arr.PushBack(jobj, jdoc.GetAllocator());                                                                                                                                                                                                                                
-    }                                                                                                                                                                                                                                                                           
-                                                                                                                                                                                                                                                                                
-    jdoc.AddMember(rapidjson::Value(name.c_str(), jdoc.GetAllocator()), arr, jdoc.GetAllocator()); 
+
+        jobj.AddMember(rapidjson::Value(field.c_str(), jdoc.GetAllocator()).Move(),
+                       rapidjson::Value(val).Move(),
+                       jdoc.GetAllocator());
+
+        arr.PushBack(jobj, jdoc.GetAllocator());
+    }
+
+    jdoc.AddMember(rapidjson::Value(name.c_str(), jdoc.GetAllocator()), arr, jdoc.GetAllocator());
 }
 
 /**
@@ -332,4 +351,3 @@ void tetra_dl::report_send()
         printf("%s\n", output.c_str());
     }
 }
-

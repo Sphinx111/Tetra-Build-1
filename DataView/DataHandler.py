@@ -22,7 +22,7 @@ import time
 from threading import Thread
 import itertools
 import databaseHandler
-import networkx as nx
+# import networkx as nx
 
 localIP = "127.0.0.1"
 localPort = 42100
@@ -36,7 +36,9 @@ radiosDict = {}
 callsList = []
 sessionsList = []
 
-G = nx.Graph()
+db = databaseHandler.main()
+
+# G = nx.Graph()
 
 print("socket created and ready")
 
@@ -195,4 +197,4 @@ def find_active_call(testRadio, testTime):
 
 
 time.sleep(20)
-G.add_nodes_from(callsList)
+# G.add_nodes_from(callsList)

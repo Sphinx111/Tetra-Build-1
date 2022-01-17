@@ -27,19 +27,19 @@ def main():
     sql_create_radios_table = """ CREATE TABLE IF NOT EXISTS radios (
                                     ssid integer PRIMARY_KEY,
                                     short_id text,
+                                    calls_id integer,
                                     lastSeen timestamp
                                     channel_nums integer,
                                     FOREIGN KEY (calls_id)
-                                        REFERENCES calls(id),
+                                        REFERENCES calls(id)
                                 );"""
 
     sql_create_calls_table = """ CREATE TABLE IF NOT EXISTS calls (
                                     id integer PRIMARY_KEY,
                                     isEmergency integer,
+                                    sessions_id integer,
                                     start_time timestamp,
                                     end_time timestamp,
-                                    FOREGIN KEY (radio_id)
-                                        REFERENCES radios(ssid),
                                     FOREIGN KEY (sessions_id)
                                         REFERENCES sessions(id)
                                 );"""

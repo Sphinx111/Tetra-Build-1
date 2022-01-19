@@ -13,6 +13,7 @@
 import socket
 import time
 from threading import Thread
+import datetime
 import databaseHandler
 
 localIP = "127.0.0.1"
@@ -22,10 +23,10 @@ cl_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 cl_socket.bind((localIP, localPort))
 dataBuffer = []
 radiosDict = {}         # Mobile Stations (radios)
-controllersList = [16777215, 7179146]  # Control stations, not Mobile Stations
+controllersList = ['16777215', '7179146']  # Control stations, ignore these
 frequenciesList = [392.75, 393.28, 394.255]
 radioTimeout = 300
-updateFrequency = 10
+updateFrequency = 60
 
 db = databaseHandler.main()
 
@@ -70,27 +71,28 @@ def processRawData():
 def processSpeechFrame(thisLine):
     thisRadio = thisLine[5].split(':')[1]
     timeOfBurst = float(thisLine[8].split(':')[1])
-    print(thisRadio + " sent burst at " + timeOfBurst)
     if thisRadio != "0":
         try:
             if thisRadio not in controllersList:
                 radiosDict.update({thisRadio: timeOfBurst})
         except Exception as e:
             print(e)
-    print(str(len(radiosDict)) + " radios Active - " + str(radiosDict.keys()))
 
 
 def cleanup():
-    time.sleep(updateFrequency)
-    cleanList = []
-    for r in radiosDict:
-        if time.time() - radiosDict[r] > radioTimeout:
-            updateTime = time.time().strftime('%Y-%m-%d %H:%M:%S')
-            databaseHandler.addSimpleCount(updateTime, len(radiosDict))
-            cleanList.append(r)
-    global radiosDict
-    for r in cleanList:
-        radiosDict.pop(r)
+    while 1:
+        time.sleep(updateFrequency)
+        cleanList = []
+        updateTime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        databaseHandler.addSimpleCount(updateTime, len(radiosDict))
+        for r in radiosDict:
+            timeDiff = round(time.time(), 0) - radiosDict[r]
+            print("Debug: timeDiff for Radio " + r + " is " + str(timeDiff))
+            if timeDiff > radioTimeout:
+                cleanList.append(r)
+        for r in cleanList:
+            radiosDict.pop(r)
+        print(str(len(radiosDict)) + " radios Active")
 
 
 process_thread = Thread(target=processRawData)

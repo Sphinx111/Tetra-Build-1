@@ -20,7 +20,7 @@
 import socket
 import time
 from threading import Thread
-from uuid import uuid4
+import ViewGraph
 import databaseHandler
 # import networkx as nx
 
@@ -41,6 +41,7 @@ lastFrameTime = 0
 uidCounter = 0
 
 db = databaseHandler.main()
+g = ViewGraph.main()
 
 # G = nx.Graph()
 
@@ -138,6 +139,7 @@ class Call():
     usageMarker = -1
     radio = 0
     sessionID = 0
+    usageDiffAllowed = 3  # internal constant, allows progressive usage markers
 
     def __init__(self, newRadio, usageMarker, startTime):
         global uidCounter
@@ -148,6 +150,11 @@ class Call():
         self.usageMarker = usageMarker
         self.isClosed = False
         uidCounter += 1
+
+        activeSession = find_active_session(self)
+        activeSession.add_call_to_session(self)
+        self.sessionID = activeSession.id
+        g.addCall(self.id, self.radio, self.sessionID)
 
     def __eq__(self, other):
         if (self.id == other.id):
@@ -160,6 +167,7 @@ class Call():
         if (self.sessionID == 0):
             activeSession = find_active_session(self)
             activeSession.add_call_to_session(self)
+            self.sessionID = activeSession.id
         databaseHandler.addCallToDB(self.id,
                                     self.isEmergency,
                                     self.start_time,
@@ -167,6 +175,7 @@ class Call():
                                     self.radio,
                                     self.sessionID)
         self.isClosed = True
+        g.removeObject(self.id)
 
     def setEmergency(self, value):
         self.isEmergency = value
@@ -174,14 +183,12 @@ class Call():
     def isFrameInThisCall(self, testRadio, testMarker):
         if (self.isClosed):
             return False
-        if (self.radio != testRadio):
+        if (self.radio == testRadio):
+            usageDiff = abs(self.usageMarker - testMarker)
+            if (usageDiff < Call.usageDiffAllowed):
+                return True
+        else:
             return False
-        if (self.usageMarker == testMarker):
-            return True
-        usageDiff = abs(self.usageMarker - testMarker)
-        if (usageDiff > 6):
-            return False
-        return True
 
     def updateTime(self, newTime):
         self.end_time = newTime
@@ -201,6 +208,7 @@ class Session():
         self.start_time = firstCall.start_time
         self.end_time = firstCall.end_time
         uidCounter += 1
+        g.addSession(self.id)
 
     def __eq__(self, other):
         if (self.id == other.id):
@@ -214,6 +222,7 @@ class Session():
                                        self.end_time,
                                        self.radio)
         self.isClosed = True
+        g.removeObject(self.id)
 
     # returns a weighting of how likely a call is to be in this session.
     def isCallInThisSession(self, testCall):
@@ -283,12 +292,12 @@ cleanup_thread.start()
 
 
 def doCallsOverlap(call, testCall):
-    if (call.end_time > testCall.start_time):
-        if (testCall.start_time > call.start_time):
+    if (call.end_time > testCall.start_time + 1):
+        if (testCall.start_time > call.start_time + 1):
             print("DEBUG: calls overlapped")
             return True
-    elif (call.end_time > testCall.end_time):
-        if (testCall.end_time > call.start_time):
+    elif (call.end_time > testCall.end_time + 1):
+        if (testCall.end_time > call.start_time + 1):
             print("DEBUG: calls overlapped")
             return True
 

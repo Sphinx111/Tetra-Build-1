@@ -164,4 +164,4 @@ def resumeUniqueIDs():
                 if (highest > highestID):
                     highestID = highest
 
-    return highestID
+    return (highestID + 1)

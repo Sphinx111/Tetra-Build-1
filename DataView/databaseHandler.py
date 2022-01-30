@@ -38,9 +38,10 @@ def main():
     sql_create_calls_table = """ CREATE TABLE IF NOT EXISTS calls (
                                     id integer PRIMARY_KEY,
                                     isEmergency integer,
-                                    session_id integer,
                                     start_time timestamp,
                                     end_time timestamp,
+                                    radio_id integer,
+                                    session_id integer,
                                     FOREIGN KEY (session_id)
                                         REFERENCES sessions(id),
                                     PRIMARY KEY (id)
@@ -82,16 +83,17 @@ def main():
         print("Error, cannot create the database connection")
 
 
-def addCallToDB(id, isEmergency, start_time, end_time, session):
+def addCallToDB(id, isEmergency, start_time, end_time, radio_id, session):
     conn = create_connection(database)
     c = conn.cursor()
     sql = ''' INSERT INTO calls(id,
                                 isEmergency,
                                 start_time,
                                 end_time,
+                                radio_id,
                                 session_id)
-            VALUES(?,?,?,?,?) '''
-    params = (id, isEmergency, start_time, end_time, session)
+            VALUES(?,?,?,?,?,?) '''
+    params = (id, isEmergency, start_time, end_time, radio_id, session)
     c.execute(sql, params)
     conn.commit()
 
@@ -113,15 +115,14 @@ def addSessionToDB(id, calls_count, start_time, end_time):
     return c.lastrowid
 
 
-def addRadioToDB(ssid, lastSeen, calls_id):
+def addRadioToDB(ssid, lastSeen):
     conn = create_connection(database)
     c = conn.cursor()
-    sql = ''' INSERT INTO radios(ssid,
-                                 short_id,
-                                 calls_id,
-                                 lastSeen)
-            VALUES(?,?,?,?) '''
-    params = (ssid, str(ssid), calls_id, lastSeen)
+    sql = ''' INSERT OR IGNORE INTO radios(ssid,
+                                           short_id,
+                                           lastSeen)
+            VALUES(?,?,?) '''
+    params = (ssid, str(ssid), lastSeen)
     c.execute(sql, params)
     conn.commit()
 
@@ -129,10 +130,38 @@ def addRadioToDB(ssid, lastSeen, calls_id):
 def addSimpleCount(dateTime, radiosCount):
     conn = create_connection(database)
     c = conn.cursor()
-    sql = ''' INSERT INTO radiosCount(dateTime,
-                                 radiosCount)
+    sql = ''' INSERT INTO radio_counts(timestamp,
+                                 count)
             VALUES(?,?) '''
     params = (dateTime, radiosCount)
     c.execute(sql, params)
     conn.commit()
     return c.lastrowid
+
+
+def resumeUniqueIDs():
+    highestID = 0
+    tables = ["calls", "sessions"]
+    columns = ["id", "id"]
+    conn = create_connection(database)
+    c = conn.cursor()
+    sql = ''''''
+
+    for i in range(0, 1):
+        table = tables[i]
+        column = columns[i]
+        sql = ''' SELECT '''+column+'''
+                    FROM '''+table+'''
+                    ORDER BY '''+column+''' DESC
+                    LIMIT 1 '''
+
+        row = c.execute(sql)
+        if (row is not None):
+            highest = row.fetchone()
+            if (highest is not None):
+                highest = highest[0]
+                print(highest)
+                if (highest > highestID):
+                    highestID = highest
+
+    return highestID

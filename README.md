@@ -1,5 +1,7 @@
 # Tetra-kit
 
+Please note - the readme below is currently copied from the original Tetra-Kit by [Larry](https://gitlab.com/larryth/tetra-kit)
+
 TETRA downlink decoder/recorder kit
 
 ![](screenshots/main.png)

@@ -42,11 +42,15 @@ void tetra_dl::service_u_plane(std::vector<uint8_t> pdu, mac_logical_channel_t m
 
         static const std::size_t MIN_SIZE = 432;
 
+        // Changed from base program, no longer cares about speech content
+        // as all speech on UK Tetra is encrypted. We make no effort to decrypt
+        // so no value in retaining the speech content
         if (pdu.size() >= MIN_SIZE)
         {
 
             uint16_t speech_frame[690] = {0};
 
+            /*
             for (int i = 0; i < 6; i++)
             {
                 speech_frame[115 * i] = 0x6b21 + i;
@@ -71,8 +75,9 @@ void tetra_dl::service_u_plane(std::vector<uint8_t> pdu, mac_logical_channel_t m
             {
                 speech_frame[346 + i] = pdu[342 + i] ? -127 : 127;
             }
-
-            // speech frame will be converted in base64 string
+            */
+            // speech frame would have been converted in base64 string
+            // instead we simply initialise an empty array
 
             report_add("downlink usage marker", mac_state.downlink_usage_marker);                               // current usage marker
             report_add("encryption mode",       usage_marker_encryption_mode[mac_state.downlink_usage_marker]); // current encryption mode

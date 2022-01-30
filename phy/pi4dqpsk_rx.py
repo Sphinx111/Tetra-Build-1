@@ -23,12 +23,12 @@ if __name__ == '__main__':
 from PyQt5 import Qt
 from gnuradio import eng_notation
 from gnuradio import qtgui
-from gnuradio.filter import firdes
 import sip
 from gnuradio import analog
 from gnuradio import blocks
 from gnuradio import digital
 from gnuradio import filter
+from gnuradio.filter import firdes
 from gnuradio import gr
 import sys
 import signal
@@ -133,43 +133,6 @@ class pi4dqpsk_rx(gr.top_block, Qt.QWidget):
         self.rtlsdr_source.set_bb_gain(0, 0)
         self.rtlsdr_source.set_antenna('', 0)
         self.rtlsdr_source.set_bandwidth(0, 0)
-        self.qtgui_waterfall_sink_x_0 = qtgui.waterfall_sink_c(
-            256, #size
-            firdes.WIN_BLACKMAN_hARRIS, #wintype
-            0, #fc
-            channel_rate, #bw
-            "", #name
-            1 #number of inputs
-        )
-        self.qtgui_waterfall_sink_x_0.set_update_time(0.1)
-        self.qtgui_waterfall_sink_x_0.enable_grid(False)
-        self.qtgui_waterfall_sink_x_0.enable_axis_labels(True)
-
-
-
-        labels = ['', '', '', '', '',
-                  '', '', '', '', '']
-        colors = [0, 0, 0, 0, 0,
-                  0, 0, 0, 0, 0]
-        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
-                  1.0, 1.0, 1.0, 1.0, 1.0]
-
-        for i in range(1):
-            if len(labels[i]) == 0:
-                self.qtgui_waterfall_sink_x_0.set_line_label(i, "Data {0}".format(i))
-            else:
-                self.qtgui_waterfall_sink_x_0.set_line_label(i, labels[i])
-            self.qtgui_waterfall_sink_x_0.set_color_map(i, colors[i])
-            self.qtgui_waterfall_sink_x_0.set_line_alpha(i, alphas[i])
-
-        self.qtgui_waterfall_sink_x_0.set_intensity_range(-140, 10)
-
-        self._qtgui_waterfall_sink_x_0_win = sip.wrapinstance(self.qtgui_waterfall_sink_x_0.pyqwidget(), Qt.QWidget)
-        self.top_grid_layout.addWidget(self._qtgui_waterfall_sink_x_0_win, 3, 0, 1, 2)
-        for r in range(3, 4):
-            self.top_grid_layout.setRowStretch(r, 1)
-        for c in range(0, 2):
-            self.top_grid_layout.setColumnStretch(c, 1)
         self.qtgui_const_sink_x_0_0 = qtgui.const_sink_c(
             1024, #size
             "output", #name
@@ -243,7 +206,6 @@ class pi4dqpsk_rx(gr.top_block, Qt.QWidget):
         self.connect((self.digital_pfb_clock_sync_xxx_0, 0), (self.digital_cma_equalizer_cc_0, 0))
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.mmse_resampler_xx_0, 0))
         self.connect((self.mmse_resampler_xx_0, 0), (self.analog_feedforward_agc_cc_0, 0))
-        self.connect((self.mmse_resampler_xx_0, 0), (self.qtgui_waterfall_sink_x_0, 0))
         self.connect((self.rtlsdr_source, 0), (self.freq_xlating_fir_filter_xxx_0, 0))
 
     def closeEvent(self, event):
@@ -324,7 +286,6 @@ class pi4dqpsk_rx(gr.top_block, Qt.QWidget):
     def set_channel_rate(self, channel_rate):
         self.channel_rate = channel_rate
         self.mmse_resampler_xx_0.set_resamp_ratio(float(self.samp_rate)/(float(self.decim)*float(self.channel_rate)))
-        self.qtgui_waterfall_sink_x_0.set_frequency_range(0, self.channel_rate)
 
     def get_arity(self):
         return self.arity

@@ -20,7 +20,7 @@
 import socket
 import time
 from threading import Thread
-import itertools
+from uuid import uuid4
 import databaseHandler
 # import networkx as nx
 
@@ -30,17 +30,24 @@ bufferSize = 65535  # should match output databuffer size, from C++ elements
 cl_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 cl_socket.bind((localIP, localPort))
 dataBuffer = []
-callSeparationTime = 5  # seconds paus allowed before classifying as a new call
+callSeparationTime = 3  # seconds paus allowed before classifying as a new call
 sessionSeparationTime = 20  # ------------before classifying as a new session
 radiosDict = {}
 callsList = []
 sessionsList = []
+callsCleanupList = []
+sessionsCleanupList = []
+lastFrameTime = 0
+uidCounter = 0
 
 db = databaseHandler.main()
 
 # G = nx.Graph()
 
 print("socket created and ready")
+
+# get the new uidCounter Value from db
+uidCounter = databaseHandler.resumeUniqueIDs()
 
 
 # Loop to be threaded to receive the raw data from Decoder
@@ -76,20 +83,40 @@ def processRawData():
         else:
             time.sleep(0.1)
 
+    # Only remove calls/sessions from the list after processing all else
+    if (len(callsCleanupList) > 0):
+        for c in callsCleanupList:
+            callsList.remove(c)
+        callsCleanupList.clear()
+    if (len(sessionsCleanupList) > 0):
+        for s in sessionsCleanupList:
+            sessionsList.remove(s)
+        sessionsCleanupList.clear()
 
+
+# If a frame is a Speech Frame break it down to the info we want
 def processSpeechFrame(thisLine):
-    thisRadio = thisLine[5].split(':')[1]
-    timeOfBurst = thisLine[8].split(':')[1]
-    print(thisRadio + " sent burst at " + timeOfBurst)
+    thisRadio = int(thisLine[5].split(':')[1])
+    timeOfBurst = float(thisLine[8].split(':')[1])
+    timeLabel = (thisLine[8].split(':')[0])
+    usageLabel = (thisLine[9].split(':')[0])
+    if ((timeLabel != '"sysTime"') | (usageLabel != '"downlink usage marker"')):
+        return
+    usageMarker = int(thisLine[9].split(':')[1])
     if thisRadio != "0":
         try:
-            thisCall = find_active_call(thisRadio, timeOfBurst)
+            thisCall = find_active_call(thisRadio, usageMarker, timeOfBurst)
             if thisCall not in callsList:
                 callsList.append(thisCall)
+            thisCall.updateTime(timeOfBurst)
+
             thisSession = find_active_session(thisCall)
             if thisSession not in sessionsList:
                 sessionsList.append(thisSession)
+
             radiosDict.update({thisRadio: timeOfBurst})
+            global lastFrameTime
+            lastFrameTime = timeOfBurst
         except Exception as e:
             print(e.stackTrace())
     print(str(len(radiosDict)) + " radios Active - " + str(radiosDict.keys()))
@@ -107,32 +134,57 @@ class Call():
     isEmergency = 0
     start_time = 0
     end_time = 0
-    last_frame = 0
-    isClosed = True
-    newid = next(itertools.count())
-    radios = []
-    session = 0
+    isClosed = False
+    usageMarker = -1
+    radio = 0
+    sessionID = 0
 
-    def __init__(self, newRadio, updateTime):
-        self.id = Call.newid
-        self.radios.append(newRadio)
-        self.start_time = updateTime
+    def __init__(self, newRadio, usageMarker, startTime):
+        global uidCounter
+        self.id = uidCounter
+        self.radio = newRadio
+        self.start_time = startTime
+        self.end_time = startTime
+        self.usageMarker = usageMarker
         self.isClosed = False
+        uidCounter += 1
 
-    def end_call(self, endTime):
-        self.end_time = endTime
-        databaseHandler.addCallToDB(self.id,
-                                    self.start_time,
-                                    self.end_time,
-                                    self.radio)
+    def __eq__(self, other):
+        if (self.id == other.id):
+            return True
+        else:
+            return False
+
+    def end_call(self):
         databaseHandler.addRadioToDB(self.radio, self.end_time)
-        self.isClosed = True
-        if self.session == 0:
+        if (self.sessionID == 0):
             activeSession = find_active_session(self)
             activeSession.add_call_to_session(self)
+        databaseHandler.addCallToDB(self.id,
+                                    self.isEmergency,
+                                    self.start_time,
+                                    self.end_time,
+                                    self.radio,
+                                    self.sessionID)
+        self.isClosed = True
 
     def setEmergency(self, value):
         self.isEmergency = value
+
+    def isFrameInThisCall(self, testRadio, testMarker):
+        if (self.isClosed):
+            return False
+        if (self.radio != testRadio):
+            return False
+        if (self.usageMarker == testMarker):
+            return True
+        usageDiff = abs(self.usageMarker - testMarker)
+        if (usageDiff > 6):
+            return False
+        return True
+
+    def updateTime(self, newTime):
+        self.end_time = newTime
 
 
 class Session():
@@ -140,60 +192,105 @@ class Session():
     calls = []
     start_time = 0
     end_time = 0
-    last_call_time = 0
     isClosed = False
 
     def __init__(self, firstCall):
-        Session.id += 1
-        self.id = Session.id
+        global uidCounter
+        self.id = uidCounter
         self.calls.append(firstCall)
         self.start_time = firstCall.start_time
-        self.last_call_time = firstCall.end_time
+        self.end_time = firstCall.end_time
+        uidCounter += 1
+
+    def __eq__(self, other):
+        if (self.id == other.id):
+            return True
+        else:
+            return False
 
     def end_session(self):
-        self.end_time = self.last_call_time
         databaseHandler.addSessionToDB(self.id,
                                        self.start_time,
                                        self.end_time,
                                        self.radio)
         self.isClosed = True
 
+    # returns a weighting of how likely a call is to be in this session.
+    def isCallInThisSession(self, testCall):
+        minTime = sessionSeparationTime
+        for c in self.calls:
+            # if the testCall overlapped with any existing calls in session
+            # it can't be part of this session, immediately return 0
+            if (doCallsOverlap(c, testCall)):
+                return 0
+            timeSep = testCall.start_time - c.end_time
+            if (timeSep < minTime):
+                minTime = timeSep
+        weighting = (sessionSeparationTime - minTime) / sessionSeparationTime
+        return weighting
+
     # Only call this when a new call has finished
     def add_call_to_session(self, newCall):
         newCall.session = self
         self.calls.append(newCall)
-        self.last_call_time = newCall.end_time
+        self.end_time = newCall.end_time
 
 
 def find_active_session(testCall):
+    likelySession = None
+    maxWeighting = 0
     for s in sessionsList:
         if not s.isClosed:
-            for c in s.calls:
-                for r in c.radios:
-                    for r2 in testCall.radios:
-                        if r == r2:
-                            t = float(testCall.end_time) - float(c.end_time)
-                            if t < sessionSeparationTime:
-                                return s
-                            else:
-                                # if the radios Match, but it's been too long
-                                # close the session being tested
-                                s.isClosed = True
+            testWeight = s.isCallInThisSession(testCall)
+            if (testWeight > maxWeighting):
+                likelySession = s
+                maxWeighting = testWeight
     # If no active session found for the radio on this call, create new and rtn
-    return Session(testCall)
+    if (maxWeighting <= 0):
+        return Session(testCall)
+    else:
+        return likelySession
 
 
-def find_active_call(testRadio, testTime):
+def find_active_call(testRadio, testMarker, testTime):
     for c in callsList:
-        if not c.isClosed:
-            for r in c.radios:
-                if testRadio == r:
-                    timeDiff = float(testTime) - float(radiosDict[r])
-                    print("DEBUG " + str(timeDiff) + " timeDiff for call")
-                    if timeDiff < callSeparationTime:
-                        return c
+        if (c.isFrameInThisCall(testRadio, testMarker)):
+            return c
     # if there's no active call found, create a new call and return it
-    return Call(testRadio, testTime)
+    return Call(testRadio, testMarker, testTime)
+
+
+# closes old calls that haven't had updates for a while.
+def cleanupObjects():
+    while 1:
+        time.sleep(5)
+        print("===== Cleanup Thread Running =====")
+        for c in callsList:
+            if (lastFrameTime - c.end_time > callSeparationTime):
+                c.end_call()
+                print("call ended for Call from Radio: " + str(c.radio))
+            if (c.isClosed):
+                callsCleanupList.append(c)
+        for s in sessionsList:
+            if (lastFrameTime - s.end_time > sessionSeparationTime):
+                s.end_session()
+            if (s.isClosed):
+                sessionsCleanupList.append(s)
+
+
+cleanup_thread = Thread(target=cleanupObjects)
+cleanup_thread.start()
+
+
+def doCallsOverlap(call, testCall):
+    if (call.end_time > testCall.start_time):
+        if (testCall.start_time > call.start_time):
+            print("DEBUG: calls overlapped")
+            return True
+    elif (call.end_time > testCall.end_time):
+        if (testCall.end_time > call.start_time):
+            print("DEBUG: calls overlapped")
+            return True
 
 
 time.sleep(20)

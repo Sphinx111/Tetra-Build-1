@@ -507,67 +507,6 @@ blocks:
     coordinate: [768, 444]
     rotation: 0
     state: enabled
-- name: qtgui_waterfall_sink_x_0
-  id: qtgui_waterfall_sink_x
-  parameters:
-    affinity: ''
-    alias: ''
-    alpha1: '1.0'
-    alpha10: '1.0'
-    alpha2: '1.0'
-    alpha3: '1.0'
-    alpha4: '1.0'
-    alpha5: '1.0'
-    alpha6: '1.0'
-    alpha7: '1.0'
-    alpha8: '1.0'
-    alpha9: '1.0'
-    axislabels: 'True'
-    bw: channel_rate
-    color1: '0'
-    color10: '0'
-    color2: '0'
-    color3: '0'
-    color4: '0'
-    color5: '0'
-    color6: '0'
-    color7: '0'
-    color8: '0'
-    color9: '0'
-    comment: ''
-    fc: '0'
-    fftsize: '256'
-    freqhalf: 'True'
-    grid: 'False'
-    gui_hint: 3,0,1,2
-    int_max: '10'
-    int_min: '-140'
-    label1: ''
-    label10: ''
-    label2: ''
-    label3: ''
-    label4: ''
-    label5: ''
-    label6: ''
-    label7: ''
-    label8: ''
-    label9: ''
-    legend: 'True'
-    maxoutbuf: '0'
-    minoutbuf: '0'
-    name: '""'
-    nconnections: '1'
-    showports: 'True'
-    type: complex
-    update_time: '0.1'
-    wintype: firdes.WIN_BLACKMAN_hARRIS
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [784, 204]
-    rotation: 0
-    state: enabled
 - name: rtlsdr_source
   id: rtlsdr_source
   parameters:
@@ -939,7 +878,6 @@ connections:
 - [digital_pfb_clock_sync_xxx_0, '0', digital_cma_equalizer_cc_0, '0']
 - [freq_xlating_fir_filter_xxx_0, '0', mmse_resampler_xx_0, '0']
 - [mmse_resampler_xx_0, '0', analog_feedforward_agc_cc_0, '0']
-- [mmse_resampler_xx_0, '0', qtgui_waterfall_sink_x_0, '0']
 - [rtlsdr_source, '0', freq_xlating_fir_filter_xxx_0, '0']
 
 metadata:
